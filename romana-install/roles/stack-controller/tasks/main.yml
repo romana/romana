@@ -1,0 +1,12 @@
+---
+- include: workarounds.yml
+  become: true
+  become_user: root
+
+- include: devstack.yml
+  become: true
+  become_user: ubuntu
+
+- include: update_ubuntu_profile.yml
+  become: true
+  become_user: ubuntu

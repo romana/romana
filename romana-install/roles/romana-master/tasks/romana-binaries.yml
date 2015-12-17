@@ -1,0 +1,28 @@
+---
+- name: Install latest binaries
+  # Workaround for S3 issue: Delete binaries first
+  file: path="{{ romana_dir }}/bin/{{ item }}" state=absent
+  with_items:
+    - ipam
+    - root
+    - tenant
+    - topology
+
+- s3: region="{{ region }}" bucket="pani-infrastructure" object="binaries/latest/origin/master/{{ item }}" dest="{{ romana_dir }}/bin/{{ item }}" mode=get
+  with_items:
+    - ipam
+    - root
+    - tenant
+    - topology
+
+# Make the files executable
+- file: path="{{ romana_dir }}/bin/{{ item }}" mode=0750
+  with_items:
+    - ipam
+    - root
+    - tenant
+    - topology
+
+- name: Install config file
+  template: src="romana.conf.yml" dest="{{ romana_dir }}/etc/romana.conf.yml" mode=0644
+

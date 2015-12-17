@@ -1,0 +1,15 @@
+---
+- name: Files and Directories for Romana
+  become: true
+  become_user: root
+  include: romana.yml
+
+- name: Networking changes for Romana
+  become: true
+  become_user: root
+  include: network.yml
+
+- name: Set up dnsmasq
+  become: true
+  become_user: root
+  include: dnsmasq.yml

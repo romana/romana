@@ -1,0 +1,14 @@
+---
+- name: Update OS and install distro packages
+  become: true
+  become_user: root
+  include: apt.yml
+
+- name: Install common key for remote ubuntu user
+  become: true
+  become_user: ubuntu
+  include: ubuntu_ssh.yml
+
+- become: true
+  become_user: root
+  include: update_vimrc.yml

@@ -1,0 +1,23 @@
+devstack_name: "{{ ansible_env.USER }}"
+devstack_compute_nodes: 1
+
+devstack_password: "secrete"
+devstack_controller: "192.168.0.10"
+devstack_service_token: "eb24cc1eb0036c7971237850c767d9f6bae017a3"
+
+romana_dir: "/home/ubuntu/romana"
+romana_branch: "master"
+nw_romana_branch: "odwork"
+
+region: "us-west-1"
+key_name: "shared-key-1"
+# instance_type: "t2.micro"
+instance_type: "t2.medium"
+# controller_image: "ami-f911d7bd"
+# compute_image: "ami-f911d7bd"
+controller_image: "ami-df6a8b9b"
+compute_image: "ami-df6a8b9b"
+
+# deployment_user: deploy
+# deployment_group: deploy
+# deployment_pubkey: "{{ lookup('file', '../../credentials/deployment_id_rsa.pub') }}"
