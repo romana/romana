@@ -1,12 +1,12 @@
 ---
 romana:
   ControllerInstance:
-    gateway: 10.0.0.0/16
+    gateway: 10.0.0.1/16
   ComputeInstance01:
-    gateway: 10.1.0.0/16
+    gateway: 10.1.0.1/16
   ComputeInstance02:
-    gateway: 10.2.0.0/16
+    gateway: 10.2.0.1/16
   ComputeInstance03:
-    gateway: 10.3.0.0/16
+    gateway: 10.3.0.1/16
   ComputeInstance04:
-    gateway: 10.4.0.0/16
+    gateway: 10.4.0.1/16
