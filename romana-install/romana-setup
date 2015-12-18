@@ -62,7 +62,8 @@ if (( $# > 0 )); then
 fi
 
 # Check Ansible is installed. May need to check additional commands
-for i in ansible-playbook; do
+required=( ansible-playbook )
+for i in "${required[@]}"; do
 	if ! command -v "$i" > /dev/null; then
 		echo "Required command '$i' not found. Please check your Ansible installation."
 		exit 1
