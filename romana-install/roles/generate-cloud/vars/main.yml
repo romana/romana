@@ -1,13 +1,6 @@
 ---
 bootstrap:
-#  - logger "Started bootstrap"
   - apt-get install python-apt
-#  - groupadd --system {{ deployment_group }}
-#  - useradd --system --home-dir=/var/{{ deployment_user }} --shell=/bin/bash --create-home --gid={{ deployment_group }} {{ deployment_user }}
-#  - install -o root -g root -m 0440 <(printf '%s\tALL=(ALL) NOPASSWD:ALL\n' '{{ deployment_user }}') /etc/sudoers.d/deploy
-#  - install -o {{ deployment_user }} -g  {{ deployment_group }} -m 0700 -d /var/{{ deployment_user }}/.ssh
-#  - install -o {{ deployment_user }} -g  {{ deployment_group }} -m 0600 <(printf '%s\n' '{{ deployment_pubkey }}') /var/{{ deployment_user }}/.ssh/authorized_keys
-#  - logger "Finished bootstrap"
 nodes:
   controllerNode:
     ip: "192.168.0.10"

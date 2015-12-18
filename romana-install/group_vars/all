@@ -11,13 +11,8 @@ nw_romana_branch: "odwork"
 
 region: "us-west-1"
 key_name: "shared-key-1"
-# instance_type: "t2.micro"
+# Devstack can install on "medium" or "large" instances, not "micro"
 instance_type: "t2.medium"
-# controller_image: "ami-f911d7bd"
-# compute_image: "ami-f911d7bd"
+# Deployment currently targets Ubuntu 14.04 LTS 
 controller_image: "ami-df6a8b9b"
 compute_image: "ami-df6a8b9b"
-
-# deployment_user: deploy
-# deployment_group: deploy
-# deployment_pubkey: "{{ lookup('file', '../../credentials/deployment_id_rsa.pub') }}"
