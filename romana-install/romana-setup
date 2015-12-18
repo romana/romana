@@ -1,0 +1,107 @@
+#!/bin/bash
+
+usage() {
+	echo "romana-setup: executes the ansible playbooks for installing romana"
+	echo "Usage: romana-setup [-t targetname] [action]"
+	echo "       romana-setup [-t targetname] <action> [ansible-options]"
+	echo "       romana-setup <h|--help>"
+	echo "Targets: aws (default), virtualbox"
+	echo "Actions: install (default), uninstall"
+}
+
+# Change to romana-setup directory
+if ! cd "${0%/*}"; then
+	echo "Error attempting to cd to installation directory."
+	exit 1
+fi
+
+# Process command-line options
+target=aws
+if (( $# > 0 )); then 
+	while [[ $1 == -* ]]; do
+		case "$1" in
+			-h|--help)
+				usage
+				exit 0
+				;;
+			-t|--target)
+				case "$2" in
+					aws|virtualbox)
+						target="$2"
+						shift 2
+						;;
+					*)
+						echo "Unknown install target '$2'."
+						usage
+						exit 1
+						;;
+				esac
+				;;
+			*)
+				echo "Unrecognized option '$1'"
+				usage
+				exit 1
+				;;
+		esac
+	done
+fi
+
+# Process action
+action=install
+if (( $# > 0 )); then
+	case "$1" in
+		install|uninstall)
+			action="$1"
+			shift
+			;;
+		*)
+			echo "Unknown action '$1' for target '$target'."
+			usage
+			exit 1
+	esac
+fi
+
+# Check Ansible is installed. May need to check additional commands
+for i in ansible-playbook; do
+	if ! command -v "$i" > /dev/null; then
+		echo "Required command '$i' not found. Please check your Ansible installation."
+		exit 1
+	fi
+done
+
+case "$target" in
+	aws)
+		case "$action" in
+			install)
+				echo ansible-playbook "$@" -i ec2.py create.yml &&
+					echo ansible-playbook "$@" -i ec2.py config.yml
+				;;
+			uninstall)
+				echo ansible-playbook "$@" -i ec2.py destroy.yml
+				;;
+			*)
+				echo "Unknown action '$action' for target '$target'"
+				exit 1
+				;;
+		esac
+		;;
+	virtualbox)
+		case "$action" in
+			install)
+				echo "Not implemented yet"
+				;;
+			uninstall)
+				echo "Not implemented yet"
+				;;
+			*)
+				echo "Unknown action '$action' for target '$target'"
+				exit 1
+			;;
+		esac
+		;;
+
+	*)
+		echo "Unknown target '$target'"
+		exit 1
+		;;
+esac
