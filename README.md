@@ -23,8 +23,14 @@ Install ansible and other dependencies.
 sudo apt-get install ansible python-boto awscli
 ```
 
+Copy your EC2 SSH key into the expected location.
+```bash
+cp /path/to/ec2_ssh_private_key ~/.ssh/ec2_id_rsa
+chmod 0600 ~/.ssh/ec2_id_rsa
+```
+
 Configure awscli with your AWS Credentials
-```shell-session
+```bash session
 $ aws configure
 AWS Access Key ID [None]: A*******************
 AWS Secret Access Key [None]: ****************************************
@@ -33,6 +39,14 @@ Default output format [None]:
 ```
 Note: The installation currently expects region ``us-west-1``, and might not work in other regions.
 This will be addressed in the future.
+
+Confirm you have the appropriate Github keys available
+```bash session
+$ ssh git@github.com
+PTY allocation request failed on channel 0
+Hi your-github-username! You've successfully authenticated, but GitHub does not provide shell access.
+Connection to github.com closed.
+```
 
 ### Install
 
