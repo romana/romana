@@ -74,11 +74,11 @@ case "$target" in
 	aws)
 		case "$action" in
 			install)
-				ansible-playbook "$@" -i ec2.py create.yml &&
+				ansible-playbook "$@" -i /dev/null create.yml &&
 					ansible-playbook "$@" -i ec2.py config.yml
 				;;
 			uninstall)
-				ansible-playbook "$@" -i ec2.py destroy.yml
+				ansible-playbook "$@" -i /dev/null destroy.yml
 				;;
 			*)
 				echo "Unknown action '$action' for target '$target'"
