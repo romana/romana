@@ -17,16 +17,30 @@ sudo add-apt-repository ppa:ansible/ansible
 sudo apt-get update
 ```
 
-Install ansible and boto.
+Install ansible and other dependencies.
 
 ```bash
-sudo apt-get install ansible python-boto
+sudo apt-get install ansible python-boto awscli
 ```
+
+Configure awscli with your AWS Credentials
+```shell-session
+$ aws configure
+AWS Access Key ID [None]: A*******************
+AWS Secret Access Key [None]: ****************************************
+Default region name [None]: us-west-1
+Default output format [None]: 
+```
+Note: The installation currently expects region ``us-west-1``, and might not work in other regions.
+This will be addressed in the future.
+
+### Install
 
 Check out Romana repository.
 ```bash
 git clone https://github.com/romana/romana
 ```
+
 Run the installer. This will create the Devstack cluster, install and activate Romana Cloud-Native tools.
 ```bash
 cd romana/romana-install
