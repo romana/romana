@@ -9,7 +9,7 @@
   file: path="/etc/ethers" state="touch" mode=0644
 
 - name: Create dnsmasq-calico upstart service
-  copy: src="dnsmasq-calico.conf" dest="/etc/init/dnsmasq-calico.conf" mode=0644
+  template: src="dnsmasq-calico.conf" dest="/etc/init/dnsmasq-calico.conf" mode=0644
 
 - name: Enable dnsmasq-calico
   service: name="dnsmasq-calico" state="started"
