@@ -8,3 +8,8 @@
   become: true
   become_user: root
   include: romana-services.yml
+
+- name: Execute romana-master setup
+  become: true
+  become_user: root
+  include: romana-master-setup.yml

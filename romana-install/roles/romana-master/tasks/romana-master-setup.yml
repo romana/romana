@@ -1,0 +1,6 @@
+---
+- name: Install romana-master setup script
+  template: src="romana-master-setup.sh" dest="/var/tmp/romana-master-setup.sh" mode=0755
+
+- name: Execute romana-master setup script
+  shell: /var/tmp/romana-master-setup.sh
