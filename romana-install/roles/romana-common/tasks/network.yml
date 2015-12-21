@@ -8,7 +8,7 @@
   with_items:
     - /sbin/ip link add romana-gw type dummy
     - /sbin/ip link set romana-gw up
-    - /sbin/ip addr add {{ romana[ec2_tag_aws_cloudformation_logical_id].gateway }} dev romana-gw
+    - /sbin/ip addr add {{ romana[ec2_tag_aws_cloudformation_logical_id].gateway }}/16 dev romana-gw
   when: gw.rc != 0
 
 - name: UDP Checksum fix
