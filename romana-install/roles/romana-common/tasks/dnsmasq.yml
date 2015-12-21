@@ -1,6 +1,10 @@
 ---
 - name: Install base dnsmasq (for dependencies)
-  apt: pkg="dnsmasq-base"
+  apt: pkg="{{ item }}"
+  with_items:
+    - dnsmasq-base
+    - libnettle4
+    - libhogweed2
 
 - name: Fetch calico modified dnsmasq
   get_url: url="https://s3-us-west-1.amazonaws.com/pani-infrastructure/dist/pre-poc1/dnsmasq-calico" dest="{{ romana_dir }}/bin/dnsmasq-calico" mode=0755
