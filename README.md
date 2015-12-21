@@ -25,7 +25,7 @@ chmod 0600 ~/.ssh/ec2_id_rsa
 ```
 
 Configure awscli with your AWS Credentials
-```bash session
+```bash-session
 $ aws configure
 AWS Access Key ID [None]: A*******************
 AWS Secret Access Key [None]: ****************************************
@@ -36,7 +36,7 @@ Note: The installation currently expects region ``us-west-1``, and might not wor
 This will be addressed in the future.
 
 Confirm you have the appropriate Github keys available
-```bash session
+```bash-session
 $ ssh git@github.com
 PTY allocation request failed on channel 0
 Hi your-github-username! You've successfully authenticated, but GitHub does not provide shell access.
