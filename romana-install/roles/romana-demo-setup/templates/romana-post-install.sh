@@ -12,6 +12,14 @@ fi
 # Suppress output
 exec > /dev/null
 
+# Create hosts
+# TODO: Generate this from variables
+curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-10", "ip": "192.168.0.10", "romana_ip": "10.0.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
+curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-11", "ip": "192.168.0.11", "romana_ip": "10.1.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
+curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-12", "ip": "192.168.0.12", "romana_ip": "10.2.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
+curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-13", "ip": "192.168.0.13", "romana_ip": "10.3.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
+curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-14", "ip": "192.168.0.14", "romana_ip": "10.4.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
+
 # Create tenants and segments
 # TODO: Remove the id:0 bits once master branch has fixed its JSON handling
 #  -- admin

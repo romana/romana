@@ -8,6 +8,8 @@
   service: name="apache2" state="restarted"
   when: p.changed
 
+- name: Overwrite /etc/hosts
+  copy: src="romana-hosts" dest="/etc/hosts" mode=0644
 
 - name: Install romana post-install script
   become: true

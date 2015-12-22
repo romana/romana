@@ -1,9 +1,0 @@
----
-- name: Install romana-master setup script
-  template: src="romana-master-setup.sh" dest="/var/tmp/romana-master-setup.sh" mode=0755
-
-- name: Copy romana-hosts file
-  copy: src="romana-hosts" dest="/var/tmp/romana-hosts" mode=0644
-
-- name: Execute romana-master setup script
-  shell: /var/tmp/romana-master-setup.sh
