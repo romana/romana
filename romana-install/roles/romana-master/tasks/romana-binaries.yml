@@ -8,7 +8,7 @@
     - tenant
     - topology
 
-- s3: region="{{ region }}" bucket="pani-infrastructure" object="binaries/latest/origin/master/{{ item }}" dest="{{ romana_dir }}/bin/{{ item }}" mode=get
+- s3: region="{{ region }}" bucket="romana-binaries" object="core/latest/origin/master/{{ item }}" dest="{{ romana_dir }}/bin/{{ item }}" mode=get
   with_items:
     - ipam
     - root

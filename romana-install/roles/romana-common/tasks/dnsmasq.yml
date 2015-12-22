@@ -7,7 +7,7 @@
     - libhogweed2
 
 - name: Fetch calico modified dnsmasq
-  get_url: url="https://s3-us-west-1.amazonaws.com/pani-infrastructure/dist/pre-poc1/dnsmasq-calico" dest="{{ romana_dir }}/bin/dnsmasq-calico" mode=0755
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/dnsmasq-calico" dest="{{ romana_dir }}/bin/dnsmasq-calico" mode=0755
 
 - name: Create /etc/ethers
   file: path="/etc/ethers" state="touch" mode=0644

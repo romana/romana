@@ -954,7 +954,7 @@
                 "s3:ListBucket"
               ],
               "Resource": [
-                "arn:aws:s3:::pani-infrastructure"
+                "arn:aws:s3:::romana-binaries"
               ]
             },
             {
@@ -965,7 +965,7 @@
                 "s3:PutObject"
               ],
               "Resource": [
-                "arn:aws:s3:::pani-infrastructure/binaries/*"
+                "arn:aws:s3:::romana-binaries/*"
               ]
             },
             {
