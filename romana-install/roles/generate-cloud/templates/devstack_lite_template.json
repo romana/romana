@@ -795,6 +795,7 @@
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
         "PrivateIpAddress": "{{ nodes.controllerNode.ip }}",
+        "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
         },
@@ -824,6 +825,7 @@
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
         "PrivateIpAddress": "{{ node.ip }}",
+        "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
         },
