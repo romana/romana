@@ -25,9 +25,13 @@ curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-
 #  -- admin
 curl -X POST -H 'Content-Type: application/json' --data "$(printf '{"id": 0, "name": "%s"}' $(openstack project show -f value -c id admin))" http://{{ devstack_controller }}:9602/tenants
 curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "default"}' http://{{ devstack_controller }}:9602/tenants/1/segments
+curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s1"}' http://{{ devstack_controller }}:9602/tenants/1/segments
+curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s2"}' http://{{ devstack_controller }}:9602/tenants/1/segments
 #  -- demo
 curl -X POST -H "Content-Type: application/json" --data "$(printf '{"id": 0, "name": "%s"}' $(openstack project show -f value -c id demo))" http://{{ devstack_controller }}:9602/tenants
 curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "default"}' http://{{ devstack_controller }}:9602/tenants/2/segments
+curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s1"}' http://{{ devstack_controller }}:9602/tenants/2/segments
+curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s2"}' http://{{ devstack_controller }}:9602/tenants/2/segments
 
 # Create romana network and subnet
 if ! neutron net-show romana 2>/dev/null; then
