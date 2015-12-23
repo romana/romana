@@ -1,0 +1,3 @@
+---
+- name: Update global vimrc
+  patch: src="vimrc.patch" basedir="/etc/vim"

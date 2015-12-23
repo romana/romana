@@ -1,0 +1,15 @@
+---
+- name: Install latest binaries
+  # Workaround for S3 issue: Delete binaries first
+  file: path="{{ romana_dir }}/bin/{{ item }}" state=absent
+  with_items:
+    - agent
+
+- s3: region="{{ region }}" bucket="romana-binaries" object="core/latest/origin/master/{{ item }}" dest="{{ romana_dir }}/bin/{{ item }}" mode=get
+  with_items:
+    - agent
+
+# Make the files executable
+- file: path="{{ romana_dir }}/bin/{{ item }}" mode=0750
+  with_items:
+    - agent

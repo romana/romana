@@ -1,0 +1,9 @@
+---
+- name: Get devstack
+  git: repo="https://github.com/openstack-dev/devstack" version="stable/liberty" dest="~/devstack"
+
+- name: Install controller local.conf
+  template: src=local.conf dest="~/devstack/local.conf"
+
+- name: Run devstack "stack" script
+  shell: chdir="~/devstack" creates="~/devstack/stack.sh.log" ./stack.sh

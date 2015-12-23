@@ -1,0 +1,9 @@
+---
+- name: Create main romana directory
+  file: path="{{ romana_dir }}/" mode=0770 state=directory owner=ubuntu group=ubuntu
+
+- name: Create romana subdirectories
+  file: path="{{ romana_dir }}/{{ item }}" mode=0770 state=directory owner=ubuntu group=ubuntu
+  with_items:
+    - bin
+    - etc

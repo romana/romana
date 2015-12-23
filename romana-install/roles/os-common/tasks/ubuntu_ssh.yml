@@ -1,0 +1,14 @@
+---
+- name: Install private key for ubuntu user
+  copy: src="~/.ssh/id_rsa" dest="~/.ssh/id_rsa" mode=0600
+
+- name: Install public key for ubuntu user
+  copy: src="~/.ssh/id_rsa.pub" dest="~/.ssh/id_rsa.pub" mode=0644
+
+- name: Add public key to authorised keys
+  authorized_key: user=ubuntu key="{{ item }}" state=present
+  with_file:
+    - "~/.ssh/id_rsa.pub"
+
+- name: Install known hosts for ubuntu user (github ssh)
+  copy: src="known_hosts" dest="~/.ssh/known_hosts" mode=0644

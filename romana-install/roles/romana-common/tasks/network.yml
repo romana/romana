@@ -1,0 +1,21 @@
+---
+- shell: /sbin/ip link show romana-gw 2>/dev/null
+  register: gw
+  ignore_errors: True
+
+- name: Create romana gateway
+  shell: "{{ item }}"
+  with_items:
+    - /sbin/ip link add romana-gw type dummy
+    - /sbin/ip link set romana-gw up
+    - /sbin/ip addr add {{ romana[ec2_tag_aws_cloudformation_logical_id].gateway }}/16 dev romana-gw
+  when: gw.rc != 0
+
+- name: UDP Checksum fix
+  shell: if ! /sbin/iptables -C {{ item }}; then /sbin/iptables -A {{ item }}; fi
+  with_items:
+    - POSTROUTING -t mangle -p udp --dport 68 -j CHECKSUM --checksum-fill
+
+- name: Enable kernel proxy_arp setting
+  shell: if [[ $(sysctl -n net.ipv4.conf.all.proxy_arp) != "1" ]]; then sysctl net.ipv4.conf.all.proxy_arp=1; fi
+

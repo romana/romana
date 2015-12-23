@@ -1,0 +1,42 @@
+diff --git a/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py b/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py
+index 04898ac..0317d46 100644
+--- a/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py
++++ b/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py
+@@ -788,6 +788,9 @@ class SetAdvancedAction(workflows.Action):
+         required=False, help_text=_("Configure OpenStack to write metadata to "
+                                     "a special configuration drive that "
+                                     "attaches to the instance when it boots."))
++    romana_segment = forms.CharField(
++        label=_("Romana Network Segment"), required=False,
++        help_text=_("Name of network segment to create the instance within."))
+ 
+     def __init__(self, request, context, *args, **kwargs):
+         super(SetAdvancedAction, self).__init__(request, context,
+@@ -818,7 +821,7 @@ class SetAdvancedAction(workflows.Action):
+ 
+ class SetAdvanced(workflows.Step):
+     action_class = SetAdvancedAction
+-    contributes = ("disk_config", "config_drive",)
++    contributes = ("disk_config", "config_drive", "romana_segment")
+ 
+     def prepare_action_context(self, request, context):
+         context = super(SetAdvanced, self).prepare_action_context(request,
+@@ -929,6 +932,8 @@ class LaunchInstance(workflows.Workflow):
+                                                   context['network_id'],
+                                                   context['profile_id'])
+ 
++        meta = {"romanaSegment": context.get('network_segment', 'default')}
++
+         try:
+             api.nova.server_create(request,
+                                    context['name'],
+@@ -944,7 +949,8 @@ class LaunchInstance(workflows.Workflow):
+                                    instance_count=int(context['count']),
+                                    admin_pass=context['admin_pass'],
+                                    disk_config=context.get('disk_config'),
+-                                   config_drive=context.get('config_drive'))
++                                   config_drive=context.get('config_drive'),
++                                   meta=meta)
+             return True
+         except Exception:
+             if port_profiles_supported:

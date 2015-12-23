@@ -1,0 +1,3 @@
+---
+- name: Update ubuntu profile
+  patch: src="ubuntu_profile_add_openrc.patch" basedir="/home/ubuntu"

@@ -1,0 +1,25 @@
+---
+
+- name: Patch in Horizon/UI changes
+  patch: src="dashboard_romana_segment.patch" basedir="/opt/stack/horizon" strip=1
+  register: p
+
+- name: Restart Web Server
+  become: true
+  become_user: root
+  service: name="apache2" state="restarted"
+  when: p.changed
+
+- name: Overwrite /etc/hosts
+  become: true
+  become_user: root
+  copy: src="romana-hosts" dest="/etc/hosts" mode=0644
+
+- name: Install romana post-install script
+  template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755
+  
+- name: Execute romana post-install script
+  shell: /var/tmp/romana-post-install.sh
+  # This is done as a shell script because doing shell commands in ansible
+  # that contain precise quotes and JSON data is .. difficult
+  # and hard to maintain.

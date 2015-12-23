@@ -1,0 +1,11 @@
+---
+- name: Perform a "safe" upgrade
+  apt: update_cache=yes cache_valid_time=3600 upgrade=safe
+
+- name: Install additional packages
+  apt: pkg={{ item }} state=latest
+  with_items:
+    - git
+    - python-boto
+    - python-pip
+    - python-virtualenv

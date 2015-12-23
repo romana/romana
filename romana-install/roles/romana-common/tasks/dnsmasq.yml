@@ -1,0 +1,20 @@
+---
+- name: Install base dnsmasq (for dependencies)
+  apt: pkg="{{ item }}"
+  with_items:
+    - dnsmasq-base
+    - libnettle4
+    - libhogweed2
+
+- name: Fetch calico modified dnsmasq
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/dnsmasq-calico" dest="{{ romana_dir }}/bin/dnsmasq-calico" mode=0755
+
+- name: Create /etc/ethers
+  file: path="/etc/ethers" state="touch" mode=0644
+
+- name: Create dnsmasq-calico upstart service
+  template: src="dnsmasq-calico.conf" dest="/etc/init/dnsmasq-calico.conf" mode=0644
+
+- name: Enable dnsmasq-calico
+  service: name="dnsmasq-calico" state="started"
+  

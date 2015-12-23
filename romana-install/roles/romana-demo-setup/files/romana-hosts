@@ -1,0 +1,14 @@
+127.0.0.1 localhost ip-192-168-0-10
+192.168.0.10 ip-192-168-0-10
+192.168.0.11 ip-192-168-0-11
+192.168.0.12 ip-192-168-0-12
+192.168.0.13 ip-192-168-0-13
+192.168.0.14 ip-192-168-0-14
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts

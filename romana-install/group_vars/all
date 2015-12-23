@@ -1,0 +1,18 @@
+devstack_name: "{{ ansible_env.USER }}"
+devstack_compute_nodes: 1
+
+devstack_password: "secrete"
+devstack_controller: "192.168.0.10"
+devstack_service_token: "eb24cc1eb0036c7971237850c767d9f6bae017a3"
+
+romana_dir: "/home/ubuntu/romana"
+romana_branch: "master"
+nw_romana_branch: "odwork"
+
+region: "us-west-1"
+key_name: "shared-key-1"
+# Devstack can install on "medium" or "large" instances, not "micro"
+instance_type: "t2.medium"
+# Deployment currently targets Ubuntu 14.04 LTS 
+controller_image: "ami-df6a8b9b"
+compute_image: "ami-df6a8b9b"
