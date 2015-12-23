@@ -2,9 +2,7 @@
   connection: local
   tasks:
     - name: Check for ec2_id_rsa
-      stat: path="~/.ssh/ec2_id_rsa"
-      register: st
-      failed_when: not (st.stat.exists and st.stat.mode == "0600")
+      file: path="~/.ssh/ec2_id_rsa" state=file mode=0600
     - name: Add Controller host(s)
       add_host: name="{{ item }}" groups="controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_{{devstack_name}}_controller"] | default([])
