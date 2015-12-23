@@ -47,7 +47,7 @@ Connection to github.com closed.
 
 Check out Romana repository.
 ```bash
-git clone https://github.com/romana/romana
+git clone git@github.com:romana/romana
 ```
 
 Run the installer. This will create the Devstack cluster, install and activate Romana Cloud-Native tools.
