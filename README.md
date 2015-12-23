@@ -11,11 +11,10 @@ Before you start, you will need to install the appropriate tools, and configure 
 
 ### Tools
 
-This setup requires ansible v1.9.3+, so for Ubuntu, you will need to add this PPA (Personal Package Archive).
+This setup requires ansible v1.9.3+ and boto. It is generally best to install these via python's ``pip`` tool.
 ```bash
-sudo add-apt-repository ppa:ansible/ansible
-sudo apt-get update
-sudo apt-get install ansible python-boto awscli
+sudo apt-get install git python-pip python-dev
+sudo pip install ansible boto awscli
 ```
 
 Copy your EC2 SSH key into the expected location.
