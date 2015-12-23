@@ -13,7 +13,7 @@ Before you start, you will need to install the appropriate tools, and configure 
 
 This setup requires ansible v1.9.3+ and boto. It is generally best to install these via python's ``pip`` tool.
 ```bash
-sudo apt-get install git python-pip
+sudo apt-get install git python-pip python-dev
 sudo pip install ansible boto awscli
 ```
 
