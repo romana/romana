@@ -25,7 +25,7 @@ index 04898ac..0317d46 100644
                                                    context['network_id'],
                                                    context['profile_id'])
  
-+        meta = {"romanaSegment": context.get('network_segment', 'default')}
++        meta = {"romanaSegment": context.get('romana_segment', 'default')}
 +
          try:
              api.nova.server_create(request,
