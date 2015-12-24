@@ -23,7 +23,6 @@
     - stack-controller
     - romana-common
     - romana-master
-    - romana-agent
 
 - hosts: computes 
   connection: ssh
@@ -31,9 +30,18 @@
     - os-common
     - stack-compute
     - romana-common
-    - romana-agent
 
 - hosts: controllers
   connection: ssh
   roles:
     - romana-demo-setup
+
+- hosts: controllers
+  connection: ssh
+  roles:
+    - romana-agent
+
+- hosts: computes
+  connection: ssh
+  roles:
+    - romana-agent
