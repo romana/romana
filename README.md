@@ -55,6 +55,10 @@ cd romana/romana-install
 ./romana-setup
 ```
 
+The EC2 installation takes 30-40 min to complete (on t2.medium instances) and creates an OpenStack DevStack cluster (Liberty release) with a single Controller Node and up to 4 Compute Nodes. Each OpenStack Node runs on a dedicated EC2 instance. Romana installs its OpenStack ML2 and IPAM drivers and creates a Romana router gateway interface on each Compute Node.
+
+Once installed, you can perform a variety of checks and experiments on your own. See the [Wiki](https://github.com/romana/romana/wiki) for details.
+
 To uninstall, use the 'uninstall' subcommand.
 ```bash
 ./romana-setup uninstall
