@@ -1,5 +1,5 @@
 diff --git a/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py b/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py
-index 04898ac..0317d46 100644
+index 04898ac..ad43990 100644
 --- a/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py
 +++ b/openstack_dashboard/dashboards/project/instances/workflows/create_instance.py
 @@ -788,6 +788,9 @@ class SetAdvancedAction(workflows.Action):
@@ -21,16 +21,19 @@ index 04898ac..0317d46 100644
  
      def prepare_action_context(self, request, context):
          context = super(SetAdvanced, self).prepare_action_context(request,
-@@ -929,6 +932,8 @@ class LaunchInstance(workflows.Workflow):
+@@ -928,6 +931,11 @@ class LaunchInstance(workflows.Workflow):
+             nics = self.set_network_port_profiles(request,
                                                    context['network_id'],
                                                    context['profile_id'])
- 
-+        meta = {"romanaSegment": context.get('network_segment', 'default')}
++        romana_segment = context.get('romana_segment', 'default')
++        if romana_segment == "":
++            romana_segment = 'default'
 +
++        meta = {"romanaSegment": romana_segment}
+ 
          try:
              api.nova.server_create(request,
-                                    context['name'],
-@@ -944,7 +949,8 @@ class LaunchInstance(workflows.Workflow):
+@@ -944,7 +952,8 @@ class LaunchInstance(workflows.Workflow):
                                     instance_count=int(context['count']),
                                     admin_pass=context['admin_pass'],
                                     disk_config=context.get('disk_config'),
