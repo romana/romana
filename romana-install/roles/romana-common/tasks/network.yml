@@ -16,6 +16,8 @@
   with_items:
     - POSTROUTING -t mangle -p udp --dport 68 -j CHECKSUM --checksum-fill
 
+# Ensure ARP requests/replies can be handled across interfaces.
+# This is generally VMs behind TAP interfaces can reach the host/gw.
 - name: Enable kernel proxy_arp setting
   shell: if [[ $(sysctl -n net.ipv4.conf.all.proxy_arp) != "1" ]]; then sysctl net.ipv4.conf.all.proxy_arp=1; fi
 
