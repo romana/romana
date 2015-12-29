@@ -1,4 +1,9 @@
 ---
+
+# These keys are installed so that the EC2 instance can access
+# the github repositories of the user doing the installation.
+# This is necessary for accessing the (currently) private repositories
+# that contain Romana software.
 - name: Install private key for ubuntu user
   copy: src="~/.ssh/id_rsa" dest="~/.ssh/id_rsa" mode=0600
 
