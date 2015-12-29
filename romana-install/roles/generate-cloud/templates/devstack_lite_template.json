@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Devstack Environment",
+  "Description": "Romana Devstack Environment",
   "Metadata": {
     "AWS::CloudFormation::Designer": {
       "3ec442c6-29fd-45ad-8ff2-ecb2e3dce920": {
