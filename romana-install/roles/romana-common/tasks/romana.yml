@@ -1,4 +1,6 @@
 ---
+# These directories are created in this "commmon" task because they are shared by other
+# tasks (romana-master, romana-agent).
 - name: Create main romana directory
   file: path="{{ romana_dir }}/" mode=0770 state=directory owner=ubuntu group=ubuntu
 
