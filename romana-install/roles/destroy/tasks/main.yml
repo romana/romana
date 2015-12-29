@@ -1,4 +1,4 @@
 ---
-- name: Destroy Stack with Cloudformation
+- name: Destroy Stack with Cloudformation. This may take a couple of minutes.
   cloudformation: stack_name="{{devstack_name}}" region={{region}} state=absent template="devstack_lite.json"
   register: stack

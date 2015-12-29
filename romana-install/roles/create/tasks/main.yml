@@ -1,5 +1,5 @@
 ---
-- name: Create Stack with Cloudformation
+- name: Create Stack with Cloudformation. This may take around 5 minutes.
   cloudformation: stack_name="{{devstack_name}}" region={{region}} disable_rollback=true template="devstack_lite.json"
   args:
      template_parameters:
