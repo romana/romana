@@ -2,5 +2,5 @@
 - hosts: localhost
   connection: local
   roles:
-    - generate-cloud
+    - generate-cf-template
     - create
