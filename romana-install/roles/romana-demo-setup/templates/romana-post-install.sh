@@ -27,6 +27,11 @@ fi
 # Suppress output
 exec > /dev/null
 
+# This script currently uses the REST APIs for topology and tenant to configure the hosts/tenants/segments
+# used in a simple setup. In the future, this may be replaced with a 'romana' command-line tool.
+# By using the REST API at this stage, implementation details can be changed without affecting these installation steps,
+# eg: replacing mysql with a distributed KV store.
+
 # Create hosts
 # TODO: Generate this from variables
 curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-10", "ip": "192.168.0.10", "romana_ip": "10.0.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
