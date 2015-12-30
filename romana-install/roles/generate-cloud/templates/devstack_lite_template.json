@@ -656,7 +656,7 @@
       }
     },
 {% endfor %}
-    "AllowSSH": {
+    "CommonIncomingRules": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Allow ICMP, SSH (Port 22)",
@@ -673,15 +673,15 @@
           },
           {
             "CidrIp": "0.0.0.0/0",
-            "FromPort": 22,
-            "ToPort": 22,
+            "FromPort": "22",
+            "ToPort": "22",
             "IpProtocol": "tcp"
           }
         ],
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-ssh"
+            "Value": "{{ devstack_name }}-sg-common"
           }
         ],
         "VpcId": {
@@ -694,16 +694,24 @@
         }
       }
     },
-    "AllowHTTP": {
+    "ControllerIncomingRules": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Allow HTTP (Port 80)",
-        "SecurityGroupIngress": {
-          "CidrIp": "0.0.0.0/0",
-          "FromPort": 80,
-          "ToPort": 80,
-          "IpProtocol": "tcp"
-        },
+        "SecurityGroupIngress": [
+	  {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80,
+            "ToPort": 80,
+            "IpProtocol": "tcp"
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": "6080",
+            "ToPort": "6080",
+            "IpProtocol": "tcp"
+          }
+	],
         "Tags": [
           {
             "Key": "Name",
@@ -801,10 +809,10 @@
         },
         "GroupSet": [
           {
-            "Ref": "AllowHTTP"
+            "Ref": "ControllerIncomingRules"
           },
           {
-            "Ref": "AllowSSH"
+            "Ref": "CommonIncomingRules"
           }
         ],
         "Tags": [
@@ -831,7 +839,7 @@
         },
         "GroupSet": [
           {
-            "Ref": "AllowSSH"
+            "Ref": "CommonIncomingRules"
           }
         ],
         "Tags": [
