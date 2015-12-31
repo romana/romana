@@ -17,5 +17,5 @@
     - POSTROUTING -t mangle -p udp --dport 68 -j CHECKSUM --checksum-fill
 
 - name: Enable kernel proxy_arp setting
-  shell: if [[ $(sysctl -n net.ipv4.conf.all.proxy_arp) != "1" ]]; then sysctl net.ipv4.conf.all.proxy_arp=1; fi
+  shell: if [ $(sysctl -n net.ipv4.conf.all.proxy_arp) != "1" ]; then sysctl net.ipv4.conf.all.proxy_arp=1; fi
 
