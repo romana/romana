@@ -575,6 +575,10 @@
             "Value": "{{ devstack_name }}-controller"
           },
           {
+            "Key": "StackHost",
+            "Value": "Controller"
+          },
+          {
             "Key": "automation_group",
             "Value": "{{ devstack_name }}_controller"
           }
@@ -628,6 +632,10 @@
           {
             "Key": "Name",
             "Value": "{{ devstack_name }}-compute{{ node.suffix }}"
+          },
+          {
+            "Key": "StackHost",
+            "Value": "Compute{{ node.suffix }}"
           },
           {
             "Key": "automation_group",
