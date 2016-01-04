@@ -27,10 +27,8 @@ fi
 # Suppress output
 exec > /dev/null
 
-# This script currently directly uses the REST API of the Romana Topology and Tenant services to configure the hosts/tenants/segments
-# used in a simple setup. In the future, this may be replaced with a 'romana' command-line tool.
-# By using the REST API at this stage, implementation details can be changed without affecting these installation steps,
-# eg: replacing mysql with a distributed KV store.
+# This script currently directly uses the REST API of the Romana Topology and Tenant services
+# to configure the hosts/tenants/segments used in a simple setup.
 
 # Create hosts
 # TODO: Generate this from variables
