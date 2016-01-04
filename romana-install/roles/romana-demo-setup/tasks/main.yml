@@ -13,7 +13,7 @@
   service: name="apache2" state="restarted"
   when: p.changed
 
-# Hosts across the group need to be in /etc/hosts
+# Hosts across the cluster need to be in /etc/hosts
 # for the Romana "Mech Driver" to reach them.
 # This adds the hostnames into /etc/hosts
 - name: Overwrite /etc/hosts
