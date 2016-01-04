@@ -14,6 +14,8 @@
 
 - name: Create dnsmasq-calico upstart service
   template: src="dnsmasq-calico.conf" dest="/etc/init/dnsmasq-calico.conf" mode=0644
+  # Note: this uses 255.255.0.0 as the netmask for dnsmasq, as each host is managing a 10.x/16 subnet.
+  # It will be necessary to change the mask in this config if a different address structure is being used.
 
 - name: Enable dnsmasq-calico
   service: name="dnsmasq-calico" state="started"

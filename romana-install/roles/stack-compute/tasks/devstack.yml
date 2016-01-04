@@ -5,5 +5,5 @@
 - name: Install compute local.conf
   template: src=local.conf dest="~/devstack/local.conf"
 
-- name: Run devstack "stack" script
+- name: Run devstack "stack" script. This may take around 10 minutes.
   shell: chdir="~/devstack" creates="~/devstack/stack.sh.log" ./stack.sh

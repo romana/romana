@@ -1,15 +1,21 @@
 ---
 
+# Add a new UI element into Advanced Options.
+# This is used when creating instances via Horizon.
 - name: Patch in Horizon/UI changes
   patch: src="dashboard_romana_segment.patch" basedir="/opt/stack/horizon" strip=1
   register: p
 
+# Restart Horizon (by restarting the webserver)
 - name: Restart Web Server
   become: true
   become_user: root
   service: name="apache2" state="restarted"
   when: p.changed
 
+# Hosts across the cluster need to be in /etc/hosts
+# for the Romana "Mech Driver" to reach them.
+# This adds the hostnames into /etc/hosts
 - name: Overwrite /etc/hosts
   become: true
   become_user: root

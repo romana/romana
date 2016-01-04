@@ -2,9 +2,11 @@
 - name: Install romana-root upstart service
   template: src="romana-root.conf" dest="/etc/init/romana-root.conf" mode=0644
 
+# The "root" service needs to be launched so that the first-run can be performed
 - name: Launch romana-root
   service: name="romana-root" state="started"
 
+# The first-run is required for these services to create the database schema.
 - name: Execute first-run for other services
   shell: "{{ romana_dir }}/bin/{{ item }} -overwriteSchema -rootUrl http://{{ devstack_controller }}:9600"
   with_items:
@@ -19,6 +21,7 @@
     - tenant
     - topology
 
+# All services are installed, and dependent on the "root" service.
+# To activate them, a restart of the root service brings them all up.
 - name: Restart romana-root
   service: name="romana-root" state="restarted"
-  # This brings up the other services also
