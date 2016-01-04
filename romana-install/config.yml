@@ -4,10 +4,10 @@
     - name: Check for ec2_id_rsa
       file: path="~/.ssh/ec2_id_rsa" state=file mode=0600
     - name: Add Controller host(s)
-      add_host: name="{{ item }}" groups="controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
+      add_host: name="{{ item }}" groups="stack_nodes,controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_{{devstack_name}}_controller"] | default([])
     - name: Add Compute host(s)
-      add_host: name="{{ item }}" groups="computes" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
+      add_host: name="{{ item }}" groups="stack_nodes,computes" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_{{devstack_name}}_compute"] | default([])
     - name: Wait for SSH to be ready (controllers)
       wait_for: host="{{ item }}" port=22
@@ -16,10 +16,15 @@
       wait_for: host="{{ item }}" port=22
       with_items: groups.computes | default([])
 
-- hosts: controllers
+
+- hosts: stack_nodes
   connection: ssh
   roles:
     - os-common
+
+- hosts: controllers
+  connection: ssh
+  roles:
     - stack-controller
     - romana-common
     - romana-master
@@ -27,7 +32,6 @@
 - hosts: computes 
   connection: ssh
   roles:
-    - os-common
     - stack-compute
     - romana-common
 
@@ -36,12 +40,7 @@
   roles:
     - romana-demo-setup
 
-- hosts: controllers
-  connection: ssh
-  roles:
-    - romana-agent
-
-- hosts: computes
+- hosts: stack_nodes
   connection: ssh
   roles:
     - romana-agent

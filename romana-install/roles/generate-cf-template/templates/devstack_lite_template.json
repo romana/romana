@@ -593,6 +593,10 @@ under the License.
             "Value": "{{ devstack_name }}-controller"
           },
           {
+            "Key": "StackHost",
+            "Value": "Controller"
+          },
+          {
             "Key": "automation_group",
             "Value": "{{ devstack_name }}_controller"
           }
@@ -648,6 +652,10 @@ under the License.
             "Value": "{{ devstack_name }}-compute{{ node.suffix }}"
           },
           {
+            "Key": "StackHost",
+            "Value": "Compute{{ node.suffix }}"
+          },
+          {
             "Key": "automation_group",
             "Value": "{{ devstack_name }}_compute"
           }
@@ -674,7 +682,7 @@ under the License.
       }
     },
 {% endfor %}
-    "AllowSSH": {
+    "CommonIncomingRules": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Allow ICMP, SSH (Port 22)",
@@ -691,15 +699,15 @@ under the License.
           },
           {
             "CidrIp": "0.0.0.0/0",
-            "FromPort": 22,
-            "ToPort": 22,
+            "FromPort": "22",
+            "ToPort": "22",
             "IpProtocol": "tcp"
           }
         ],
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-ssh"
+            "Value": "{{ devstack_name }}-sg-common"
           }
         ],
         "VpcId": {
@@ -712,16 +720,24 @@ under the License.
         }
       }
     },
-    "AllowHTTP": {
+    "ControllerIncomingRules": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Allow HTTP (Port 80)",
-        "SecurityGroupIngress": {
-          "CidrIp": "0.0.0.0/0",
-          "FromPort": 80,
-          "ToPort": 80,
-          "IpProtocol": "tcp"
-        },
+        "SecurityGroupIngress": [
+	  {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80,
+            "ToPort": 80,
+            "IpProtocol": "tcp"
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": "6080",
+            "ToPort": "6080",
+            "IpProtocol": "tcp"
+          }
+	],
         "Tags": [
           {
             "Key": "Name",
@@ -819,10 +835,10 @@ under the License.
         },
         "GroupSet": [
           {
-            "Ref": "AllowHTTP"
+            "Ref": "ControllerIncomingRules"
           },
           {
-            "Ref": "AllowSSH"
+            "Ref": "CommonIncomingRules"
           }
         ],
         "Tags": [
@@ -849,7 +865,7 @@ under the License.
         },
         "GroupSet": [
           {
-            "Ref": "AllowSSH"
+            "Ref": "CommonIncomingRules"
           }
         ],
         "Tags": [
