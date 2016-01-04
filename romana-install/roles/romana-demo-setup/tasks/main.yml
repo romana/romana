@@ -1,7 +1,7 @@
 ---
 
 # Add a new UI element into Advanced Options.
-# This is when creating instances via Horizon.
+# This is used when creating instances via Horizon.
 - name: Patch in Horizon/UI changes
   patch: src="dashboard_romana_segment.patch" basedir="/opt/stack/horizon" strip=1
   register: p
