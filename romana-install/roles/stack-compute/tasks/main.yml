@@ -1,5 +1,5 @@
 ---
-- include: workarounds.yml
+- include: pip_cache.yml
   become: true
   become_user: root
 
