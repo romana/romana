@@ -883,6 +883,7 @@ under the License.
     },
 {% endfor %}
     "InternetRoute": {
+      "DependsOn": "InternetGatewayAttachment",
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
@@ -915,7 +916,7 @@ under the License.
         }
       }
     },
-    "VGWA46OPO": {
+    "InternetGatewayAttachment": {
       "Type": "AWS::EC2::VPCGatewayAttachment",
       "Properties": {
         "InternetGatewayId": {
