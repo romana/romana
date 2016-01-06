@@ -1,0 +1,13 @@
+diff --git a/nova/virt/driver.py b/nova/virt/driver.py
+index 7ad53bf..8db7232 100644
+--- a/nova/virt/driver.py
++++ b/nova/virt/driver.py
+@@ -1135,7 +1135,7 @@ class ComputeDriver(object):
+ 
+     def deallocate_networks_on_reschedule(self, instance):
+         """Does the driver want networks deallocated on reschedule?"""
+-        return False
++        return True
+ 
+     def macs_for_instance(self, instance):
+         """What MAC addresses must this instance have?
