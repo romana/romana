@@ -689,7 +689,11 @@ under the License.
         "SecurityGroupIngress": [
           {
             "IpProtocol": "-1",
-            "CidrIp": "192.168.0.0/24"
+            "CidrIp": "192.168.0.0/16"
+          },
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "10.0.0.0/8"
           },
           {
             "IpProtocol": "icmp",
