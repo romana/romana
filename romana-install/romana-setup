@@ -16,12 +16,21 @@
 # under the License.
 
 usage() {
+	echo ""
 	echo "romana-setup: executes the ansible playbooks for installing romana"
 	echo "Usage: romana-setup [-t targetname] [action]"
 	echo "       romana-setup [-t targetname] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
+	echo ""
 	echo "Targets: aws (default), virtualbox"
 	echo "Actions: install (default), uninstall"
+	echo ""
+	echo "Example: ./romana-setup install -e devstack_name=xyzdemo"
+	echo "Example: ./romana-setup uninstall -e devstack_name=xyzdemo"
+	echo "Example: ./romana-setup install -e devstack_name=xyzdemo \\"
+	echo "           romana_core_branch=master \\"
+	echo "           romana_networking_branch=stable/liberty"
+	echo ""
 }
 
 # Change to romana-setup directory
