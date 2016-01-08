@@ -73,6 +73,26 @@ These can also be passed to the romana-setup command as Ansible extra-options, e
 
 Note: the name should be one word, and only contain letters and numbers. (No hyphens, underscores, etc).
 
+### Use
+
+- connect to your host: `ssh -i ~/.ssh/ec2_id_rsa ubuntu@controller-ip`
+- launch an instance using Horizon:
+  * Open http://controller-ip/
+  * Log into the dashboard using username `admin` and password `secrete` (or the password you configured before installation
+  * Select `Instances` from the `Project/Compute` sidebar
+  * Click the `Launch Instance` button
+  * Provide the required details
+  * Optionally, select the Advanced tab and specify a segment name in the `Romana Network Segment` field
+  * Click the Launch button
+- launch an instance using command-line: `nova boot --flavor m1.tiny --image cirros-0.3.4-x86_64-uec --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=default instance-name`
+- connect to the instance: `ssh cirros@instance-ip`
+- install an ubuntu image:
+  * Create a new flavor with RAM:512MB, Disk: 3GB, VCPUs: 1: `nova flavor-create m1.smallish auto 512 3 1`
+  * Download a suitable image: `wget https://cloud-images.ubuntu.com/releases/14.04.3/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img`
+  * Create image: `glance image-create --visibility public --disk-format qcow2 --container-format bare --name "ubuntu" < ubuntu-14.04-server-cloudimg-amd64-disk1.img`
+
+See also: [Try Romana Now](http://romana.io/try_romana/#what-you-can-do)
+
 ## Romana on Virtualbox VMs
 
 Under development.
