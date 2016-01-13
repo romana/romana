@@ -78,7 +78,7 @@ Note: the name should be one word, and only contain letters and numbers. (No hyp
 - connect to your host: `ssh -i ~/.ssh/ec2_id_rsa ubuntu@controller-ip`
 - launch an instance using Horizon:
   * Open http://controller-ip/
-  * Log into the dashboard using username `admin` and password `secrete` (or the password you configured before installation
+  * Log into the dashboard using username `admin` and password `secrete` (or the password you configured before installation)
   * Select `Instances` from the `Project/Compute` sidebar
   * Click the `Launch Instance` button
   * Provide the required details
@@ -90,6 +90,9 @@ Note: the name should be one word, and only contain letters and numbers. (No hyp
   * Create a new flavor with RAM:512MB, Disk: 3GB, VCPUs: 1: `nova flavor-create m1.smallish auto 512 3 1`
   * Download a suitable image: `wget https://cloud-images.ubuntu.com/releases/14.04.3/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img`
   * Create image: `glance image-create --visibility public --disk-format qcow2 --container-format bare --name "ubuntu" < ubuntu-14.04-server-cloudimg-amd64-disk1.img`
+- Register a new host: on the controller, run `romana add-host <hostname> <host-ip> <romana-cidr> <agent-port>`
+- Add a new tenant: on the controller, run `romana create-tenant <tenant-name>`
+- Add a new segment: on the controller, run `romana add-segment <tenant-name> <segment-name>`
 
 See also: [Try Romana Now](http://romana.io/try_romana/#what-you-can-do)
 
