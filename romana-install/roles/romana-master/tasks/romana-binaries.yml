@@ -26,3 +26,8 @@
 - name: Install config file
   template: src="romana.conf.yml" dest="{{ romana_dir }}/etc/romana.conf.yml" mode=0644
 
+- file: path="/home/ubuntu/bin/" mode=0775 state=directory
+
+- name: Install romana tool
+  copy: src="../cmd/romana" dest="/home/ubuntu/bin/romana" mode=0775
+  
