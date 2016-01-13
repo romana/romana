@@ -1,0 +1,170 @@
+#!/bin/bash
+
+# Copyright (c) 2015 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
+# Usage subcommand.
+usage() {
+	echo "romana: command-line tool for Romana administratino"
+	echo "Usage: romana subcommmand [options]"
+	echo "       romana help subcommmand"
+	echo "Subcommands:"
+	echo "    add-host"
+	echo "    remove-host"
+	echo "    create-tenant"
+	echo "    delete-tenant"
+	echo "    add-segment"
+	echo "    remove-segment"
+}
+
+add_host() {
+	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
+		echo "romana add-host <hostname> <host-ip> <romana-cidr> <agent-port>"
+		return
+	fi
+	if (( $# != 4 )); then
+		echo "ERROR: expected 4 parameters, received $#"
+		return
+	fi
+	local hostname="$1" host_ip="$2" romana_cidr="$3" agent_port="$4"
+	# TODO: add validation for the parameters
+	post_data=$(printf '{"name": "%s", "ip": "%s", "romana_ip": "%s", "agent_port": %s}' "$hostname" "$host_ip" "$romana_cidr" "$agent_port")
+	topology_path="hosts"
+	echo "Sending request to '${topology_url}${topology_path}': '$post_data'"
+	curl -X POST -H "Content-Type: application/json" --data "$post_data" "${topology_url}${topology_path}"; printf "\n"
+}
+
+create_tenant() {
+	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
+		echo "romana create-tenant <tenant-name>"
+		return
+	fi
+	if (( $# != 1 )); then
+		echo "ERROR: expected 1 parameters, received $#"
+		return
+	fi
+	local tenant_name="$1"
+	# TODO: handle other types of tenants
+	echo "Resolving name to id in openstack"
+	if ! tenant_ref=$(openstack project show -f value -c id "$tenant_name"); then
+		echo "Unable to find name in openstack."
+		return
+	fi
+
+	post_data=$(printf '{"id": 0, "name": "%s"}' "$tenant_ref")
+	tenant_path="tenants"
+	echo "Sending request to '${tenant_url}${tenant_path}': '$post_data'"
+	curl -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tenant_path}"; printf "\n"
+}
+
+add_segment() {
+	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
+		echo "romana add-segment <tenant-name> <segment-name>"
+		return
+	fi
+	if (( $# != 2 )); then
+		echo "ERROR: expected 2 parameters, received $#"
+		return
+	fi
+	local tenant_name="$1" segment_name="$2"
+	# TODO: handle this without duplication
+	echo "Resolving name to id in openstack"
+	if ! tenant_ref=$(openstack project show -f value -c id "$tenant_name"); then
+		echo "Unable to find name in openstack."
+		return
+	fi
+	# TODO: see if we can change the URLs to allow names instead of internal IDs
+	tenant_id=$(mysql -N tenant <<< "SELECT id FROM tenants WHERE name='$tenant_ref';")
+	if ! [[ "$tenant_id" ]]; then
+		echo "Unable to find tenant id using tenant ref '$tenant_ref'"
+		return
+	fi
+
+	post_data=$(printf '{"id": 0, "name": "%s"}' "$segment_name")
+	tenant_path="tenants/$tenant_id/segments"
+	echo "Sending request to '${tenant_url}${tenant_path}': '$post_data'"
+	curl -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tenant_path}"; printf "\n"
+}
+
+# Show usage if no subcommand was provided
+if (( $# == 0 )); then
+	usage
+	exit 9
+fi
+
+# Undocumented options to set topology and tenant URLs
+tenant_url=http://192.168.0.10:9602/
+topology_url=http://192.168.0.10:9603/
+
+while [[ "$1" = -* ]]; do
+	case "$1" in
+		--tenant-url)
+			tenant_url="$2"
+			shift 2
+			;;
+		--tenant-url=*)
+			tenant_url="${1:13}"
+			shift
+			;;
+		--topology-url)
+			topology_url="$2"
+			shift 2
+			;;
+		--topology-url=*)
+			topology_url="${1:15}"
+			shift
+			;;
+		*)
+			# Silently ignore unrecognized parameter
+			shift
+			;;
+	esac
+done
+
+
+# Dispatch to subcommand
+case "$1" in
+	add-host)
+		shift
+		add_host "$@"
+		;;
+	remove-host)
+		echo "$1: Not implemented yet"
+		;;
+	create-tenant)
+		shift
+		create_tenant "$@"
+		;;
+	delete-tenant)
+		echo "$1: Not implemented yet"
+		;;
+	add-segment)
+		shift
+		add_segment "$@"
+		;;
+	remove-segment)
+		echo "$1: Not implemented yet"
+		;;
+	help)
+		usage
+		;;
+	*)
+		echo "Unknown subcommand '$1'"
+		usage
+		exit 1
+		;;
+esac
+
