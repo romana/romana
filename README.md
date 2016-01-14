@@ -1,13 +1,23 @@
 # The Romana Project
 
+Romana is a new Software Defined Network (SDN) solution specifically designed
+for the Cloud Native architectural style. The result of this focus is that
+Romana cloud networks are less expensive to build, easier to operate and
+deliver higher performance than cloud networks built using alternative SDN
+designs.
 
 # Getting Started
 
-To get started with Romana running on Devstack, some Ansible playbooks have been provided to automate the setup and deployment.
+To get started with Romana running on Devstack, some scripts and Ansible
+playbooks have been provided to automate the setup and deployment. These are
+located in this repository. They will access other repositories to download
+required pieces of the Romana system, as well as some binaries we have already
+pre-compiled for your convenience.
 
 ## Romana on Amazon EC2 Instances
 
-Before you start, you will need to install the appropriate tools, and configure SSH and AWS credentials.
+Before you start, you will need to install the appropriate tools, and configure
+SSH and AWS credentials.
 
 ### Tools
 
