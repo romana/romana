@@ -18,7 +18,7 @@
 
 # Usage subcommand.
 usage() {
-	echo "romana: command-line tool for Romana administratino"
+	echo "romana: command-line tool for Romana administration"
 	echo "Usage: romana <subcommmand> [options]"
 	echo "       romana <subcommmand> help"
 	echo "       romana [help]"
