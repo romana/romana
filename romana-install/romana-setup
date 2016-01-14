@@ -28,8 +28,9 @@ usage() {
 	echo "Example: ./romana-setup install -e devstack_name=xyzdemo"
 	echo "Example: ./romana-setup uninstall -e devstack_name=xyzdemo"
 	echo "Example: ./romana-setup install -e devstack_name=xyzdemo \\"
-	echo "           romana_core_branch=master \\"
-	echo "           romana_networking_branch=stable/liberty"
+	echo "           -e instance_type=t2.medium \\"
+	echo "           -e romana_core_branch=master \\"
+	echo "           -e romana_networking_branch=stable/liberty"
 	echo ""
 }
 
