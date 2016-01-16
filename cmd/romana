@@ -77,12 +77,12 @@ show_host() {
 	# For each hostname...
 	for i in "$@"; do
 		# Check that the host is in the list
-		len=$(jq -r '.[] | select(.name=="'"$i"'") | length' <<< "$response")
+		len=$(jq -r --arg host "$i" '.[] | select(.name==$host) | length' <<< "$response")
 		if (( len == 0 )); then
 			echo "Unable to find host '$i'"
 			continue
 		fi
-		read -r hostname host_ip romana_cidr agent_port _ < <(jq -r '.[] | select(.name=="'"$i"'") | "\(.name) \(.ip) \(.romana_ip) \(.agent_port)"' <<< "$response")
+		read -r hostname host_ip romana_cidr agent_port _ < <(jq -r --arg host "$i" '.[] | select(.name==$host) | "\(.name) \(.ip) \(.romana_ip) \(.agent_port)"' <<< "$response")
 		printf "%-20s %15s %18s %5d\n" "$hostname" "$host_ip" "$romana_cidr" "$agent_port"
 	done
 }
@@ -157,13 +157,13 @@ show_tenant() {
 			continue
 		fi
 		# Find the tenant with that id
-		len=$(jq -r '.[] | select(.Name=="'"$project"'") | length' <<< "$response")
+		len=$(jq -r --arg name "$project" '.[] | select(.Name==$name) | length' <<< "$response")
 		if (( len == 0 )); then
 			echo "Unable to find tenant '$project' ($i)"
 			continue
 		fi
 
-		read -r id tenant _ < <(jq -r '.[] | select(.Name=="'"$project"'") | "\(.Id) \(.Name)"' <<< "$response")
+		read -r id tenant _ < <(jq -r --arg name "$project" '.[] | select(.Name==$name) | "\(.Id) \(.Name)"' <<< "$response")
 
 		# Get the list of segments
 		if ! segment_list=$(curl -s -f -H "Content-Type: application/json" "${tenant_url}${tenant_path}/${id}/segments"); then
@@ -226,7 +226,7 @@ add_segment() {
 		echo "Unable to fetch tenants using URL '${tenant_url}${tenant_path}'"
 		return
 	fi
-	read -r tenant_id _ < <(jq -r '.[] | select(.Name=="'"$project"'") | "\(.Id)"' <<< "$response")
+	read -r tenant_id _ < <(jq -r --arg name "$project" '.[] | select(.Name==$name) | "\(.Id)"' <<< "$response")
 
 	if ! [[ "$tenant_id" ]]; then
 		echo "Unable to find tenant id using tenant ref '$project'"
