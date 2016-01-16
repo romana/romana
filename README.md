@@ -24,7 +24,7 @@ SSH and AWS credentials.
 This setup requires ansible v1.9.3+ and boto. It is generally best to install these via python's ``pip`` tool.
 ```bash
 sudo apt-get install git python-pip python-dev
-sudo pip install ansible boto awscli
+sudo pip install ansible==1.9.4 boto awscli
 ```
 
 Copy your EC2 SSH key into the expected location.
