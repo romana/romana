@@ -1,0 +1,4 @@
+---
+- name: "Generate Stack Summary"
+  template: src=stackinfo.txt dest=./stackinfo.txt
+

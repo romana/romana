@@ -16,7 +16,6 @@
       wait_for: host="{{ item }}" port=22
       with_items: groups.computes | default([])
 
-
 - hosts: stack_nodes
   connection: ssh
   roles:
@@ -44,3 +43,8 @@
   connection: ssh
   roles:
     - romana-agent
+
+- hosts: localhost
+  connection: local
+  roles:
+    - stack-summary
