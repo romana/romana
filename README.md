@@ -47,7 +47,7 @@ Default region name [None]: us-west-1
 Default output format [None]: 
 ```
 Note: The credentials provided should permit the creation of AWS resources such as EC2 instances, VPCs and so on.
-Ensure the IAM role has the appropriate permissions for this.
+Ensure the IAM user or role for these credentials has permission to create these AWS resources.
 
 Note: The installation currently expects region ``us-west-1``, and might not work in other regions.
 This will be addressed in the future.
