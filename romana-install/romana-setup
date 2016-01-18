@@ -100,7 +100,8 @@ case "$target" in
 		case "$action" in
 			install)
 				ansible-playbook "$@" -i /dev/null create.yml &&
-					ansible-playbook "$@" -i ec2.py config.yml
+					ansible-playbook "$@" -i ec2.py config.yml &&
+					[[ -f "stackinfo.txt" ]] && cat stackinfo.txt
 				;;
 			uninstall)
 				ansible-playbook "$@" -i /dev/null destroy.yml

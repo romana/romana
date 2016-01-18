@@ -1,0 +1,17 @@
+Devstack Summary
+================
+
+Controller
+----------
+{% for ip in groups["tag_automation_group_" + devstack_name + "_controller"] %}
+IP: {{ ip }}
+http://{{ ip }}
+(username: admin, password: {{ devstack_password }})
+ssh -i ~/.ssh/ec2_id_rsa ubuntu@{{ ip }}
+{% endfor %}
+
+Other Nodes
+-----------
+{% for ip in groups["tag_automation_group_" + devstack_name + "_compute"] %}
+ssh -i ~/.ssh/ec2_id_rsa ubuntu@{{ ip }}
+{% endfor %}
