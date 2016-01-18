@@ -32,24 +32,23 @@ exec > /dev/null
 
 # Create hosts
 # TODO: Generate this from variables
-curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-10", "ip": "192.168.0.10", "romana_ip": "10.0.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
-curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-11", "ip": "192.168.0.11", "romana_ip": "10.1.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
-curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-12", "ip": "192.168.0.12", "romana_ip": "10.2.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
-curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-13", "ip": "192.168.0.13", "romana_ip": "10.3.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
-curl -X POST -H "Content-Type: application/json" --data '{"name": "ip-192-168-0-14", "ip": "192.168.0.14", "romana_ip": "10.4.0.0/16", "agent_port": 9604 }' http://{{ devstack_controller }}:9603/hosts
+romana add-host ip-192-168-0-10 192.168.0.10 10.0.0.0/16 9604
+romana add-host ip-192-168-0-11 192.168.0.11 10.1.0.0/16 9604
+romana add-host ip-192-168-0-12 192.168.0.12 10.2.0.0/16 9604
+romana add-host ip-192-168-0-13 192.168.0.13 10.3.0.0/16 9604
+romana add-host ip-192-168-0-14 192.168.0.14 10.4.0.0/16 9604
 
 # Create tenants and segments
 # TODO: Remove the id:0 bits once master branch has fixed its JSON handling
 #  -- admin
-curl -X POST -H 'Content-Type: application/json' --data "$(printf '{"id": 0, "name": "%s"}' $(openstack project show -f value -c id admin))" http://{{ devstack_controller }}:9602/tenants
-curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "default"}' http://{{ devstack_controller }}:9602/tenants/1/segments
-curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s1"}' http://{{ devstack_controller }}:9602/tenants/1/segments
-curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s2"}' http://{{ devstack_controller }}:9602/tenants/1/segments
-#  -- demo
-curl -X POST -H "Content-Type: application/json" --data "$(printf '{"id": 0, "name": "%s"}' $(openstack project show -f value -c id demo))" http://{{ devstack_controller }}:9602/tenants
-curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "default"}' http://{{ devstack_controller }}:9602/tenants/2/segments
-curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s1"}' http://{{ devstack_controller }}:9602/tenants/2/segments
-curl -X POST -H "Content-Type: application/json" --data '{"id": 0, "name": "s2"}' http://{{ devstack_controller }}:9602/tenants/2/segments
+romana create-tenant admin
+romana add-segment admin default
+romana add-segment admin s1
+romana add-segment admin s2
+romana create-tenant demo
+romana add-segment demo default
+romana add-segment demo s1
+romana add-segment demo s2
 
 # Create romana network and subnet
 if ! neutron net-show romana 2>/dev/null; then
