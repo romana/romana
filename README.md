@@ -108,9 +108,6 @@ Note: the name should be one word, and only contain letters and numbers. (No hyp
   * Optionally, select the Advanced tab and specify a segment name in the `Romana Network Segment` field
   * Click the Launch button
 - launch an instance using command-line: `nova boot --flavor m1.tiny --image cirros-0.3.4-x86_64-uec --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=default instance-name`
-- list your instances
-  * Use `nova list` to see a summary of your instances
-  * The default tenant is `admin`. You can change to `demo` using this command: `. "$HOME/devstack/openrc" admin demo`
 - connect to the instance: `ssh cirros@instance-ip`
 - install an ubuntu image:
   * Create a new flavor with RAM:512MB, Disk: 3GB, VCPUs: 1: `nova flavor-create m1.smallish auto 512 3 1`
