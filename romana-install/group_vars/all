@@ -15,5 +15,5 @@ key_name: "shared-key-1"
 # Devstack can install on "medium" or "large" instances, not "micro"
 instance_type: "t2.large"
 # Deployment currently targets Ubuntu 14.04 LTS 
-controller_image: "ami-df6a8b9b"
-compute_image: "ami-df6a8b9b"
+controller_image: "ami-bf3ec1fb"
+compute_image: "ami-bf3ec1fb"
