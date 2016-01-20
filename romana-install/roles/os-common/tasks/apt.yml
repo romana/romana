@@ -9,3 +9,11 @@
     - python-boto
     - python-pip
     - python-virtualenv
+
+- name: Remove conflicting packages
+  apt: pkg={{ item }} state=absent
+  with_items:
+    - python-six
+    - python-yaml
+    - python-openssl
+    - python-json-pointer
