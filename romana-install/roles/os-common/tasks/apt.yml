@@ -1,4 +1,7 @@
 ---
+- name: Wait for cloud-init to complete
+  wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
+
 - name: Perform a "safe" upgrade
   apt: update_cache=yes cache_valid_time=3600 upgrade=safe
 
@@ -9,3 +12,11 @@
     - python-boto
     - python-pip
     - python-virtualenv
+
+- name: Remove conflicting packages
+  apt: pkg={{ item }} state=absent
+  with_items:
+    - python-six
+    - python-yaml
+    - python-openssl
+    - python-json-pointer
