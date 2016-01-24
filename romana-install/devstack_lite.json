@@ -1,21 +1,3 @@
-{#
-
-Copyright (c) 2016 Pani Networks
-All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may
-not use this file except in compliance with the License. You may obtain
-a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-License for the specific language governing permissions and limitations
-under the License.
-
-#}
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Romana Devstack Environment",
@@ -51,9 +33,7 @@ under the License.
         "z": 2,
         "parent": "3ec442c6-29fd-45ad-8ff2-ecb2e3dce920",
         "embeds": [
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-          "{{ node.nic_uuid }}",
-{% endfor %}
+          "2ff10565-734a-430a-b907-0e5d0c286f38",
           "823ba251-91bf-41b4-9743-800ce02c81af"
         ]
       },
@@ -113,26 +93,24 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.uuid }}": {
+      "33dc755c-e61c-4821-847f-97353b8e799e": {
         "size": {
           "width": 60,
           "height": 60
         },
         "position": {
-          "x": {{ 260 + loop.index * 80 }},
+          "x": 340,
           "y": 760
         },
         "z": 1,
         "embeds": [],
         "isconnectedto": [
-          "{{ node.nic_uuid }}"
+          "2ff10565-734a-430a-b907-0e5d0c286f38"
         ],
         "isrelatedto": [
           "d1a2f6de-482a-43e9-8572-2dc7617605c7"
         ]
       },
-{% endfor %}
       "bc0c66d8-8a7d-4b7e-8799-4e043f1c899d": {
         "size": {
           "width": 60,
@@ -170,17 +148,15 @@ under the License.
         },
         "z": 5
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref1 }}": {
+      "6c8b7d61-4a57-4107-9fd6-5358d39f4a58": {
         "source": {
-          "id": "{{ node.uuid }}"
+          "id": "33dc755c-e61c-4821-847f-97353b8e799e"
         },
         "target": {
           "id": "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
         },
         "z": 6
       },
-{% endfor %}
       "5cba2af6-33c9-453a-a0e1-7fa665468582": {
         "source": {
           "id": "4b80e302-c4a6-42ad-92e2-90b08b10f870"
@@ -212,17 +188,15 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref2 }}": {
+      "906fbb18-0375-4f95-8142-f42a12459254": {
         "source": {
-          "id": "{{ node.uuid }}"
+          "id": "33dc755c-e61c-4821-847f-97353b8e799e"
         },
         "target": {
           "id": "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
         },
         "z": 8
       },
-{% endfor %}
       "3c0773b6-cd1c-47ea-a135-478a25df05c9": {
         "size": {
           "width": 160,
@@ -270,14 +244,13 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.nic_uuid }}": {
+      "2ff10565-734a-430a-b907-0e5d0c286f38": {
         "size": {
           "width": 60,
           "height": 60
         },
         "position": {
-          "x": {{ 260 + loop.index * 80 }},
+          "x": 340,
           "y": 640
         },
         "z": 3,
@@ -287,18 +260,15 @@ under the License.
           "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
         ]
       },
-{% endfor %}
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref3 }}": {
+      "c28a2f33-4f51-45fc-80ba-69855f6847b5": {
         "source": {
-          "id": "{{ node.uuid }}"
+          "id": "33dc755c-e61c-4821-847f-97353b8e799e"
         },
         "target": {
-          "id": "{{ node.nic_uuid }}"
+          "id": "2ff10565-734a-430a-b907-0e5d0c286f38"
         },
         "z": 4
       },
-{% endfor %}
       "40fec201-4a7c-4857-bf1c-2bf446c30a96": {
         "source": {
           "id": "823ba251-91bf-41b4-9743-800ce02c81af"
@@ -308,17 +278,15 @@ under the License.
         },
         "z": 6
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref4 }}": {
+      "4a4e4f11-e8cb-4f6c-b0ae-594fb364350c": {
         "source": {
-          "id": "{{ node.nic_uuid }}"
+          "id": "2ff10565-734a-430a-b907-0e5d0c286f38"
         },
         "target": {
           "id": "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
         },
         "z": 7
       },
-{% endfor %}
       "767b3f5f-5b10-48d8-8d11-6f0df385a51f": {
         "source": {
           "id": "823ba251-91bf-41b4-9743-800ce02c81af"
@@ -506,7 +474,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-private-subnet"
+            "Value": "jb3-private-subnet"
           },
           {
             "Key": "Application",
@@ -531,7 +499,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-ig"
+            "Value": "jb3-ig"
           }
         ]
       },
@@ -548,7 +516,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-vpc"
+            "Value": "jb3-vpc"
           },
           {
             "Key": "Application",
@@ -590,7 +558,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-controller"
+            "Value": "jb3-controller"
           },
           {
             "Key": "StackHost",
@@ -598,7 +566,7 @@ under the License.
           },
           {
             "Key": "automation_group",
-            "Value": "{{ devstack_name }}_controller"
+            "Value": "jb3_controller"
           }
         ],
         "UserData": {
@@ -607,9 +575,7 @@ under the License.
               "",
               [
                 "#!/bin/bash", "\n",
-{% for cmd in bootstrap %}
-                {{ cmd | to_json }}, "\n",
-{% endfor %}
+                "apt-get install python-apt", "\n",
                 ""
               ]
             ]
@@ -622,8 +588,7 @@ under the License.
         }
       }
     },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-    "ComputeInstance{{ node.suffix }}": {
+    "ComputeInstance01": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "InstanceType": {
@@ -641,7 +606,7 @@ under the License.
         "NetworkInterfaces": [
           {
             "NetworkInterfaceId": {
-              "Ref": "{{ node.nic }}"
+              "Ref": "nic1"
             },
             "DeviceIndex": "0"
           }
@@ -649,15 +614,15 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-compute{{ node.suffix }}"
+            "Value": "jb3-compute01"
           },
           {
             "Key": "StackHost",
-            "Value": "Compute{{ node.suffix }}"
+            "Value": "Compute01"
           },
           {
             "Key": "automation_group",
-            "Value": "{{ devstack_name }}_compute"
+            "Value": "jb3_compute"
           }
         ],
         "UserData": {
@@ -666,9 +631,7 @@ under the License.
               "",
               [
                 "#!/bin/bash", "\n",
-{% for cmd in bootstrap %}
-                {{ cmd | to_json }}, "\n",
-{% endfor %}
+                "apt-get install python-apt", "\n",
                 ""
               ]
             ]
@@ -677,11 +640,10 @@ under the License.
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
-          "id": "{{ node.uuid }}"
+          "id": "33dc755c-e61c-4821-847f-97353b8e799e"
         }
       }
     },
-{% endfor %}
     "CommonIncomingRules": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
@@ -711,7 +673,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-common"
+            "Value": "jb3-sg-common"
           }
         ],
         "VpcId": {
@@ -745,7 +707,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-http"
+            "Value": "jb3-sg-http"
           }
         ],
         "VpcId": {
@@ -764,7 +726,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-nw-acl"
+            "Value": "jb3-nw-acl"
           }
         ],
         "VpcId": {
@@ -832,7 +794,7 @@ under the License.
     "nic0": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
-        "PrivateIpAddress": "{{ nodes.controllerNode.ip }}",
+        "PrivateIpAddress": "192.168.0.10",
         "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
@@ -848,7 +810,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-nic0"
+            "Value": "jb3-nic0"
           }
         ]
       },
@@ -858,11 +820,10 @@ under the License.
         }
       }
     },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-    "{{ node.nic }}": {
+    "nic1": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
-        "PrivateIpAddress": "{{ node.ip }}",
+        "PrivateIpAddress": "192.168.0.11",
         "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
@@ -875,17 +836,16 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-{{ node.nic }}"
+            "Value": "jb3-nic1"
           }
         ]
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
-          "id": "{{ node.nic_uuid }}"
+          "id": "2ff10565-734a-430a-b907-0e5d0c286f38"
         }
       }
     },
-{% endfor %}
     "InternetRoute": {
       "DependsOn": "InternetGatewayAttachment",
       "Type": "AWS::EC2::Route",
@@ -942,7 +902,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-routes"
+            "Value": "jb3-routes"
           }
         ],
         "VpcId": {
