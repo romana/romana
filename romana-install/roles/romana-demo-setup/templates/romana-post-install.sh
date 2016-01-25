@@ -66,3 +66,11 @@ fi
 # Boot inst1 using romana's network
 # - nova boot --flavor m1.micro --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) inst1
 
+# Add Nano and Micro Flavours if it is not present.
+available_flavors=$(nova flavor-list)
+if [[ ! ( $available_flavors =~ 'm1.nano' ) ]]; then
+    nova flavor-create m1.nano 42 64 0 1
+fi
+if [[ ! ( $available_flavors =~ 'm1.micro' ) ]]; then
+    nova flavor-create m1.micro 84 128 0 1
+fi
