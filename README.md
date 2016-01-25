@@ -82,8 +82,8 @@ To uninstall, use the 'uninstall' subcommand.
 Some options are available within ``romana/romana-install/group_vars/all`` that can be adjusted.
 These can also be passed to the romana-setup command as Ansible extra-options, eg:
 ```bash
-./romana-setup install -e devstack_name=xyzdemo
-./romana-setup uninstall -e devstack_name=xyzdemo
+./romana-setup install -e stack_name=xyzdemo
+./romana-setup uninstall -e stack_name=xyzdemo
 ```
 
 Note: the name should be one word, and only contain letters and numbers. (No hyphens, underscores, etc).

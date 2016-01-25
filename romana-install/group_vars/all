@@ -1,5 +1,5 @@
-devstack_name: "{{ ansible_env.USER }}"
-devstack_compute_nodes: 1
+stack_name: "{{ ansible_env.USER }}"
+compute_nodes: 1
 
 devstack_password: "secrete"
 devstack_controller: "192.168.0.10"

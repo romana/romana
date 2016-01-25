@@ -51,7 +51,7 @@ under the License.
         "z": 2,
         "parent": "3ec442c6-29fd-45ad-8ff2-ecb2e3dce920",
         "embeds": [
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
           "{{ node.nic_uuid }}",
 {% endfor %}
           "823ba251-91bf-41b4-9743-800ce02c81af"
@@ -113,7 +113,7 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
       "{{ node.uuid }}": {
         "size": {
           "width": 60,
@@ -170,7 +170,7 @@ under the License.
         },
         "z": 5
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
       "{{ node.xref1 }}": {
         "source": {
           "id": "{{ node.uuid }}"
@@ -212,7 +212,7 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
       "{{ node.xref2 }}": {
         "source": {
           "id": "{{ node.uuid }}"
@@ -270,7 +270,7 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
       "{{ node.nic_uuid }}": {
         "size": {
           "width": 60,
@@ -288,7 +288,7 @@ under the License.
         ]
       },
 {% endfor %}
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
       "{{ node.xref3 }}": {
         "source": {
           "id": "{{ node.uuid }}"
@@ -308,7 +308,7 @@ under the License.
         },
         "z": 6
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
       "{{ node.xref4 }}": {
         "source": {
           "id": "{{ node.nic_uuid }}"
@@ -506,7 +506,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-private-subnet"
+            "Value": "{{ stack_name }}-private-subnet"
           },
           {
             "Key": "Application",
@@ -531,7 +531,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-ig"
+            "Value": "{{ stack_name }}-ig"
           }
         ]
       },
@@ -548,7 +548,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-vpc"
+            "Value": "{{ stack_name }}-vpc"
           },
           {
             "Key": "Application",
@@ -590,7 +590,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-controller"
+            "Value": "{{ stack_name }}-controller"
           },
           {
             "Key": "StackHost",
@@ -598,7 +598,7 @@ under the License.
           },
           {
             "Key": "automation_group",
-            "Value": "{{ devstack_name }}_controller"
+            "Value": "{{ stack_name }}_controller"
           }
         ],
         "UserData": {
@@ -622,7 +622,7 @@ under the License.
         }
       }
     },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
     "ComputeInstance{{ node.suffix }}": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
@@ -649,7 +649,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-compute{{ node.suffix }}"
+            "Value": "{{ stack_name }}-compute{{ node.suffix }}"
           },
           {
             "Key": "StackHost",
@@ -657,7 +657,7 @@ under the License.
           },
           {
             "Key": "automation_group",
-            "Value": "{{ devstack_name }}_compute"
+            "Value": "{{ stack_name }}_compute"
           }
         ],
         "UserData": {
@@ -711,7 +711,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-common"
+            "Value": "{{ stack_name }}-sg-common"
           }
         ],
         "VpcId": {
@@ -745,7 +745,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-http"
+            "Value": "{{ stack_name }}-sg-http"
           }
         ],
         "VpcId": {
@@ -764,7 +764,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-nw-acl"
+            "Value": "{{ stack_name }}-nw-acl"
           }
         ],
         "VpcId": {
@@ -848,7 +848,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-nic0"
+            "Value": "{{ stack_name }}-nic0"
           }
         ]
       },
@@ -858,7 +858,7 @@ under the License.
         }
       }
     },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
+{% for node in nodes.computeNodes[:compute_nodes] %}
     "{{ node.nic }}": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
@@ -875,7 +875,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-{{ node.nic }}"
+            "Value": "{{ stack_name }}-{{ node.nic }}"
           }
         ]
       },
@@ -942,7 +942,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-routes"
+            "Value": "{{ stack_name }}-routes"
           }
         ],
         "VpcId": {

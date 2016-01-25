@@ -8,11 +8,11 @@
       args:
         creates: "romana_id_rsa"
     - name: Add Controller host(s)
-      add_host: name="{{ item }}" groups="stack_nodes,controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
-      with_items: groups["tag_automation_group_" + devstack_name + "_controller"] | default([])
+      add_host: name="{{ item }}" groups="stack_nodes,aws,controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
+      with_items: groups["tag_automation_group_" + stack_name + "_controller"] | default([])
     - name: Add Compute host(s)
-      add_host: name="{{ item }}" groups="stack_nodes,computes" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
-      with_items: groups["tag_automation_group_" + devstack_name + "_compute"] | default([])
+      add_host: name="{{ item }}" groups="stack_nodes,aws,computes" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
+      with_items: groups["tag_automation_group_" + stack_name + "_compute"] | default([])
     - name: Wait for SSH to be ready (controllers)
       wait_for: host="{{ item }}" port=22
       with_items: groups.controllers | default([])
