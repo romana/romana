@@ -74,3 +74,9 @@ fi
 if [[ ! ( $available_flavors =~ 'm1.micro' ) ]]; then
     nova flavor-create m1.micro 84 128 0 1
 fi
+ 
+# Remove default virbr0 bridge.
+virbr_present=$(virsh net-list --all)
+if [[ ! ( $virbr_present =~ 'active' ) ]]; then
+    virsh net-destroy default
+fi
