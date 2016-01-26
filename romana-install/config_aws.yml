@@ -3,10 +3,6 @@
   tasks:
     - name: Check for ec2_id_rsa
       file: path="~/.ssh/ec2_id_rsa" state=file mode=0600
-    - name: Generate SSH keypair for stack nodes
-      command: ssh-keygen -t rsa -b 2048 -f "romana_id_rsa" -N ""
-      args:
-        creates: "romana_id_rsa"
     - name: Add Controller host(s)
       add_host: name="{{ item }}" groups="stack_nodes,aws,controller" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_" + stack_name + "_controller"] | default([])
@@ -27,7 +23,5 @@
       args:
         controller_public_ip: "{{ groups.controller[0] }}"
         stack_host: "{{ ec2_tag_StackHost }}"
-    - name: Wait for cloud-init to complete
-      wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
 
 - include: stack_config.yml
