@@ -1,0 +1,21 @@
+stack_nodes:
+  Controller:
+    mgmt_ip: "{{ host_cidr | ipaddr(10) | ipaddr('address') }}"
+    gateway: "{{ romana_cidr | ipsubnet(16, 0) | ipaddr(1) }}"
+  ComputeNodes:
+    - Compute01
+    - Compute02
+    - Compute03
+    - Compute04
+  Compute01:
+    mgmt_ip: "{{ host_cidr | ipaddr(11) | ipaddr('address') }}"
+    gateway: "{{ romana_cidr | ipsubnet(16, 1) | ipaddr(1) }}"
+  Compute02:
+    mgmt_ip: "{{ host_cidr | ipaddr(12) | ipaddr('address') }}"
+    gateway: "{{ romana_cidr | ipsubnet(16, 2) | ipaddr(1) }}"
+  Compute03:
+    mgmt_ip: "{{ host_cidr | ipaddr(13) | ipaddr('address') }}"
+    gateway: "{{ romana_cidr | ipsubnet(16, 3) | ipaddr(1) }}"
+  Compute04:
+    mgmt_ip: "{{ host_cidr | ipaddr(14) | ipaddr('address') }}"
+    gateway: "{{ romana_cidr | ipsubnet(16, 4) | ipaddr(1) }}"

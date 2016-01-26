@@ -32,11 +32,10 @@ exec > /dev/null
 
 # Create hosts
 # TODO: Generate this from variables
-romana add-host ip-192-168-0-10 192.168.0.10 10.0.0.0/16 9604
-romana add-host ip-192-168-0-11 192.168.0.11 10.1.0.0/16 9604
-romana add-host ip-192-168-0-12 192.168.0.12 10.2.0.0/16 9604
-romana add-host ip-192-168-0-13 192.168.0.13 10.3.0.0/16 9604
-romana add-host ip-192-168-0-14 192.168.0.14 10.4.0.0/16 9604
+romana add-host ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }} {{ stack_nodes.Controller.mgmt_ip }} {{ stack_nodes.Controller.gateway }} 9604
+{% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
+romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_nodes[node].mgmt_ip }} {{ stack_nodes[node].gateway }} 9604
+{% endfor %}
 
 # Create tenants and segments
 # TODO: Remove the id:0 bits once master branch has fixed its JSON handling

@@ -1,6 +1,8 @@
 ---
 - hosts: localhost
   connection: local
+  vars_files:
+    - group_vars/aws
   roles:
     - generate-cf-template
     - create

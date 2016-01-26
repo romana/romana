@@ -1,0 +1,3 @@
+romana_dir: "/home/ubuntu/romana"
+romana_core_branch: "v0.6.1"
+romana_networking_branch: "v0.6.1-stable/liberty"

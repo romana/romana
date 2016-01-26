@@ -8,47 +8,24 @@
       args:
         creates: "romana_id_rsa"
     - name: Add Controller host(s)
-      add_host: name="{{ item }}" groups="stack_nodes,aws,controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
+      add_host: name="{{ item }}" groups="stack_nodes,aws,controller" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_" + stack_name + "_controller"] | default([])
     - name: Add Compute host(s)
       add_host: name="{{ item }}" groups="stack_nodes,aws,computes" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_" + stack_name + "_compute"] | default([])
-    - name: Wait for SSH to be ready (controllers)
+    - name: Wait for SSH to be ready (controller)
       wait_for: host="{{ item }}" port=22
-      with_items: groups.controllers | default([])
+      with_items: groups.controller | default([])
     - name: Wait for SSH to be ready (computes)
       wait_for: host="{{ item }}" port=22
       with_items: groups.computes | default([])
-
+  
 - hosts: stack_nodes
   connection: ssh
-  roles:
-    - os-common
+  tasks:
+    - set_fact:
+      args:
+        controller_public_ip: "{{ groups.controller[0] }}"
+        stack_host: "{{ ec2_tag_StackHost }}"
 
-- hosts: controllers
-  connection: ssh
-  roles:
-    - stack-controller
-    - romana-common
-    - romana-master
-
-- hosts: computes 
-  connection: ssh
-  roles:
-    - stack-compute
-    - romana-common
-
-- hosts: controllers
-  connection: ssh
-  roles:
-    - romana-demo-setup
-
-- hosts: stack_nodes
-  connection: ssh
-  roles:
-    - romana-agent
-
-- hosts: localhost
-  connection: local
-  roles:
-    - stack-summary
+- include: stack_config.yml

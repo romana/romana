@@ -1,13 +1,16 @@
 ---
-bootstrap:
-  - apt-get install python-apt
-nodes:
-  controllerNode:
-    ip: "192.168.0.10"
-  computeNodes: 
-    - 
+cf_data:
+  bootstrap:
+    - apt-get install python-apt
+  compute_hosts:
+    - Compute01
+    - Compute02
+    - Compute03
+    - Compute04
+  host_data:
+    Controller:
+    Compute01: 
       suffix: "01"
-      ip: "192.168.0.11"
       nic: "nic1"
       uuid: "33dc755c-e61c-4821-847f-97353b8e799e"
       nic_uuid: "2ff10565-734a-430a-b907-0e5d0c286f38"
@@ -15,9 +18,7 @@ nodes:
       xref2: "906fbb18-0375-4f95-8142-f42a12459254"
       xref3: "c28a2f33-4f51-45fc-80ba-69855f6847b5"
       xref4: "4a4e4f11-e8cb-4f6c-b0ae-594fb364350c"
-    - 
-      suffix: "02"
-      ip: "192.168.0.12"
+    Compute02:
       nic: "nic2"
       uuid: "bc0c66d8-8a7d-4b7e-8799-4e043f1c899d"
       nic_uuid: "844f2842-9076-451d-bfca-989a224152a2"
@@ -25,9 +26,7 @@ nodes:
       xref2: "24cb7a72-2335-4538-906b-7a2b6695dd30"
       xref3: "5fd19de7-f390-459d-9ded-e53c71dfa967"
       xref4: "a6288198-5e69-4863-bc1f-3445a18d512e"
-    - 
-      suffix: "03"
-      ip: "192.168.0.13"
+    Compute03:
       nic: "nic3"
       uuid: "18630951-f2bf-454f-87fa-98dedc3c374d"
       nic_uuid: "8db2cdc3-e2c0-45f3-a684-17ebf2aea9d4"
@@ -35,9 +34,7 @@ nodes:
       xref2: "b5875e0a-02db-4573-9b6e-16c780ffd598"
       xref3: "8f9888c8-0d57-457f-948f-f5213334c1ff"
       xref4: "2fb1fcdf-706b-4676-8d79-cdd3417b41cf"
-    - 
-      suffix: "04"
-      ip: "192.168.0.14"
+    Compute04:
       nic: "nic4"
       uuid: "1e99d5b9-7fee-43ae-80ed-372f8473be7a"
       nic_uuid: "b5d7c59d-0138-4210-adb6-63ba3c89f3b2"
@@ -45,3 +42,4 @@ nodes:
       xref2: "c6deeb3e-f580-450e-b67e-9dcd8494f885"
       xref3: "e258f113-4192-426e-b160-71739ed67428"
       xref4: "d09ebc83-2556-4990-8826-24861ea74480"
+

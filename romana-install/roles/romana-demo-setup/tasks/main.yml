@@ -19,7 +19,7 @@
 - name: Overwrite /etc/hosts
   become: true
   become_user: root
-  copy: src="romana-hosts" dest="/etc/hosts" mode=0644
+  template: src="romana-hosts" dest="/etc/hosts" mode=0644
 
 - name: Install romana post-install script
   template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755

@@ -36,5 +36,5 @@
   become_user: root
 
 - name: Install romana tool
-  copy: src="../cmd/romana" dest="/home/ubuntu/bin/romana" mode=0775
+  template: src="../cmd/romana" dest="/home/ubuntu/bin/romana" mode=0775
   

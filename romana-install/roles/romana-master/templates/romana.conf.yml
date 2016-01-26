@@ -1,11 +1,11 @@
 services:
   - service: root
     api:
-      host: {{ devstack_controller }}
+      host: {{ stack_nodes.Controller.mgmt_ip }}
       port: 9600
   - service: ipam
     api:
-      host: {{ devstack_controller }}
+      host: {{ stack_nodes.Controller.mgmt_ip }}
       port: 9601
     config:
       store: 
@@ -17,7 +17,7 @@ services:
         database: ipam
   - service: tenant
     api:
-      host: {{ devstack_controller }}
+      host: {{ stack_nodes.Controller.mgmt_ip }}
       port: 9602
     config:
       store: 
@@ -28,7 +28,7 @@ services:
         database: tenant
   - service: topology
     api:
-      host: {{ devstack_controller }}
+      host: {{ stack_nodes.Controller.mgmt_ip }}
       port: 9603
     config:
       store: 

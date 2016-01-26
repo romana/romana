@@ -34,9 +34,9 @@ usage() {
 }
 
 # Variables used within the script
-tenant_url=http://192.168.0.10:9602/
+tenant_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9602/
 tenant_path="tenants"
-topology_url=http://192.168.0.10:9603/
+topology_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9603/
 topology_path="hosts"
 
 add_host() {
@@ -52,7 +52,7 @@ add_host() {
 	# TODO: add validation for the parameters
 	post_data=$(printf '{"name": "%s", "ip": "%s", "romana_ip": "%s", "agent_port": %s}' "$hostname" "$host_ip" "$romana_cidr" "$agent_port")
 	echo "Sending request to '${topology_url}${topology_path}': '$post_data'"
-	curl -X POST -H "Content-Type: application/json" --data "$post_data" "${topology_url}${topology_path}"; printf "\n"
+	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${topology_url}${topology_path}"; printf "\n"
 }
 
 show_host() {
@@ -126,7 +126,7 @@ create_tenant() {
 
 	post_data=$(printf '{"id": 0, "name": "%s"}' "$project")
 	echo "Sending request to '${tenant_url}${tenant_path}': '$post_data'"
-	curl -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tenant_path}"; printf "\n"
+	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tenant_path}"; printf "\n"
 }
 
 show_tenant() {
@@ -236,7 +236,7 @@ add_segment() {
 	post_data=$(printf '{"id": 0, "name": "%s"}' "$segment_name")
 	segment_path="$tenant_path/$tenant_id/segments"
 	echo "Sending request to '${tenant_url}${segment_path}': '$post_data'"
-	curl -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${segment_path}"; printf "\n"
+	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${segment_path}"; printf "\n"
 }
 
 # Show usage if no subcommand was provided
