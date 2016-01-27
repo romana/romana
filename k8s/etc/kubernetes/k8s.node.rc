@@ -1,0 +1,6 @@
+screen -t kubelet
+select 0
+stuff "until nc -z __MASTER_IP__ 8080; do sleep 10; done; /home/ubuntu/kubernetes/cluster/ubuntu/binaries/minion/kubelet --address=0.0.0.0 --hostname-override=__MASTER_ID__ --api-servers=http://__MASTER_IP__:8080 --network-plugin=cni --network-plugin-dir=/etc/cni/net.d^M"
+screen -t kube-proxy
+select 1
+stuff "until nc -z __MASTER_IP__ 8080; do sleep 10; done; /home/ubuntu/kubernetes/cluster/ubuntu/binaries/minion/kube-proxy --master=http://__MASTER_IP__:8080^M"

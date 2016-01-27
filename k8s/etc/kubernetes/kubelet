@@ -1,0 +1,14 @@
+###
+# Kubernetes kubelet (node) config
+
+# The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
+KUBELET_ADDRESS="--address=0.0.0.0"
+
+# You may leave this blank to use the actual hostname
+KUBELET_HOSTNAME="--hostname-override=__NODE__"
+
+# location of the api-server
+KUBELET_API_SERVER="--api-servers=http://__MASTER_IP__:8080"
+
+# Add your own!
+KUBELET_ARGS="--network-plugin=cni"

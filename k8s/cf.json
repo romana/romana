@@ -1,0 +1,988 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Romana kubernetes demo",
+  "Parameters": {
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Default": "shared-key-1",
+      "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+    },
+    "InstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "Default": "t2.small",
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+    "AMI": {
+      "Description": "AMI",
+      "Type": "String",
+      "Default": "ami-06116566",
+      "ConstraintDescription": "Default ubuntu"
+    },
+    "S3Prefix": {
+      "Description": "",
+      "Type": "String",
+      "Default": "secret"
+    },
+    "S3BinariesPrefix": {
+      "Description": "",
+      "Type": "String",
+      "Default": "binaries"
+    },
+    "S3Bucket": {
+      "Description": "",
+      "Type": "String",
+      "Default": "pani-infrastructure"
+    },
+    "CoreBranch": {
+      "Description": "Branch to pull core binaries from ",
+      "Type": "String",
+      "Default": "feature/k8s-handler"
+    },
+    "RomanaBranch": {
+      "Description": "Check out custom branch of romana repo",
+      "Type": "String",
+      "Default": "dev/k8s-demo"
+    },
+    "AdditionalComputeHosts": {
+      "Description": "One compute host is mandatory, this is a number of extra compute hosts to add (0-10)",
+      "Type": "String",
+      "Default": "0"
+    },
+    "ControllerBootstrapScript": {
+      "Description": "Base64 encoded bash script to execute on boot",
+      "Type": "String",
+      "Default": "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"
+    },
+    "ComputeBootstrapScript": {
+      "Description": "Base64 encoded bash script to execute on boot",
+      "Type": "String",
+      "Default": "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"
+    },
+    "LockOnTests": {
+      "Description": "Wait for pani tests to run and fail the stack tests aren't good (True for enable, False for disable)",
+      "Default": "False",
+      "Type": "String"
+    }
+  },
+  "Conditions": {
+    "TestCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "LockOnTests"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "root",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:GetBucketLocation"
+                  ],
+                  "Resource": [
+                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3Prefix" } ] ] },
+                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3Prefix" }, "/*" ] ] },
+                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3BinariesPrefix" } ] ] },
+                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3BinariesPrefix" }, "/*" ] ] }
+                  ]
+                },
+                {
+                  "Action": [
+                    "cloudformation:DescribeStackResources",
+                    "cloudformation:DescribeStacks",
+                    "cloudformation:SignalResource",
+                    "autoscaling:DescribeAutoScalingGroups",
+                    "autoscaling:DescribeLaunchConfigurations",
+                    "ec2:DescribeTags",
+                    "ec2:ModifyInstanceAttribute",
+                    "ec2:DescribeInstances"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "243bbe59-b695-491c-8177-fd4e9efac369"
+        }
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "315c1c63-4e10-4794-9b0e-94a43e66e26f"
+        }
+      }
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "192.168.0.0/24",
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackId"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "6991cabb-ad03-477c-9b92-da192922c37d"
+        }
+      }
+    },
+    "Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": "192.168.0.0/24",
+	"MapPublicIpOnLaunch" : "true",
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackId"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "aa82911b-d932-4272-931c-5480862a1c98"
+        }
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackId"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "18f3555c-a23e-461a-9a7e-ec2babfdb4ec"
+        }
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "bcf1c513-2193-4a1a-8f7e-b4e304c742d7"
+        }
+      }
+    },
+    "RouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackId"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "60473c58-80eb-40ba-a348-e2fe5082b89d"
+        }
+      }
+    },
+    "Route": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "AttachGateway",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "bf8fb059-5435-44eb-b92c-347a8875f5a7"
+        }
+      }
+    },
+    "SubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet"
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "df5485b4-1ea3-41ed-b4d7-e819f946879a"
+        }
+      }
+    },
+    "NetworkAcl": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": {
+              "Ref": "AWS::StackId"
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "6ce8659e-0861-4d09-ae08-0cb5904713bf"
+        }
+      }
+    },
+    "InboundNetworkAclEntry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkAcl"
+        },
+        "RuleNumber": "100",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "Egress": "false",
+        "CidrBlock": "0.0.0.0/0"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "752537b1-15b5-42cf-96ea-ee6002a47b87"
+        }
+      }
+    },
+    "OutBoundNetworkAclEntry": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "NetworkAcl"
+        },
+        "RuleNumber": "100",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "Egress": "true",
+        "CidrBlock": "0.0.0.0/0"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "18b1e3c0-83a5-434e-a91e-c27dae38a3b6"
+        }
+      }
+    },
+    "SubnetNetworkAclAssociation": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet"
+        },
+        "NetworkAclId": {
+          "Ref": "NetworkAcl"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "5d7484f2-94cf-45d5-b221-e16c4dcf9712"
+        }
+      }
+    },
+    "IAMUser": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Policies": [
+          {
+            "PolicyName": "IAMAccess",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "NotAction": "iam:*",
+                  "Resource": "*"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "Cleanup",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "iam:DeleteAccessKey",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "892d6bce-28da-46d7-8061-e201a57d2310"
+        }
+      }
+    },
+    "HostKeys": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "UserName": {
+          "Ref": "IAMUser"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "1de9c0ca-5b05-42bd-be0e-0e23f05a2a48"
+        }
+      }
+    },
+    "InstanceSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "GroupDescription": "Enable SSH access via port 22",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "FromPort": "0",
+            "ToPort": "65535",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "b2b7eea4-a692-4aa5-ab69-706b690b2b03"
+        }
+      }
+    },
+    "Eth0": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "Properties": {
+        "Description": "eth0",
+        "PrivateIpAddress": "192.168.0.10",
+        "GroupSet": [
+          {
+            "Ref": "InstanceSecurityGroup"
+          }
+        ],
+        "SourceDestCheck": "false",
+        "SubnetId": {
+          "Ref": "Subnet"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Interface 0"
+          },
+          {
+            "Key": "Interface",
+            "Value": "eth0"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "379ce63e-3be5-472c-891f-04cb28a313dc"
+        }
+      }
+    },
+    "MasterNode": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "ImageId": {
+          "Ref": "AMI"
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "NetworkInterfaces": [
+          {
+            "NetworkInterfaceId": {
+              "Ref": "Eth0"
+            },
+            "DeviceIndex": "0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "controller-instance"
+          }
+        ],
+        "UserData": {
+          "Ref": "ControllerBootstrapScript"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "e13087ba-6941-4fbc-9d49-5b76fc10354e"
+        }
+      }
+    },
+    "WaitForTest": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "Condition": "TestCondition",
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Timeout": "PT90M"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "b5ed78ce-3b57-40b5-a9f7-33359894ea7c"
+        }
+      }
+    },
+    "ComputeGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": {
+          "Ref": "ComputeConfig"
+        },
+        "MaxSize": 10,
+        "MinSize": 0,
+        "DesiredCapacity": {
+          "Ref": "AdditionalComputeHosts"
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "Subnet"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "compute-instance",
+            "PropagateAtLaunch": true
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "c918b6dd-85ee-42bb-9249-f442d782c8c1"
+        }
+      }
+    },
+    "ComputeConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "ImageId": {
+          "Ref": "AMI"
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "InstanceSecurityGroup"
+          }
+        ],
+        "UserData": {
+          "Ref": "ComputeBootstrapScript"
+        },
+        "AssociatePublicIpAddress": true
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "4e112a60-de1f-4ed1-b409-fedb635d7744"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "InstanceId": {
+      "Value": {
+        "Fn::GetAtt": [ "MasterNode", "PublicIp" ]
+      },
+      "Description": "Instance Id of newly created instance"
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "b5ed78ce-3b57-40b5-a9f7-33359894ea7c": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 60,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "5716e5bc-f294-4651-bddf-43de3a589caf": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "48cb6e7b-f960-4d75-b4ed-769ef159236c": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 300,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "892d6bce-28da-46d7-8061-e201a57d2310": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 420,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "1de9c0ca-5b05-42bd-be0e-0e23f05a2a48": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 540,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": [],
+        "isrelatedto": [
+          "892d6bce-28da-46d7-8061-e201a57d2310"
+        ]
+      },
+      "18f3555c-a23e-461a-9a7e-ec2babfdb4ec": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 660,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "6991cabb-ad03-477c-9b92-da192922c37d": {
+        "size": {
+          "width": 750,
+          "height": 660
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [
+          "b2b7eea4-a692-4aa5-ab69-706b690b2b03",
+          "6ce8659e-0861-4d09-ae08-0cb5904713bf",
+          "60473c58-80eb-40ba-a348-e2fe5082b89d",
+          "aa82911b-d932-4272-931c-5480862a1c98"
+        ]
+      },
+      "b2b7eea4-a692-4aa5-ab69-706b690b2b03": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 450,
+          "y": 420
+        },
+        "z": 2,
+        "parent": "6991cabb-ad03-477c-9b92-da192922c37d",
+        "embeds": []
+      },
+      "6ce8659e-0861-4d09-ae08-0cb5904713bf": {
+        "size": {
+          "width": 300,
+          "height": 210
+        },
+        "position": {
+          "x": 90,
+          "y": 420
+        },
+        "z": 2,
+        "parent": "6991cabb-ad03-477c-9b92-da192922c37d",
+        "embeds": [
+          "18b1e3c0-83a5-434e-a91e-c27dae38a3b6",
+          "752537b1-15b5-42cf-96ea-ee6002a47b87"
+        ]
+      },
+      "18b1e3c0-83a5-434e-a91e-c27dae38a3b6": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 120,
+          "y": 480
+        },
+        "z": 3,
+        "parent": "6ce8659e-0861-4d09-ae08-0cb5904713bf",
+        "embeds": []
+      },
+      "752537b1-15b5-42cf-96ea-ee6002a47b87": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 240,
+          "y": 480
+        },
+        "z": 3,
+        "parent": "6ce8659e-0861-4d09-ae08-0cb5904713bf",
+        "embeds": []
+      },
+      "60473c58-80eb-40ba-a348-e2fe5082b89d": {
+        "size": {
+          "width": 210,
+          "height": 210
+        },
+        "position": {
+          "x": 450,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "6991cabb-ad03-477c-9b92-da192922c37d",
+        "embeds": [
+          "bf8fb059-5435-44eb-b92c-347a8875f5a7"
+        ]
+      },
+      "bcf1c513-2193-4a1a-8f7e-b4e304c742d7": {
+        "source": {
+          "id": "18f3555c-a23e-461a-9a7e-ec2babfdb4ec"
+        },
+        "target": {
+          "id": "6991cabb-ad03-477c-9b92-da192922c37d"
+        },
+        "z": 1
+      },
+      "bf8fb059-5435-44eb-b92c-347a8875f5a7": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 480,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "60473c58-80eb-40ba-a348-e2fe5082b89d",
+        "embeds": [],
+        "references": [
+          "18f3555c-a23e-461a-9a7e-ec2babfdb4ec"
+        ],
+        "dependson": [
+          "bcf1c513-2193-4a1a-8f7e-b4e304c742d7"
+        ]
+      },
+      "aa82911b-d932-4272-931c-5480862a1c98": {
+        "size": {
+          "width": 300,
+          "height": 210
+        },
+        "position": {
+          "x": 90,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "6991cabb-ad03-477c-9b92-da192922c37d",
+        "embeds": [
+          "a1cd5e97-0c7c-487d-9ec4-af6734a8677d",
+          "379ce63e-3be5-472c-891f-04cb28a313dc"
+        ]
+      },
+      "a1cd5e97-0c7c-487d-9ec4-af6734a8677d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 120,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "aa82911b-d932-4272-931c-5480862a1c98",
+        "embeds": [],
+        "ismemberof": [
+          "b2b7eea4-a692-4aa5-ab69-706b690b2b03"
+        ]
+      },
+      "f6f993ae-1141-459f-aea1-4221ca3eaac1": {
+        "source": {
+          "id": "5716e5bc-f294-4651-bddf-43de3a589caf"
+        },
+        "target": {
+          "id": "a1cd5e97-0c7c-487d-9ec4-af6734a8677d"
+        },
+        "z": 3
+      },
+      "379ce63e-3be5-472c-891f-04cb28a313dc": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 240,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "aa82911b-d932-4272-931c-5480862a1c98",
+        "embeds": [],
+        "ismemberof": [
+          "b2b7eea4-a692-4aa5-ab69-706b690b2b03"
+        ]
+      },
+      "96050c8b-b630-4009-a5a1-0a5e72a19816": {
+        "source": {
+          "id": "48cb6e7b-f960-4d75-b4ed-769ef159236c"
+        },
+        "target": {
+          "id": "379ce63e-3be5-472c-891f-04cb28a313dc"
+        },
+        "z": 3
+      },
+      "5d7484f2-94cf-45d5-b221-e16c4dcf9712": {
+        "source": {
+          "id": "6ce8659e-0861-4d09-ae08-0cb5904713bf"
+        },
+        "target": {
+          "id": "aa82911b-d932-4272-931c-5480862a1c98"
+        },
+        "z": 2
+      },
+      "df5485b4-1ea3-41ed-b4d7-e819f946879a": {
+        "source": {
+          "id": "60473c58-80eb-40ba-a348-e2fe5082b89d"
+        },
+        "target": {
+          "id": "aa82911b-d932-4272-931c-5480862a1c98"
+        },
+        "z": 2
+      },
+      "243bbe59-b695-491c-8177-fd4e9efac369": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 780,
+          "y": 810
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "315c1c63-4e10-4794-9b0e-94a43e66e26f": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 870,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [],
+        "isassociatedwith": [
+          "243bbe59-b695-491c-8177-fd4e9efac369"
+        ]
+      },
+      "d3d3e635-ab32-4565-87e4-34c482abf6b5": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 870,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "a1cd5e97-0c7c-487d-9ec4-af6734a8677d"
+        ],
+        "isrelatedto": [
+          "315c1c63-4e10-4794-9b0e-94a43e66e26f"
+        ]
+      },
+      "e13087ba-6941-4fbc-9d49-5b76fc10354e": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 870,
+          "y": 330
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "379ce63e-3be5-472c-891f-04cb28a313dc"
+        ],
+        "isrelatedto": [
+          "315c1c63-4e10-4794-9b0e-94a43e66e26f"
+        ]
+      },
+      "c918b6dd-85ee-42bb-9249-f442d782c8c1": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 870,
+          "y": 520
+        },
+        "z": 0,
+        "embeds": [],
+        "isconnectedto": [
+          "aa82911b-d932-4272-931c-5480862a1c98"
+        ],
+        "isassociatedwith": [
+          "4e112a60-de1f-4ed1-b409-fedb635d7744"
+        ],
+        "isrelatedto": [
+          "aa82911b-d932-4272-931c-5480862a1c98"
+        ]
+      },
+      "4e112a60-de1f-4ed1-b409-fedb635d7744": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 870,
+          "y": 430
+        },
+        "z": 0,
+        "embeds": [],
+        "ismemberof": [
+          "b2b7eea4-a692-4aa5-ab69-706b690b2b03"
+        ],
+        "isrelatedto": [
+          "315c1c63-4e10-4794-9b0e-94a43e66e26f"
+        ]
+      },
+      "e54da2b3-ef18-4e27-8763-5ce594e609ab": {
+        "source": {
+          "id": "c918b6dd-85ee-42bb-9249-f442d782c8c1"
+        },
+        "target": {
+          "id": "4e112a60-de1f-4ed1-b409-fedb635d7744"
+        },
+        "z": 4
+      },
+      "04f78556-3747-4b76-9213-bb10ed1a77e4": {
+        "source": {
+          "id": "4e112a60-de1f-4ed1-b409-fedb635d7744"
+        },
+        "target": {
+          "id": "b2b7eea4-a692-4aa5-ab69-706b690b2b03"
+        },
+        "z": 5
+      }
+    }
+  }
+}

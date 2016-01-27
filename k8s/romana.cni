@@ -1,0 +1,64 @@
+#!/bin/bash
+
+exec 2>>/tmp/romana-cni.err
+
+log () {
+	echo "$*" >> /tmp/romana-cni.log
+}
+
+log_env () {
+	env >> /tmp/romana-cni.log
+}
+
+get_pod () { while read line; do [[ ${line/=*/} == "K8S_POD_NAME" ]] && echo ${line/*=/}; done; }
+get_tenant () { while read line; do [[ ${line/=*/} == "tenant" ]] && echo ${line/*=/}; done; }
+get_labels () { awk '/Labels/ { print $2}' | xargs -d"," -n1 ; } 
+get_json_kv () { sed 's/["{}]//g' | xargs -d "," -n1; }
+get_ip () { while read line; do [[ ${line/:*/} == "ip" ]] && echo ${line/*:/}; done; }
+get_nspid () { echo $1 | awk -F"/" '{ print $3 }'; }
+get_args () { echo $CNI_ARGS | xargs -d";" -n1 ;}
+
+
+KUBECTL=kubectl
+KUBEARGS=" -s __MASTER_IP__:8080"
+GATE_SRC="__GATE_SRC__"
+
+
+log "Romana CNI plugin"
+log "$*"
+log_env
+
+result () {
+printf '{ "cniVersion": "0.1.0", "ip4": { "ip": "%s/16" } }' $1
+}
+
+if [[ $CNI_COMMAND == "ADD" ]]; then
+	log "--- ADD --"
+	NSPID=$(get_nspid "$CNI_NETNS")
+	log "--- nspid = $NSPID ---"
+
+	POD=$(get_args | get_pod)
+	TENANT=$( $KUBECTL $KUBEARGS describe pod $POD | get_labels | get_tenant )
+	NODE=$( $KUBECTL $KUBEARGS get pods -o wide | grep $POD | awk '{ print $6 }' )
+	IP=$(curl -s "http://__MASTER_IP__:9601/allocateIpByName?tenantName=${TENANT}&segmentName=default&hostName=${NODE}&instanceId=0" | get_json_kv | get_ip)
+
+	sudo ip link add type veth
+	sudo ip link set veth0 name "veth0-${NSPID}"
+	sudo ip link set veth1 name "veth1-${NSPID}"
+	sudo ip link set "veth1-${NSPID}" netns ${NSPID}
+	sudo nsenter -t ${NSPID} -n ip link set "veth1-${NSPID}" name eth0
+	sudo nsenter -t ${NSPID} -n ip link set eth0 up
+	sudo nsenter -t ${NSPID} -n ip addr add $IP/16 dev eth0
+	sudo nsenter -t ${NSPID} -n ip ro add 192.168.0.0/24 dev eth0
+	sudo ip link set "veth0-${NSPID}" up
+	sudo ip ro add ${IP}/32 dev veth0-${NSPID} src $GATE_SRC
+	
+	log "--- Setup with infra pod = $POD pid = $PID, PEERIFx = $PEERIFx, PEERIFn=$PEERIFn, TENANT=$TENANT, NODE=$NODE, IP=$IP"
+	R=$(result "$IP")
+	log "$R"
+	echo -n $R
+fi
+
+# result "127.0.0.01"
+	
+log "Romana CNI plugin done"
