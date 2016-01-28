@@ -7,8 +7,8 @@ devstack_service_token: "eb24cc1eb0036c7971237850c767d9f6bae017a3"
 devstack_pip_cache: "root_pip_cache_stable-liberty_20160106.tar.gz"
 
 romana_dir: "/home/ubuntu/romana"
-romana_core_branch: "v0.6.1"
-romana_networking_branch: "v0.6.1-stable/liberty"
+romana_core_branch: "v0.6.2"
+romana_networking_branch: "v0.6.2-stable/liberty"
 
 region: "us-west-1"
 key_name: "shared-key-1"
