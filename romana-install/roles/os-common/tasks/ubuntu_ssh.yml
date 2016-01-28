@@ -1,19 +1,11 @@
 ---
-
-# These keys are installed so that the EC2 instance can access
-# the github repositories of the user doing the installation.
-# This is necessary for accessing the (currently) private repositories
-# that contain Romana software.
 - name: Install private key for ubuntu user
-  copy: src="~/.ssh/id_rsa" dest="~/.ssh/id_rsa" mode=0600
+  copy: src="romana_id_rsa" dest="~/.ssh/id_rsa" mode=0600
 
 - name: Install public key for ubuntu user
-  copy: src="~/.ssh/id_rsa.pub" dest="~/.ssh/id_rsa.pub" mode=0644
+  copy: src="romana_id_rsa.pub" dest="~/.ssh/id_rsa.pub" mode=0644
 
 - name: Add public key to authorised keys
   authorized_key: user=ubuntu key="{{ item }}" state=present
   with_file:
-    - "~/.ssh/id_rsa.pub"
-
-- name: Install known hosts for ubuntu user (github ssh)
-  copy: src="known_hosts" dest="~/.ssh/known_hosts" mode=0644
+    - "romana_id_rsa.pub"
