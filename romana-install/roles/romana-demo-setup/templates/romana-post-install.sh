@@ -76,6 +76,6 @@ fi
  
 # Remove default virbr0 bridge.
 virbr_present=$(virsh net-list --all)
-if [[ ! ( $virbr_present =~ 'active' ) ]]; then
+if [[ $virbr_present =~ 'active' ]]; then
     virsh net-destroy default
 fi
