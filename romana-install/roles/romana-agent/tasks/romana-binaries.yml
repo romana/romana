@@ -1,15 +1,10 @@
 ---
-- name: Install Romana binaries
-  # Workaround for S3 issue: Delete binaries first
+- name: Remove if binaries exist
   file: path="{{ romana_dir }}/bin/{{ item }}" state=absent
   with_items:
     - agent
 
-- s3: region="{{ region }}" bucket="romana-binaries" object="core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_dir }}/bin/{{ item }}" mode=get
-  with_items:
-    - agent
-
-# Make the files executable
-- file: path="{{ romana_dir }}/bin/{{ item }}" mode=0750
+- name: Download latest binaries
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_dir }}/bin/{{ item }}" mode=0755
   with_items:
     - agent

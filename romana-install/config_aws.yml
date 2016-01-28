@@ -27,5 +27,7 @@
       args:
         controller_public_ip: "{{ groups.controller[0] }}"
         stack_host: "{{ ec2_tag_StackHost }}"
+    - name: Wait for cloud-init to complete
+      wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
 
 - include: stack_config.yml

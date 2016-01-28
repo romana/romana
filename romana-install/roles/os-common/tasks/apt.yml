@@ -1,7 +1,4 @@
 ---
-- name: Wait for cloud-init to complete
-  wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
-
 - name: Perform a "safe" upgrade
   apt: update_cache=yes cache_valid_time=3600 upgrade=safe
 
