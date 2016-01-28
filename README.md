@@ -125,4 +125,14 @@ See also: [Try Romana Now](http://romana.io/try_romana/#what-you-can-do)
 
 Under development.
 
+## Working with the code
+
+This repository here contains the demo installer and documentation. The actual
+source code, however, is contained in these two repositories:
+
+* [core](https://github.com/romana/core ): A number of micro services written in Go, which comprise the core components of the Romana system.
+* [networking-romana](https://github.com/romana/networking-romana): The Romana ML2 plugin an IPAM driver for OpenStack.
+
+The READMEs of those repos contain more information about the source code and
+how to run and test it.
 
