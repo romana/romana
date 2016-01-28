@@ -3,6 +3,10 @@
   tasks:
     - name: Check for ec2_id_rsa
       file: path="~/.ssh/ec2_id_rsa" state=file mode=0600
+    - name: Generate SSH keypair for stack nodes
+      command: ssh-keygen -t rsa -b 2048 -f "romana_id_rsa" -N ""
+      args:
+        creates: "romana_id_rsa"
     - name: Add Controller host(s)
       add_host: name="{{ item }}" groups="stack_nodes,controllers" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="~/.ssh/ec2_id_rsa"
       with_items: groups["tag_automation_group_" + devstack_name + "_controller"] | default([])
