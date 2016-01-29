@@ -20,30 +20,15 @@
       "Default": "ami-06116566",
       "ConstraintDescription": "Default ubuntu"
     },
-    "S3Prefix": {
-      "Description": "",
-      "Type": "String",
-      "Default": "secret"
-    },
-    "S3BinariesPrefix": {
-      "Description": "",
-      "Type": "String",
-      "Default": "binaries"
-    },
-    "S3Bucket": {
-      "Description": "",
-      "Type": "String",
-      "Default": "pani-infrastructure"
-    },
     "CoreBranch": {
       "Description": "Branch to pull core binaries from ",
       "Type": "String",
-      "Default": "feature/k8s-handler"
+      "Default": "feature/kubernetes-handler"
     },
     "RomanaBranch": {
       "Description": "Check out custom branch of romana repo",
       "Type": "String",
-      "Default": "dev/k8s-demo"
+      "Default": "dev/kubernetes-demo"
     },
     "AdditionalComputeHosts": {
       "Description": "One compute host is mandatory, this is a number of extra compute hosts to add (0-10)",
@@ -53,12 +38,12 @@
     "ControllerBootstrapScript": {
       "Description": "Base64 encoded bash script to execute on boot",
       "Type": "String",
-      "Default": "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"
+      "Default": "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"
     },
     "ComputeBootstrapScript": {
       "Description": "Base64 encoded bash script to execute on boot",
       "Type": "String",
-      "Default": "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"
+      "Default": "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"
     },
     "LockOnTests": {
       "Description": "Wait for pani tests to run and fail the stack tests aren't good (True for enable, False for disable)",
@@ -102,21 +87,6 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:PutObject",
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                    "s3:GetBucketLocation"
-                  ],
-                  "Resource": [
-                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3Prefix" } ] ] },
-                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3Prefix" }, "/*" ] ] },
-                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3BinariesPrefix" } ] ] },
-                    { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3Bucket" }, "/", { "Ref": "S3BinariesPrefix" }, "/*" ] ] }
-                  ]
-                },
                 {
                   "Action": [
                     "cloudformation:DescribeStackResources",

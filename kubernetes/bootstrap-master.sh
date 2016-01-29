@@ -113,40 +113,15 @@ print_debug () {
 	echo "AWS_REGION=$AWS_REGION"
 }
 	
-install_git_keys () {
-	aws s3 cp s3://pani-infrastructure/secret/gitbot $U_HOME/.ssh/id_rsa
-	chown ubuntu:ubuntu $U_HOME/.ssh/id_rsa
-	chmod 600 $U_HOME/.ssh/id_rsa
-}
-
 clone_romana () {
 	if ! test -d $R_HOME; then
-	    sudo su - ubuntu -c "git clone git@github.com:romana/romana.git --branch=$ROMANA_BRANCH $R_HOME"
+	    sudo su - ubuntu -c "git clone https://github.com/romana/romana --branch=$ROMANA_BRANCH $R_HOME"
 	fi
 }
 
-wait_for_all_hosts () {
-	# TODO probably not needed
-	CMD="ansible -i ${A_HOME}/autohosts --private-key=$U_HOME/.ssh/id_rsa -u ubuntu -m ping all"
-	echo "Waiting for ssh on all the hosts"
-	for i in `seq 1 12`; do 
-		if sudo su -  ubuntu-c "$CMD"; then
-			return 0
-		fi
-		echo -n .
-		sleep 10
-	done
-	echo "Some hosts failed to setup ssh access"
-	exit 1
-}
-
-call_ansible () {
-	# TODO probably not needed
-	sudo su - ubuntu -c "cd ${A_HOME} && ansible-playbook -i ${A_HOME}/autohosts -e @${A_HOME}/vars/ec2.yml --private-key=$U_HOME/.ssh/id_rsa -u ubuntu $A_HOME/site.yml"
-}
 
 call_install_script () {
-	source /home/ubuntu/romana/k8s/install.sh
+	source /home/ubuntu/romana/kubernetes/install.sh
 }
 	
 create_host_records () {
@@ -166,16 +141,11 @@ disable_aws_firewall () {
 	aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --no-source-dest-check --region $AWS_REGION
 }
 	
-# create romana gateways
-# create romana routes
-	
 #main 
 	install_packages
 	collect_aws_metadata
 	create_host_records
-	install_git_keys
 	create_user_ssh_config
 	clone_romana
 	disable_aws_firewall
 	call_install_script
-#	wait_for_all_hosts

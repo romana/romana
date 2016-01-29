@@ -21,15 +21,15 @@ configure_romana () {
 	echo "In configure_romana"
 
 	if is_master; then
-		test -f /home/ubuntu/romana.conf || cp /home/ubuntu/romana/k8s/romana.conf.example /home/ubuntu/romana.conf
+		test -f /home/ubuntu/romana.conf || cp /home/ubuntu/romana/kubernetes/romana.conf.example /home/ubuntu/romana.conf
 		sed -i "s/__MASTER_IP__/$MASTER_IP/g" /home/ubuntu/romana.conf
 		if ! test -f /tmp/romana_mysql.done; then
-			mysql -u root -psecrete  < /home/ubuntu/romana/k8s/romana.sqldump
+			mysql -u root -psecrete  < /home/ubuntu/romana/kubernetes/romana.sqldump
 			touch /tmp/romana_mysql.done
 		fi
-		cp /home/ubuntu/romana/k8s/romana.rc /root/romana.rc
+		cp /home/ubuntu/romana/kubernetes/romana.rc /root/romana.rc
 	else
-		cp /home/ubuntu/romana/k8s/romana.agent.rc /root/romana.rc
+		cp /home/ubuntu/romana/kubernetes/romana.agent.rc /root/romana.rc
 	fi
 
 	sysctl net.ipv4.conf.all.proxy_arp=1
@@ -39,9 +39,9 @@ configure_romana () {
 }
 
 configure_cni_plugin () {
-	cp -r /home/ubuntu/romana/k8s/etc/cni /etc/
+	cp -r /home/ubuntu/romana/kubernetes/etc/cni /etc/
 	mkdir -p /opt/cni/bin/
-	cp -f /home/ubuntu/romana/k8s/romana.cni /opt/cni/bin/romana
+	cp -f /home/ubuntu/romana/kubernetes/romana.cni /opt/cni/bin/romana
 	chmod +x /opt/cni/bin/romana
 	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /opt/cni/bin/romana
 	GATE_IP=${ROMANA_GATES[$INSTANCE_ID]}
@@ -106,12 +106,12 @@ configure_gate_and_routes () {
 register_node () {
 	is_master && return 0 # master registered by default somehow
 
-	sed -i "s/__NODE__/$INSTANCE_ID/g" /home/ubuntu/romana/k8s/etc/kubernetes/node.json
+	sed -i "s/__NODE__/$INSTANCE_ID/g" /home/ubuntu/romana/kubernetes/etc/kubernetes/node.json
 	until nc -z ${MASTER_IP} 8080; do
 		echo "In register_node, waiting for master to show up"
 		sleep 10
 	done;
-	kubectl -s "${MASTER_IP}:8080" create -f /home/ubuntu/romana/k8s/etc/kubernetes/node.json
+	kubectl -s "${MASTER_IP}:8080" create -f /home/ubuntu/romana/kubernetes/etc/kubernetes/node.json
 }
 	
 create_romana_gateway () {
@@ -140,21 +140,21 @@ get_kubernetes () {
 	ln -s /root/kubernetes /home/ubuntu || :
 }
 	
-configure_k8s_screen () {
+configure_kubernetes_screen () {
 	if is_master; then
-		cp /home/ubuntu/romana/k8s/etc/kubernetes/k8s.rc /root/k8s.rc
+		cp /home/ubuntu/romana/kubernetes/etc/kubernetes/kubernetes.rc /root/kubernetes.rc
 	else
-		cp /home/ubuntu/romana/k8s/etc/kubernetes/k8s.node.rc /root/k8s.rc
+		cp /home/ubuntu/romana/kubernetes/etc/kubernetes/kubernetes.node.rc /root/kubernetes.rc
 	fi
 
-	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /root/k8s.rc
-	sed -i "s/__MASTER_ID__/$INSTANCE_ID/g" /root/k8s.rc
+	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /root/kubernetes.rc
+	sed -i "s/__MASTER_ID__/$INSTANCE_ID/g" /root/kubernetes.rc
 
 }
 	
-start_k8s_screen () {
-	if ! screen -ls | grep -q k8s; then
-		screen -AmdS k8s -c /root/k8s.rc
+start_kubernetes_screen () {
+	if ! screen -ls | grep -q kubernetes; then
+		screen -AmdS kubernetes -c /root/kubernetes.rc
 	fi
 }
 
@@ -172,7 +172,7 @@ start_romana_screen () {
 	start_romana_screen
 	configure_topology
 	configure_cni_plugin
-	configure_k8s_screen
-	start_k8s_screen
+	configure_kubernetes_screen
+	start_kubernetes_screen
 	configure_gate_and_routes
 	register_node
