@@ -142,9 +142,9 @@ get_kubernetes () {
 	
 configure_kubernetes_screen () {
 	if is_master; then
-		cp /home/ubuntu/romana/kubernetes/etc/kubernetes/kubernetes.rc /root/kubernetes.rc
+		cp /home/ubuntu/romana/kubernetes/etc/kubernetes/k8s.rc /root/kubernetes.rc
 	else
-		cp /home/ubuntu/romana/kubernetes/etc/kubernetes/kubernetes.node.rc /root/kubernetes.rc
+		cp /home/ubuntu/romana/kubernetes/etc/kubernetes/k8s.node.rc /root/kubernetes.rc
 	fi
 
 	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /root/kubernetes.rc
