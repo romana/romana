@@ -3,4 +3,6 @@
   connection: local
   roles:
     - generate-vagrantfile
-    - create
+  tasks:
+    - name: Create VMs
+      command: vagrant up

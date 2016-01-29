@@ -1,7 +1,10 @@
 - hosts: localhost
   connection: local
   tasks:
-    - debug: var=groups
+    - name: Generate SSH keypair for stack nodes
+      command: ssh-keygen -t rsa -b 2048 -f "romana_id_rsa" -N ""
+      args:
+        creates: "romana_id_rsa"
     - name: Wait for SSH to be ready (controller)
       wait_for: host="{{ hostvars[item].ansible_ssh_host }}" port="{{ hostvars[item].ansible_ssh_port }}"
       with_items: groups.controller | default([])
