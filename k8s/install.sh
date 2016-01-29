@@ -8,13 +8,11 @@ is_master () {
 	
 }
 
-enable_crosscluster_login () {
-   ssh-keygen -y -f $U_HOME/.ssh/id_rsa >> $U_HOME/.ssh/authorized_keys
-}
-
 get_romana_binaries () {
 	for bin in root ipam agent tenant topology tenant; do 
-		aws s3 cp s3://pani-infrastructure/binaries/latest/origin/$CORE_BRANCH/$bin /bin/$bin
+		s3_prefix=://s3-us-west-1.amazonaws.com
+		s3_bucket=romana-binaries
+		wget "$s3_prefix/$s3_bucket/core/latest/origin/$CORE_BRANCH/$bin -O /bin/$bin
 		chmod +x /bin/$bin
 	done
 }
@@ -167,7 +165,6 @@ start_romana_screen () {
 }
 
 #main 
-	enable_crosscluster_login
 	get_kubernetes
 	get_romana_binaries
 	start_mysql
