@@ -30,13 +30,7 @@ sudo apt-get install git python-pip python-dev
 sudo pip install ansible==1.9.4 boto awscli
 ```
 
-This setup expects certain keys in specific locations.
-- Your SSH private key in `~/.ssh/id_rsa`
-- Your SSH public key in `~/.ssh/id_rsa.pub`
-- Your EC2 Private Key in `~/.ssh/ec2_id_rsa`
-
-Note: your SSH keys are used to access Github and checkout Romana's private repositories.
-It will not be necessary to provide these when the repositories are made public.
+This setup expects your EC2 Private Key in `~/.ssh/ec2_id_rsa`
 
 Configure awscli with your AWS Credentials.
 ```bash-session
@@ -53,19 +47,11 @@ Note: The installation currently expects region ``us-west-1``, and might not wor
 This will be addressed in the future.
 
 
-Confirm your SSH keys allow you to access github.
-```bash-session
-$ ssh git@github.com
-PTY allocation request failed on channel 0
-Hi your-github-username! You've successfully authenticated, but GitHub does not provide shell access.
-Connection to github.com closed.
-```
-
 ### Install
 
 Check out Romana repository.
 ```bash
-git clone git@github.com:romana/romana
+git clone https://github.com/romana/romana
 cd romana/romana-install
 ```
 
