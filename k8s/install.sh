@@ -10,9 +10,9 @@ is_master () {
 
 get_romana_binaries () {
 	for bin in root ipam agent tenant topology tenant; do 
-		s3_prefix=://s3-us-west-1.amazonaws.com
+		s3_prefix="https://s3-us-west-1.amazonaws.com"
 		s3_bucket=romana-binaries
-		wget "$s3_prefix/$s3_bucket/core/latest/origin/$CORE_BRANCH/$bin -O /bin/$bin
+		wget "$s3_prefix/$s3_bucket/core/latest/origin/$CORE_BRANCH/$bin -O /bin/$bin"
 		chmod +x /bin/$bin
 	done
 }
