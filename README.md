@@ -105,7 +105,7 @@ Note: the name should be one word, and only contain letters and numbers. (No hyp
 - see a list of tenants: `romana show-tenant`, details for a specific tenant: `romana show-tenant <tenant-name>`
 - see a list of hosts: `romana show-host`, details for a specific host: `romana show-host <hostname>`
 
-See also: [Try Romana Now](http://romana.io/try_romana/#what-you-can-do)
+See also: [Try Romana Now](http://romana.io/try_romana/openstack/)
 
 ## Romana on Virtualbox VMs
 
