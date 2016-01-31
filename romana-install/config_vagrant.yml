@@ -20,3 +20,12 @@
         controller_public_ip: "{{ stack_nodes.Controller.mgmt_ip }}"
 
 - include: stack_config.yml
+
+- hosts: localhost
+  connection: local
+  roles:
+    - stack-summary-vagrant
+  tasks:
+    - name: Remove known_hosts
+      known_hosts: host="{{ stack_nodes[hostvars[item].stack_host].mgmt_ip }}" state="absent"
+      with_items: groups.stack_nodes

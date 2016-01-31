@@ -1,0 +1,4 @@
+---
+- name: "Generate Stack Summary"
+  template: src=aws-stackinfo.txt dest=./aws-stackinfo.txt
+

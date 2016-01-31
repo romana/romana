@@ -25,3 +25,8 @@
         stack_host: "{{ ec2_tag_StackHost }}"
 
 - include: stack_config.yml
+
+- hosts: localhost
+  connection: local
+  roles:
+    - stack-summary-aws
