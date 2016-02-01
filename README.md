@@ -24,13 +24,19 @@ SSH and AWS credentials.
 
 ### Tools
 
+**Installing packages**
+
 This setup requires ansible v1.9.3+ and boto. It is generally best to install these via python's ``pip`` tool.
 ```bash
 sudo apt-get install git python-pip python-dev
 sudo pip install ansible==1.9.4 boto awscli
 ```
 
+**SSH key for access to EC2 instances**
+
 This setup expects your EC2 Private Key in `~/.ssh/ec2_id_rsa`
+
+**Setting up AWS tools**
 
 Configure awscli with your AWS Credentials.
 ```bash-session
@@ -40,10 +46,10 @@ AWS Secret Access Key [None]: ****************************************
 Default region name [None]: us-west-1
 Default output format [None]: 
 ```
-Note: The credentials provided should permit the creation of AWS resources such as EC2 instances, VPCs and so on.
+*Note:* The credentials provided should permit the creation of AWS resources such as EC2 instances, VPCs and so on.
 Ensure the IAM user or role for these credentials has permission to create these AWS resources.
 
-Note: The installation currently expects region ``us-west-1``, and might not work in other regions.
+*Note:* The installation currently expects region ``us-west-1``, and might not work in other regions.
 This will be addressed in the future.
 
 
