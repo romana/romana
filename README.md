@@ -128,3 +128,13 @@ source code, however, is contained in these two repositories:
 The READMEs of those repos contain more information about the source code and
 how to run and test it.
 
+## Getting help
+
+There are a number of ways in which you can contact us if you have any
+questions about deploying or using Romana or about contributing to our code.
+
+* By email: [info@romana.io](mailto:info@romana.io).
+* Via our [Romana developer mailing list](https://groups.google.com/forum/?hl=en#!forum/romana-dev).
+* Via our [Romana user mailing list](https://groups.google.com/forum/?hl=en#!forum/romana-user).
+* On the [Romana Slack channel](https://romana.slack.com/). Please note that you will need an invite for this channel. Please contact us [by email](mailto:info@romana.io) to request an invite.
+
