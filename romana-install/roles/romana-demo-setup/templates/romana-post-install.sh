@@ -31,15 +31,12 @@ exec > /dev/null
 # to configure the hosts/tenants/segments used in a simple setup.
 
 # Create hosts
-# TODO: Generate this from variables
 romana add-host ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }} {{ stack_nodes.Controller.mgmt_ip }} {{ stack_nodes.Controller.gateway | ipaddr(0) }} 9604
 {% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
 romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_nodes[node].mgmt_ip }} {{ stack_nodes[node].gateway | ipaddr(0) }} 9604
 {% endfor %}
 
 # Create tenants and segments
-# TODO: Remove the id:0 bits once master branch has fixed its JSON handling
-#  -- admin
 romana create-tenant admin
 romana add-segment admin default
 romana add-segment admin s1
