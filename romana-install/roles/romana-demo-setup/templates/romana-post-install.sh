@@ -19,11 +19,6 @@ if [[ -f $HOME/.profile ]]; then
 	source "$HOME/.profile"
 fi
 
-if ! mkdir /var/tmp/romana-demo-setup; then
-	# This has probably been done already. We can skip it
-	exit
-fi
-
 # Suppress output
 exec > /dev/null
 
