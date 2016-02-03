@@ -4,6 +4,7 @@
 Vagrant.configure(2) do |config|
   # Common VM configuration
   config.vm.box = "ubuntu/trusty64"
+  config.vm.box_url = "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provision "shell", inline: <<-EOF
     apt-get install python-apt
