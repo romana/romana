@@ -10,7 +10,8 @@ designs.
 
 To get started with Romana running on Devstack, some scripts and Ansible
 playbooks have been provided to automate the setup and deployment, using
-Amazon EC2 Instances or local Virtualbox VMs.
+[Amazon EC2 Instances](#romana-on-amazon-ec2-instances) or
+local [Virtualbox VMs](#romana-on-virtualbox-vms).
 The scripts and playbooks are located in this repository.
 They will access other repositories to download required pieces of the Romana system,
 as well as some binaries we have already pre-compiled for your convenience.
@@ -97,7 +98,7 @@ Approximately 5GB of available RAM is required, mainly due to the Devstack Contr
 
 **Installing packages**
 
-This setup requires
+This setup requires recent versions of
 - [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 - [Vagrant](https://www.vagrantup.com/downloads.html)
 
