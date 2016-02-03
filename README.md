@@ -125,7 +125,7 @@ cd romana/romana-install
 Run the installer. This will create the Devstack cluster, install and activate Romana Cloud-Native tools.
 
 ```bash
-./romana-setup --target vagrant
+./romana-setup -t vagrant
 ```
 
 Installation will take a while, due to some large downloads, and long installation steps. Please be patient.
@@ -136,7 +136,7 @@ You might want to take a [snapshot](https://www.virtualbox.org/manual/ch01.html#
 
 To uninstall, use the 'uninstall' subcommand.
 ```bash
-./romana-setup --target vagrant uninstall
+./romana-setup -t vagrant uninstall
 ```
 
 ## Using The System
