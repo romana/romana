@@ -143,6 +143,7 @@ Check out Romana repository.
 ```bash
 git clone https://github.com/romana/romana
 cd romana/romana-install
+```
 
 Run the installer. This will create the Devstack cluster, install and activate Romana Cloud-Native tools.
 
