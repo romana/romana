@@ -29,7 +29,7 @@ SSH and AWS credentials.
 This setup requires ansible v1.9.3+ and boto. It is generally best to install these via python's ``pip`` tool.
 ```bash
 sudo apt-get install git python-pip python-dev
-sudo pip install ansible==1.9.4 boto awscli
+sudo pip install ansible==1.9.4 boto awscli netaddr
 ```
 
 **SSH key for access to EC2 instances**
@@ -39,7 +39,7 @@ This setup expects your EC2 Private Key in `~/.ssh/ec2_id_rsa`
 **Setting up AWS tools**
 
 Configure awscli with your AWS Credentials.
-```bash-session
+```sh-session
 $ aws configure
 AWS Access Key ID [None]: A*******************
 AWS Secret Access Key [None]: ****************************************
@@ -115,7 +115,61 @@ See also: [Try Romana Now](http://romana.io/try_romana/openstack/)
 
 ## Romana on Virtualbox VMs
 
-Under development.
+You may wish to deploy this environment on your local machine using Virtualbox.
+Approximately 5GB of available RAM is required, mainly due to the Devstack Controller instance needing 4GB to function.
+
+### Tools
+
+This setup requires
+- [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
+- [Vagrant](https://www.vagrantup.com/downloads.html)
+
+Also required are Ansible and the netaddr module. It is generally best to install these via python's ``pip`` tool.
+```bash
+# Example commands to use on Ubuntu.
+sudo apt-get install git python-pip python-dev
+sudo pip install ansible==1.9.4 netaddr
+```
+
+Ensure the `vagrant` command can be run without specifying its full path.
+```sh-session
+$ type -P vagrant
+/usr/local/bin/vagrant
+```
+
+### Install
+
+Check out Romana repository.
+```bash
+git clone https://github.com/romana/romana
+cd romana/romana-install
+
+Run the installer. This will create the Devstack cluster, install and activate Romana Cloud-Native tools.
+
+```bash
+./romana-setup --target vagrant
+```
+
+Installation will take a while, due to some large downloads, and long installation steps. Please be patient.
+At the end of the installation, you should see a summary like this:
+
+```
+Devstack Summary
+================
+
+Controller
+----------
+IP: 192.168.99.10
+http://192.168.99.10
+(username: admin, password: secrete)
+ssh -i /.../romana/romana-install/romana_id_rsa ubuntu@192.168.99.10
+
+Other Nodes
+-----------
+ssh -i /.../romana/romana-install/romana_id_rsa ubuntu@192.168.99.11
+```
+
+You might want to take a [snapshot](https://www.virtualbox.org/manual/ch01.html#snapshots) of the VMs at this stage.
 
 ## Working with the code
 
