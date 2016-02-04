@@ -23,12 +23,12 @@
     "CoreBranch": {
       "Description": "Branch to pull core binaries from ",
       "Type": "String",
-      "Default": "feature/kubernetes-handler"
+      "Default": "feature/k8s-handler"
     },
     "RomanaBranch": {
       "Description": "Check out custom branch of romana repo",
       "Type": "String",
-      "Default": "dev/kubernetes-demo"
+      "Default": "dev/k8s-demo"
     },
     "AdditionalComputeHosts": {
       "Description": "One compute host is mandatory, this is a number of extra compute hosts to add (0-10)",

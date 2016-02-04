@@ -12,4 +12,4 @@ select 3
 stuff "sleep 3 && /bin/ipam -rootUrl http://__MASTER_IP__:9600^M"
 screen -t romana-agent
 select 4
-stuff "sleep 3 && /bin/agent -rootUrl http://__MASTER_IP__:9600^M"
+stuff "until ip link | grep -q romana-gw; do sleep 10; done; /bin/agent -rootUrl http://__MASTER_IP__:9600^M"
