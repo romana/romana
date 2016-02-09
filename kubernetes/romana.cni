@@ -42,7 +42,7 @@ IPAM_TYPE="romana-ipam"
 
 # -- Helpers
 get_pod            () { while read line; do [[ ${line/=*/} == "K8S_POD_NAME" ]] && echo ${line/*=/} || :; done; }
-get_tenant         () { while read line; do [[ ${line/=*/} == "tenant" ]] && echo ${line/*=/} || :; done; }
+get_tenant         () { while read line; do [[ ${line/=*/} == "romana.io/tenant" ]] && echo ${line/*=/} || :; done; }
 get_labels         () { awk '/Labels/ { print $2}' | xargs -d"," -n1 ; } 
 get_json_kv        () { sed 's/["{}]//g' | xargs -d "," -n1; }
 get_ip             () { while read line; do [[ ${line/:*/} == "ip" ]] && echo ${line/*:/} || :; done; }
