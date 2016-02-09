@@ -71,6 +71,9 @@ Run the installer. This will create the Devstack cluster, install and activate R
 ./romana-setup
 ```
 
+See details below about [using the system](#using-the-system) after the installation has completed.
+And [contact us](#getting-help) for more information or assistance.
+
 *Note:* By default, the stack name will be your username.
 If you prefer to use a different name for the stack, you can override this by providing an extra option when launching:
 ```bash
@@ -80,7 +83,6 @@ The name should be a single word, and only contain letters and numbers. (No hyph
 
 The EC2 installation takes 20-25 mins to complete (on t2.large instances) and creates an OpenStack DevStack cluster (Liberty release) with a single Controller Node and up to 4 Compute Nodes. Each OpenStack Node runs on a dedicated EC2 instance. Romana installs its OpenStack ML2 and IPAM drivers and creates a Romana router gateway interface on each Compute Node.
 
-Once installed, you can perform a variety of checks and experiments on your own. See the [Wiki](https://github.com/romana/romana/wiki) for details.
 
 ### Teardown
 
@@ -152,7 +154,7 @@ Other things you may wish to do:
   * Provide the required details
   * Optionally, select the Advanced tab and specify a segment name in the `Romana Network Segment` field
   * Click the Launch button
-- launch an instance using command-line: `nova boot --flavor m1.tiny --image cirros-0.3.4-x86_64-uec --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=default instance-name`
+- launch an instance using command-line: `nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=default instance-name`
 - connect to the instance: `ssh cirros@instance-ip`
 - install an ubuntu image:
   * Create a new flavor with RAM:512MB, Disk: 3GB, VCPUs: 1: `nova flavor-create m1.smallish auto 512 3 1`
