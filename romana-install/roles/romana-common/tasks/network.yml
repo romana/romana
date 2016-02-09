@@ -1,4 +1,12 @@
 ---
+# Remove the virbr0 interface
+- name: Install romana remove-br script
+  copy: src="romana-remove-br.sh" dest="/var/tmp/romana-remove-br.sh" mode=0755
+  
+- name: Execute romana remove-br script
+  become: true
+  become_user: root
+  shell: /var/tmp/romana-remove-br.sh
 
 # Check if the romana-gw already exists
 - shell: /sbin/ip link show romana-gw 2>/dev/null
