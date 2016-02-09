@@ -40,12 +40,10 @@ configure_romana () {
 
 configure_cni_plugin () {
 	cp -r /home/ubuntu/romana/kubernetes/etc/cni /etc/
+	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /etc/cni/net.d/10-romana.conf
 	mkdir -p /opt/cni/bin/
 	cp -f /home/ubuntu/romana/kubernetes/romana.cni /opt/cni/bin/romana
 	chmod +x /opt/cni/bin/romana
-	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /opt/cni/bin/romana
-	GATE_IP=${ROMANA_GATES[$INSTANCE_ID]}
-	sed -i "s+__GATE_SRC__+${GATE_IP%%/*}+g" /opt/cni/bin/romana
 }
 
 start_mysql () {
