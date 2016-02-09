@@ -31,7 +31,7 @@
   # and hard to maintain.
 
 - name: Install romana remove-br script
-  template: src="romana-remove-br.sh" dest="/var/tmp/romana-remove-br.sh" mode=0755
+  copy: src="romana-remove-br.sh" dest="/var/tmp/romana-remove-br.sh" mode=0755
   
 - name: Execute romana remove-br script
   become: true
