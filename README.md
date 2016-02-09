@@ -56,7 +56,7 @@ This will be addressed in the future.
 
 ### Installation
 
-Check out Romana repository.
+Check out the Romana repository.
 ```bash
 git clone https://github.com/romana/romana
 cd romana/romana-install
@@ -118,7 +118,7 @@ $ type -P vagrant
 
 ### Installation
 
-Check out Romana repository.
+Check out the Romana repository.
 ```bash
 git clone https://github.com/romana/romana
 cd romana/romana-install
