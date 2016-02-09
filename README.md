@@ -81,7 +81,9 @@ If you prefer to use a different name for the stack, you can override this by pr
 ```
 The name should be a single word, and only contain letters and numbers. (No hyphens, underscores, etc.)
 
-The EC2 installation takes 20-25 mins to complete (on t2.large instances) and creates an OpenStack DevStack cluster (Liberty release) with a single Controller Node and up to 4 Compute Nodes. Each OpenStack Node runs on a dedicated EC2 instance. Romana installs its OpenStack ML2 and IPAM drivers and creates a Romana router gateway interface on each Compute Node.
+The EC2 installation takes 20-25 mins to complete (on t2.large instances) and creates an OpenStack DevStack cluster (Liberty release) with a single Controller Node and up to 4 additional Compute Nodes. Each OpenStack Node runs on a dedicated EC2 instance. Romana installs its OpenStack ML2 and IPAM drivers and creates a Romana router gateway interface on each Compute Node.
+
+By default, you will have one Controller and one additional Compute node. You can change the number of Compute nodes by editing `group_vars/all/stack` and providing a different value for `compute_nodes`.
 
 
 ### Teardown
