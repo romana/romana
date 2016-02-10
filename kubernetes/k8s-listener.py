@@ -6,7 +6,7 @@ import simplejson
 def hook(r, *args, **kwargs):
     print r
 
-url = 'http://localhost:8080/apis/romana3.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
+url = 'http://localhost:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
 
 def process(s):
     obj = simplejson.loads(s)
