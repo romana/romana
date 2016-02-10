@@ -16,5 +16,3 @@ stuff "sleep 10 && /home/ubuntu/kubernetes/cluster/ubuntu/binaries/minion/kubele
 screen -t kube-proxy
 select 5
 stuff "sleep 10 && /home/ubuntu/kubernetes/cluster/ubuntu/binaries/minion/kube-proxy --master=http://__MASTER_IP__:8080 --proxy-mode=iptables^M"
-
-/bin/kubectl create --validate=false -f /home/ubuntu/romana/kubernetes/romana-tpr.yaml > /tmp/romana-tpr.log 2>&1 

@@ -162,6 +162,12 @@ start_romana_screen () {
 	fi
 }
 
+register_network_policy_resource () {
+	if is_master; then
+		kubectl -s "${MASTER_IP}:8080" create --validate=false -f /home/ubuntu/romana/kubernetes/romana-tpr.yaml > /tmp/romana-tpr.log 2>&1 
+	fi
+}
+	
 #main 
 	get_kubernetes
 	get_romana_binaries
@@ -174,3 +180,4 @@ start_romana_screen () {
 	start_kubernetes_screen
 	configure_gate_and_routes
 	register_node
+	register_network_policy_resource
