@@ -5,13 +5,27 @@
    "apiVersion" : "romana.io/demo/v1",
    "kind" : "NetworkPolicy",
    "spec" : { 
-               "selector" : { 
+               "podSelector" : { 
                     "romana.io/tenant" : "t1" 
                 },
-                "allowTo" : {
-                    "pods" : [ { "romana.io/tenant" : "t1" } ],
-                    "protocol" : "TCP",
-		    "ports" : [ 8000, 8080 ]
+                "allowIncoming" : {
+                    "toPorts" : [
+			{
+		          "port": 8080,
+			  "protocol": "TCP"
+			},
+			{
+		          "port": 8000,
+			  "protocol": "TCP"
+			}
+                    ],
+                    "from" : [
+			{
+			   "pods" : {
+				"access" : "admin"
+	                   }
+			}
+                    ]
                 }
            }
 }
