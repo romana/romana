@@ -164,6 +164,10 @@ start_romana_screen () {
 
 register_network_policy_resource () {
 	if is_master; then
+		until nc -z ${MASTER_IP} 8080; do
+			echo "In Register network policy resource, waiting for master to show up"
+			sleep 10
+		done;
 		kubectl -s "${MASTER_IP}:8080" create --validate=false -f /home/ubuntu/romana/kubernetes/romana-tpr.yaml > /tmp/romana-tpr.log 2>&1 
 	fi
 }
