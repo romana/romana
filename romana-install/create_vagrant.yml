@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  connection: local
+  roles:
+    - generate-vagrantfile
+  tasks:
+    - name: Create VMs
+      command: vagrant up

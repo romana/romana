@@ -1,0 +1,3 @@
+devstack_password: "secrete"
+devstack_service_token: "eb24cc1eb0036c7971237850c767d9f6bae017a3"
+devstack_pip_cache: "root_pip_cache_stable-liberty_20160106.tar.gz"

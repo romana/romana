@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - group_vars/aws
+  roles:
+    - generate-cf-template
+  tasks:
+    - name: Create Stack with Cloudformation. This may take around 5 minutes.
+      cloudformation: stack_name="{{stack_name}}" region={{region}} disable_rollback=true template="devstack_lite.json"
+      args:
+         template_parameters:
+           KeyName: "{{ key_name }}"
+           ControllerInstanceType: "{{ instance_type }}"
+           ControllerAMI: "{{ controller_image }}"
+           ComputeInstanceType: "{{ instance_type }}"
+           ComputeAMI: "{{ compute_image }}"

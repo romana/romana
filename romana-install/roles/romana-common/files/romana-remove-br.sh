@@ -15,7 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Remove default virbr0 bridge.
+# Remove default virbr0 bridge. This is created when devstack installs
+# libvirt, but we don't need bridges.
 virbr_present=$(virsh net-list --all)
 if [[ $virbr_present =~ 'active' ]]; then
     virsh net-destroy default

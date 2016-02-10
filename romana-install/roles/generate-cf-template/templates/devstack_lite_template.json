@@ -51,8 +51,8 @@ under the License.
         "z": 2,
         "parent": "3ec442c6-29fd-45ad-8ff2-ecb2e3dce920",
         "embeds": [
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-          "{{ node.nic_uuid }}",
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+          "{{ cf_data.host_data[node].nic_uuid }}",
 {% endfor %}
           "823ba251-91bf-41b4-9743-800ce02c81af"
         ]
@@ -113,8 +113,8 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.uuid }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+      "{{ cf_data.host_data[node].uuid }}": {
         "size": {
           "width": 60,
           "height": 60
@@ -126,7 +126,7 @@ under the License.
         "z": 1,
         "embeds": [],
         "isconnectedto": [
-          "{{ node.nic_uuid }}"
+          "{{ cf_data.host_data[node].nic_uuid }}"
         ],
         "isrelatedto": [
           "d1a2f6de-482a-43e9-8572-2dc7617605c7"
@@ -170,10 +170,10 @@ under the License.
         },
         "z": 5
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref1 }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+      "{{ cf_data.host_data[node].xref1 }}": {
         "source": {
-          "id": "{{ node.uuid }}"
+          "id": "{{ cf_data.host_data[node].uuid }}"
         },
         "target": {
           "id": "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
@@ -212,10 +212,10 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref2 }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+      "{{ cf_data.host_data[node].xref2 }}": {
         "source": {
-          "id": "{{ node.uuid }}"
+          "id": "{{ cf_data.host_data[node].uuid }}"
         },
         "target": {
           "id": "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
@@ -270,8 +270,8 @@ under the License.
         },
         "z": 4
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.nic_uuid }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+      "{{ cf_data.host_data[node].nic_uuid }}": {
         "size": {
           "width": 60,
           "height": 60
@@ -288,13 +288,13 @@ under the License.
         ]
       },
 {% endfor %}
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref3 }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+      "{{ cf_data.host_data[node].xref3 }}": {
         "source": {
-          "id": "{{ node.uuid }}"
+          "id": "{{ cf_data.host_data[node].uuid }}"
         },
         "target": {
-          "id": "{{ node.nic_uuid }}"
+          "id": "{{ cf_data.host_data[node].nic_uuid }}"
         },
         "z": 4
       },
@@ -308,10 +308,10 @@ under the License.
         },
         "z": 6
       },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-      "{{ node.xref4 }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+      "{{ cf_data.host_data[node].xref4 }}": {
         "source": {
-          "id": "{{ node.nic_uuid }}"
+          "id": "{{ cf_data.host_data[node].nic_uuid }}"
         },
         "target": {
           "id": "cb82b184-7d27-4c07-a4c4-e783e9d40b7a"
@@ -501,12 +501,12 @@ under the License.
     "PrivateSubnet": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
-        "CidrBlock": "192.168.0.0/24",
+        "CidrBlock": "{{ host_cidr }}",
         "MapPublicIpOnLaunch": "true",
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-private-subnet"
+            "Value": "{{ stack_name }}-private-subnet"
           },
           {
             "Key": "Application",
@@ -531,7 +531,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-ig"
+            "Value": "{{ stack_name }}-ig"
           }
         ]
       },
@@ -544,11 +544,11 @@ under the License.
     "VPC": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
-        "CidrBlock": "192.168.0.0/24",
+        "CidrBlock": "{{ host_cidr }}",
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-vpc"
+            "Value": "{{ stack_name }}-vpc"
           },
           {
             "Key": "Application",
@@ -564,7 +564,7 @@ under the License.
         }
       }
     },
-    "ControllerInstance": {
+    "Controller": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "InstanceType": {
@@ -590,7 +590,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-controller"
+            "Value": "{{ stack_name }}-controller"
           },
           {
             "Key": "StackHost",
@@ -598,7 +598,7 @@ under the License.
           },
           {
             "Key": "automation_group",
-            "Value": "{{ devstack_name }}_controller"
+            "Value": "{{ stack_name }}_controller"
           }
         ],
         "UserData": {
@@ -607,7 +607,7 @@ under the License.
               "",
               [
                 "#!/bin/bash", "\n",
-{% for cmd in bootstrap %}
+{% for cmd in cf_data.bootstrap %}
                 {{ cmd | to_json }}, "\n",
 {% endfor %}
                 ""
@@ -622,8 +622,8 @@ under the License.
         }
       }
     },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-    "ComputeInstance{{ node.suffix }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+    "{{ node }}": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "InstanceType": {
@@ -641,7 +641,7 @@ under the License.
         "NetworkInterfaces": [
           {
             "NetworkInterfaceId": {
-              "Ref": "{{ node.nic }}"
+              "Ref": "{{ cf_data.host_data[node].nic }}"
             },
             "DeviceIndex": "0"
           }
@@ -649,15 +649,15 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-compute{{ node.suffix }}"
+            "Value": "{{ stack_name }}-compute{{ cf_data.host_data[node].suffix }}"
           },
           {
             "Key": "StackHost",
-            "Value": "Compute{{ node.suffix }}"
+            "Value": "Compute{{ cf_data.host_data[node].suffix }}"
           },
           {
             "Key": "automation_group",
-            "Value": "{{ devstack_name }}_compute"
+            "Value": "{{ stack_name }}_compute"
           }
         ],
         "UserData": {
@@ -666,7 +666,7 @@ under the License.
               "",
               [
                 "#!/bin/bash", "\n",
-{% for cmd in bootstrap %}
+{% for cmd in cf_data.bootstrap %}
                 {{ cmd | to_json }}, "\n",
 {% endfor %}
                 ""
@@ -677,7 +677,7 @@ under the License.
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
-          "id": "{{ node.uuid }}"
+          "id": "{{ cf_data.host_data[node].uuid }}"
         }
       }
     },
@@ -689,11 +689,11 @@ under the License.
         "SecurityGroupIngress": [
           {
             "IpProtocol": "-1",
-            "CidrIp": "192.168.0.0/16"
+            "CidrIp": "{{ host_cidr }}"
           },
           {
             "IpProtocol": "-1",
-            "CidrIp": "10.0.0.0/8"
+            "CidrIp": "{{ romana_cidr }}"
           },
           {
             "IpProtocol": "icmp",
@@ -711,7 +711,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-common"
+            "Value": "{{ stack_name }}-sg-common"
           }
         ],
         "VpcId": {
@@ -745,7 +745,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-sg-http"
+            "Value": "{{ stack_name }}-sg-http"
           }
         ],
         "VpcId": {
@@ -764,7 +764,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-nw-acl"
+            "Value": "{{ stack_name }}-nw-acl"
           }
         ],
         "VpcId": {
@@ -832,7 +832,7 @@ under the License.
     "nic0": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
-        "PrivateIpAddress": "{{ nodes.controllerNode.ip }}",
+        "PrivateIpAddress": "{{ stack_nodes.Controller.mgmt_ip }}",
         "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
@@ -848,7 +848,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-nic0"
+            "Value": "{{ stack_name }}-nic0"
           }
         ]
       },
@@ -858,11 +858,11 @@ under the License.
         }
       }
     },
-{% for node in nodes.computeNodes[:devstack_compute_nodes] %}
-    "{{ node.nic }}": {
+{% for node in cf_data.compute_hosts[:compute_nodes] %}
+    "{{ cf_data.host_data[node].nic }}": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
-        "PrivateIpAddress": "{{ node.ip }}",
+        "PrivateIpAddress": "{{ stack_nodes[node].mgmt_ip }}",
         "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
@@ -875,13 +875,13 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-{{ node.nic }}"
+            "Value": "{{ stack_name }}-{{ cf_data.host_data[node].nic }}"
           }
         ]
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
-          "id": "{{ node.nic_uuid }}"
+          "id": "{{ cf_data.host_data[node].nic_uuid }}"
         }
       }
     },
@@ -942,7 +942,7 @@ under the License.
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{ devstack_name }}-routes"
+            "Value": "{{ stack_name }}-routes"
           }
         ],
         "VpcId": {
@@ -1059,7 +1059,7 @@ under the License.
     "ControllerInstanceType": {
       "Description": "EC2 instance type for Devstack Controller Node",
       "Type": "String",
-      "Default": "t2.micro",
+      "Default": "t2.large",
       "ConstraintDescription": "Must be a valid EC2 instance type."
     },
     "ControllerAMI": {
@@ -1071,7 +1071,7 @@ under the License.
     "ComputeInstanceType": {
       "Description": "EC2 instance type for Devstack Compute Nodes",
       "Type": "String",
-      "Default": "t2.micro",
+      "Default": "t2.large",
       "ConstraintDescription": "Must be a valid EC2 instance type."
     },
     "ComputeAMI": {

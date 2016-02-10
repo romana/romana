@@ -22,12 +22,12 @@ usage() {
 	echo "       romana-setup [-t targetname] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
-	echo "Targets: aws (default), virtualbox"
+	echo "Targets: aws (default), vagrant"
 	echo "Actions: install (default), uninstall"
 	echo ""
-	echo "Example: ./romana-setup install -e devstack_name=xyzdemo"
-	echo "Example: ./romana-setup uninstall -e devstack_name=xyzdemo"
-	echo "Example: ./romana-setup install -e devstack_name=xyzdemo \\"
+	echo "Example: ./romana-setup install -e stack_name=xyzdemo"
+	echo "Example: ./romana-setup uninstall -e stack_name=xyzdemo"
+	echo "Example: ./romana-setup install -e stack_name=xyzdemo \\"
 	echo "           -e instance_type=t2.medium \\"
 	echo "           -e romana_core_branch=master \\"
 	echo "           -e romana_networking_branch=stable/liberty"
@@ -51,7 +51,7 @@ if (( $# > 0 )); then
 				;;
 			-t|--target)
 				case "$2" in
-					aws|virtualbox)
+					aws|vagrant)
 						target="$2"
 						shift 2
 						;;
@@ -99,12 +99,16 @@ case "$target" in
 	aws)
 		case "$action" in
 			install)
-				ansible-playbook "$@" -i /dev/null create.yml &&
-					ansible-playbook "$@" -i ec2.py config.yml &&
-					[[ -f "stackinfo.txt" ]] && cat stackinfo.txt
+				ansible-playbook "$@" -i /dev/null create_aws.yml &&
+					ansible-playbook "$@" -i ec2.py config_aws.yml &&
+					[[ -f "aws-stackinfo.txt" ]] && cat aws-stackinfo.txt
 				;;
 			uninstall)
-				ansible-playbook "$@" -i /dev/null destroy.yml
+				ansible-playbook "$@" -i /dev/null destroy_aws.yml
+				# Cleanup generated files
+				for f in devstack_lite.json aws-stackinfo.txt; do
+					[[ -f "$f" ]] && echo "Deleting $f" && rm "$f"
+				done
 				;;
 			*)
 				echo "Unknown action '$action' for target '$target'"
@@ -112,13 +116,20 @@ case "$target" in
 				;;
 		esac
 		;;
-	virtualbox)
+	vagrant)
 		case "$action" in
 			install)
-				echo "Not implemented yet"
+				# echo "Not implemented yet"
+				ansible-playbook "$@" -i /dev/null create_vagrant.yml; # &&
+					ansible-playbook "$@" -i vagrant.py config_vagrant.yml &&
+					[[ -f "vagrant-stackinfo.txt" ]] && cat vagrant-stackinfo.txt
 				;;
 			uninstall)
-				echo "Not implemented yet"
+				ansible-playbook "$@" -i /dev/null destroy_vagrant.yml
+				# Cleanup generated files
+				for f in Vagrantfile vagrant-stackinfo.txt; do
+					[[ -f "$f" ]] && echo "Deleting $f" && rm "$f"
+				done
 				;;
 			*)
 				echo "Unknown action '$action' for target '$target'"
