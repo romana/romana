@@ -6,10 +6,10 @@
    "kind" : "NetworkPolicy",
    "spec" : { 
                "selector" : { 
-                    "tenant" : "t1" 
+                    "romana.io/tenant" : "t1" 
                 },
                 "allowTo" : {
-                    "pods" : [ { "tenant" : "t1" } ],
+                    "pods" : [ { "romana.io/tenant" : "t1" } ],
                     "protocol" : "TCP",
 		    "ports" : [ 8000, 8080 ]
                 }
