@@ -111,3 +111,14 @@ PING 10.3.17.3 (10.3.17.3) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.601/193.104/385.608/192.504 ms
 ```
 4) Create pod for tenant t2 and try to ping across tenants
+
+NetworkPolicy
+-------------
+
+Kubernetes 3rd party resource is running on kubernetes master node allowing to manage
+NetworkPolicy objects.
+
+```
+# create
+curl -X POST -d @romana-network-policy-request2.json http://localhost:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/
+```
