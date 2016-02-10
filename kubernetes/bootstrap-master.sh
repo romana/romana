@@ -28,7 +28,7 @@ create_user_ssh_config () {
 install_packages () { 
 	apt-get update
 	DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip jq mysql-server git iptables  vim docker.io
-	pip install awscli
+	pip install awscli simplejson
 	which nsenter || docker run -v /usr/local/bin:/target jpetazzo/nsenter
 }
 
