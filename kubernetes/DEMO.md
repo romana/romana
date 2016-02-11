@@ -70,7 +70,7 @@ root@ip-192-168-0-10:/home/ubuntu# kubectl get pods -o json | jq '.items[] | { N
 }
 ```
 
-Pick one of nginx-default- container that is running in master node and step into it
+Pick one of nginx-default- container that is running in master node and step into it. The "step-into" script merely puts you into the namespace of the specified container, as if you had logged into it.
 ```
 root@ip-192-168-0-10:/home/ubuntu# ./romana/kubernetes/step-into.sh nginx-default-wid28
 Stepping into container docker://e0f2cd8e7f0242dcc596f8d1bb32ebb10da4be2a141d94e585651a7f6dbc4d10 namespace
