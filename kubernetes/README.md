@@ -120,5 +120,5 @@ NetworkPolicy objects.
 
 ```
 # create
-curl -X POST -d @romana-network-policy-request2.json http://localhost:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/
+curl -X POST -d @romana-network-policy-request.json http://localhost:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/
 ```

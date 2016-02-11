@@ -1,6 +1,9 @@
 {
    "metadata": {
-     "name" : "policy1"
+     "name" : "policy1",
+     "labels":{
+        "owner":"t1"
+     }
    },
    "apiVersion" : "romana.io/demo/v1",
    "kind" : "NetworkPolicy",
