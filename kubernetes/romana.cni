@@ -43,6 +43,7 @@ IPAM_TYPE="romana-ipam"
 # -- Helpers
 get_pod            () { while read line; do [[ ${line/=*/} == "K8S_POD_NAME" ]] && echo ${line/*=/} || :; done; }
 get_tenant         () { while read line; do [[ ${line/=*/} == "romana.io/tenant" ]] && echo ${line/*=/} || :; done; }
+get_segment        () { while read line; do [[ ${line/=*/} == "romana.io/segment" ]] && echo ${line/*=/} || :; done; }
 get_labels         () { awk '/Labels/ { print $2}' | xargs -d"," -n1 ; } 
 get_json_kv        () { sed 's/["{}]//g' | xargs -d "," -n1; }
 get_ip             () { while read line; do [[ ${line/:*/} == "ip" ]] && echo ${line/*:/} || :; done; }
@@ -122,8 +123,9 @@ req () {
 ipam_allocate_ip () {
 	# CNI expects us to read ipam config from stdin, but for demo config is static anyway.
 	tenant=$1
-	node=$2
-	IP=$(curl -s "http://$ROMANA_MASTER_IP:9601/allocateIpByName?tenantName=${tenant}&segmentName=default&hostName=${node}&instanceId=0" | get_json_kv | get_ip)
+	segment=$2
+	node=$3
+	IP=$(curl -s "http://$ROMANA_MASTER_IP:9601/allocateIpByName?tenantName=${tenant}&segmentName=${segment}&hostName=${node}&instanceId=0" | get_json_kv | get_ip)
 	echo $IP
 }
 
@@ -136,12 +138,15 @@ set_up_pod () {
 	log "--- POD = $POD ---"
 	TENANT=$( $KUBECTL $KUBEARGS describe pod $POD | get_labels | get_tenant )
 	log "--- TENANT = $TENANT ---"
+	SEGMENT=$( $KUBECTL $KUBEARGS describe pod $POD | get_labels | get_segment )
+	log "--- SEGMENT = $SEGMENT ---"
 	NODE=$( $KUBECTL $KUBEARGS get pods -o wide | grep "$POD " | awk '{ print $6 }' )
 	log "--- NODE = $NODE ---"
 
 	# Asking romana ipam for an IP address, based on `tenant` label.
 	log "--- PRE-IPAM ---"
-	IP=$(ipam_allocate_ip $TENANT $NODE)
+	[[ $SEGMENT ]] || SEGMENT=default
+	IP=$(ipam_allocate_ip $TENANT $SEGMENT $NODE)
 	log "--- POST-IPAM IP=$IP---"
 	[[ $IP ]] || die "Failed to allocate IP address for pod $POD on node $NODE with tenant $TENANT" 2
 

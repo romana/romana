@@ -5,6 +5,7 @@ metadata:
   labels:
     app: nginx
     romana.io/tenant: t1
+    romana.io/segment: s1
 spec:
   containers:
   - name: nginx
