@@ -131,6 +131,11 @@ def install_rules(rules):
         print full_rule.split()
         call(full_rule.split())
 
+def install_first_jump(forward_chain, firewall_policy_name):
+    cmd = "iptables -I  %s 1 -j %s" % (forward_chain, firewall_policy_name)
+    print cmd
+    call(cmd.split())
+
 def process(s):
     obj = simplejson.loads(s)
     op = obj["type"]
@@ -171,6 +176,8 @@ def process(s):
         install_rules(base_rules)
         install_rules(in_rules)
         install_rules(out_rules)
+        install_first_jump(src_fw_name, firewall_policy_name)
+        install_first_jump(dst_fw_name, firewall_policy_name)
 
         print "Added: %s" % rule
     elif op == 'DELETED':
