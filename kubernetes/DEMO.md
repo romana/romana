@@ -1,3 +1,16 @@
+Key restrictions at this time
+=============================
+* K8S doesn’t support tenants, so we emulate tenancy by adding meta data and labels, such as what you see in the polocy.
+* Only use policies of exactly the defined nature and template. We can currently only handle TCP and port. No other protocols.
+* Even though “from” and “toPorts” are list items, we currently only support exactly one item for each of those.
+* The policy name cannot be more than 6 characters long!
+* Do not apply/edit/delete policies BEFORE you create the pods, ONLY AFTER the pods are up and running. This will eventually be allowed, but for now it is not.
+* What is the meaning of “tier” and “owner” and where does “frontend” and “backend” come from (all of those are used in the policy)? To make the policy nicer to look at for the demo we decided to use “tier” instead of “romana.io/segment”. We hard-coded that into our code for now! Same with “owner” being easier to look at than “romana.io/tenant”. For ‘owner’ you can see that we used ‘t1’, which happens to be the name of a pre-created tenant in the Romana system. To make the policy nicer looking for the demo, we also pre-created segments with the names “frontend” and “backend”, rather than the usual “s1”, “s2”, etc. That’s also currently hard-coded in our setup. Clearly, more flexibility around this will be provided for production. So, now you know where those names came from and how they map to Romana.
+* Policies are applied to segments, not individual pods.
+* By default, Romana will allow all pods within the same “tier” (segment) to talk to each other.
+* Names of “tiers” (segments) don’t have to be unique across the system, they just need to be unique within a tenant.
+
+
 This is a script for kubernetes demo
 ====================================
 
