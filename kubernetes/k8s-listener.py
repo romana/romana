@@ -132,7 +132,7 @@ def install_rules(rules):
         call(full_rule.split())
 
 def install_first_jump(forward_chain, firewall_policy_name):
-    cmd = "iptables -I  %s 1 -j %s" % (forward_chain, firewall_policy_name)
+    cmd = "iptables -I  %s 1 -j %s" % (forward_chain.replace("ROMANA","pani"), firewall_policy_name)
     print cmd
     call(cmd.split())
 
