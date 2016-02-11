@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CID=$(kubectl get pod $1 -o json | jq -r '.status.containerStatuses[].containerID')
+CID=$(kubectl -s 192.168.0.10:8080 get pod $1 -o json | jq -r '.status.containerStatuses[].containerID')
 PID=$(docker top ${CID##docker://} | awk '/^root/ { print $2 }')
 
 if ! [[ $PID ]]; then 
