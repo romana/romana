@@ -51,8 +51,11 @@ addr_scheme = {
 def _make_u32_match(from_tenant, from_segment, to_tenant, to_segment):
     """
     Creates the obscure u32 match string with bitmasks and all that's needed.
+
     Something like this:
+
     "0xc&0xff00ff00=0xa001200&&0x10&0xff00ff00=0xa001200"
+
     """
     mask = src = dst = 0
 
@@ -66,14 +69,14 @@ def _make_u32_match(from_tenant, from_segment, to_tenant, to_segment):
     # Adding the mask and values for tenant
     shift_by = addr_scheme['segment_width'] + addr_scheme['endpoint_width']
     mask |= ((1<<addr_scheme['tenant_width'])-1) << shift_by
-    src  |= ((1<<from_tenant)-1) << shift_by
-    dst  |= ((1<<to_tenant)-1) << shift_by
+    src  |= from_tenant << shift_by
+    dst  |= to_tenant << shift_by
 
     # Adding the mask and values for segment
     shift_by = addr_scheme['endpoint_width']
     mask |= ((1<<addr_scheme['segment_width'])-1) << shift_by
-    src  |= ((1<<from_segment)-1) << shift_by
-    dst  |= ((1<<to_segment)-1) << shift_by
+    src  |= from_segment << shift_by
+    dst  |= to_segment << shift_by
 
     return "0xc&0x%(mask)x=0x%(src)x&&0x10&0x%(mask)x=0x%(dst)x" % \
         { "mask" : mask, "src" : src, "dst" : dst }
@@ -92,8 +95,8 @@ def make_forward_name(tenant_id, segment_id):
 
 def make_base_rules(firewall_policy_name, src_mask, dst_mask):
     base_rules=[]
-    base_rules.append('-A %s -m u32 --u32 %s -j %s-OUT' % (firewall_policy_name, src_mask, firewall_policy_name))
-    base_rules.append('-A %s -m u32 --u32 %s -j %s-IN' % (firewall_policy_name, dst_mask, firewall_policy_name))
+    base_rules.append('-A %s -m u32 --u32 %s -j %s-OUT' % (firewall_policy_name, dst_mask, firewall_policy_name))
+    base_rules.append('-A %s -m u32 --u32 %s -j %s-IN' % (firewall_policy_name, src_mask, firewall_policy_name))
     base_rules.append('-A %s -j RETURN' % firewall_policy_name)
     return base_rules
 
