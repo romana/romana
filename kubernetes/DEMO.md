@@ -87,7 +87,7 @@ root@ip-192-168-0-10:/home/ubuntu# ip a show eth0
        valid_lft forever preferred_lft forever
 ```
 
-Verify access to other containers owner by same tenant and located in same segment
+Verify access to other containers owned by same tenant and located in same segment
 ```
 root@ip-192-168-0-10:/home/ubuntu# curl 10.1.33.5
 <!DOCTYPE html>
