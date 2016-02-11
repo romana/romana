@@ -885,7 +885,7 @@ CREATE TABLE `segments` (
 
 LOCK TABLES `segments` WRITE;
 /*!40000 ALTER TABLE `segments` DISABLE KEYS */;
-INSERT INTO `segments` VALUES (1,1,'default',1),(2,2,'default',1),(3,1,'s1',2),(4,1,'s2',3),(5,2,'s1',2),(6,2,'s2',3);
+INSERT INTO `segments` VALUES (1,1,'default',1),(2,2,'default',1),(3,1,'frontend',2),(4,1,'backend',3),(5,2,'frontend',2),(6,2,'backend',3);
 /*!40000 ALTER TABLE `segments` ENABLE KEYS */;
 UNLOCK TABLES;
 

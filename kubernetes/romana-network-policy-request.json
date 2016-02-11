@@ -6,23 +6,19 @@
    "kind" : "NetworkPolicy",
    "spec" : { 
                "podSelector" : { 
-                    "romana.io/tenant" : "t1" 
+                    "tier" : "backend" 
                 },
                 "allowIncoming" : {
                     "toPorts" : [
 			{
-		          "port": 8080,
-			  "protocol": "TCP"
-			},
-			{
-		          "port": 8000,
+		          "port": 80,
 			  "protocol": "TCP"
 			}
                     ],
                     "from" : [
 			{
 			   "pods" : {
-				"access" : "admin"
+				"tier" : "frontend"
 	                   }
 			}
                     ]

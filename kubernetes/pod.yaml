@@ -4,8 +4,8 @@ metadata:
   name: nginx
   labels:
     app: nginx
-    romana.io/tenant: t1
-    romana.io/segment: s1
+    owner: t1
+    tier: default
 spec:
   containers:
   - name: nginx
