@@ -26,13 +26,13 @@ Start example pods for another tenant
 root@ip-192-168-0-10:/home/ubuntu# kubectl create -f romana/kubernetes/pod-frontend.yaml 
 pod "nginx-frontend" created
 ```
-**This pod is started for tenant `t1` in segment `frontend`, default policy should block communication with other tenants and segments**
+* *This pod is started for tenant `t1` in segment `frontend`, default policy should block communication with other tenants and segments* *
 
 ```
 root@ip-192-168-0-10:/home/ubuntu# kubectl create -f romana/kubernetes/pod-backend.yaml 
 pod "nginx-backend" created
 ```
-**This pod is started for tenant `t1` in segment `backend`, default policy should block communication with other tenants and segments, even with `nginx-frontend`**
+* *This pod is started for tenant `t1` in segment `backend`, default policy should block communication with other tenants and segments, even with `nginx-frontend`* *
 
 
 Verify containers started
