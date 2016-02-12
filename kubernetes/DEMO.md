@@ -19,7 +19,7 @@ Start example replication controller
 root@ip-192-168-0-10:/home/ubuntu# kubectl create -f romana/kubernetes/example-controller.yaml
 replicationcontroller "nginx-default" created
 ```
-**This controller would start 3 pods for tenant `t2` in segment `default`, communication between this pods should be allowed by deafult policy**
+* *This controller would start 3 pods for tenant `t2` in segment `default`, communication between this pods should be allowed by deafult policy* *
 
 Start example pods for another tenant
 ```
