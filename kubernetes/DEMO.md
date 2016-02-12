@@ -137,14 +137,14 @@ logout
 
 Create network policy object to allow access from nginx-frontend to nginx-backend
 ```
-root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-network-policy-request.json http://localhost:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/
+root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-network-policy-request.json http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/
 {
   "apiVersion": "romana.io/demo/v1",
   "kind": "NetworkPolicy",
   "metadata": {
-    "name": "policy1",
+    "name": "pol1",
     "namespace": "default",
-    "selfLink": "/apis/romana.io/demo/v1/namespaces/default/networkpolicys/policy1",
+    "selfLink": "/apis/romana.io/demo/v1/namespaces/default/networkpolicys/pol1",
     "uid": "262fd5e3-d109-11e5-8078-06f9d64b8ea3",
     "resourceVersion": "307",
     "creationTimestamp": "2016-02-11T21:48:13Z",
@@ -205,4 +205,10 @@ Commercial support is available at
 <p><em>Thank you for using nginx.</em></p>
 </body>
 </html>
+```
+
+
+Thats how you can delete policy 
+```
+curl -X DELETE  http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/pol1
 ```
