@@ -318,10 +318,14 @@ addr_scheme = {
 
 
 def process(s):
-    obj = simplejson.loads(s)
-    print obj
+    try:
+        obj = simplejson.loads(s)
+    except Exception as e:
+        print "====== could not parse:"
+        print obj
+        print "@@@@ Error: ", str(e)
+        return
     op = obj["type"]
-    details = obj["object"]["spec"]
     rule = parse_rule_specs(obj)
     if not rule:
         return
@@ -339,16 +343,16 @@ def process(s):
     dst_segment_id = get_segment_id_by_name(rule['dst_segment'], segments)
     print "Discovered dst_segment_id = %s" % dst_segment_id
 
-    policy_definition = {                                                           
+    policy_definition = {
         "policy_name" : obj['object']['metadata']['name'],
         "owner_tenant_id" : tenant_id,
         "target_segment_id" : dst_segment_id,
-        "allowFrom" : {                                                             
+        "allowFrom" : {
             "segment_id" : src_segment_id,
-            "protocol" : "tcp",                                                     
+            "protocol" : "tcp",
             "port" : obj['object']['spec']['allowIncoming']['toPorts'][0]['port']
-        }                                                                           
-    }                                                                               
+        }
+    }
 
     if op == 'ADDED':
         print "Adding policy: ", obj['object']['metadata']['name']
