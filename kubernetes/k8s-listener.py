@@ -322,7 +322,7 @@ def process(s):
         obj = simplejson.loads(s)
     except Exception as e:
         print "====== could not parse:"
-        print obj
+        print s
         print "@@@@ Error: ", str(e)
         return
     op = obj["type"]
