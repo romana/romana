@@ -24,4 +24,7 @@
 # Ensure ARP requests/replies can be handled across interfaces.
 # This is so that VMs behind TAP interfaces can reach the host/gw.
 - name: Enable kernel proxy_arp setting
-  shell: if [ $(sysctl -n net.ipv4.conf.all.proxy_arp) != "1" ]; then sysctl net.ipv4.conf.all.proxy_arp=1; fi
+  shell: if [ $(sysctl -n "{{ item }}") != "1" ]; then sysctl "{{ item }}"=1; fi
+  with_items:
+    - net.ipv4.conf.default.proxy_arp
+    - net.ipv4.conf.all.proxy_arp
