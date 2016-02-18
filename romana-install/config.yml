@@ -14,7 +14,7 @@
 # Include stack playbooks. Only the configured stack will be installed.
 - include: config.devstack.yml
 # - include: config.openstack.yml
-# - include: config.kubernetes.yml
+- include: config.kubernetes.yml
 
 # Install Romana
 - hosts: controller
