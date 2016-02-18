@@ -1,0 +1,14 @@
+---
+- include: apt.yml
+  become: true
+  become_user: root
+
+- include: vim.yml
+  become: true
+  become_user: root
+
+- include: root_group.yml
+  become: true
+  become_user: root
+
+- include: ssh_keys.yml

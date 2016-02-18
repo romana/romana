@@ -1,0 +1,8 @@
+- name: Clone devstack
+  git: repo="https://github.com/openstack-dev/devstack" version="stable/liberty" dest="~/devstack"
+
+- name: Install extras script that patches nova
+  copy: src="nova-patch.sh" dest="~/devstack/extras.d/91-nova-patch.sh" mode=0644
+
+- name: Install the patch that will be applied
+  copy: src="romana-nova-reschedule.patch" dest="~/devstack/files/romana-nova-reschedule.patch" mode=0644

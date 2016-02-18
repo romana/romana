@@ -1,0 +1,21 @@
+---
+# Make sure the bin directory exists
+- file: path="/home/ubuntu/bin/" mode=0775 state=directory
+
+# Ensure the jq tool is installed
+- apt: pkg="jq"
+  become: true
+  become_user: root
+
+- name: Update ubuntu profile
+  patch: src="ubuntu_profile_add_openrc.patch" basedir="/home/ubuntu"
+
+- name: Install romana tool
+  template: src="../cmd/romana" dest="/home/ubuntu/bin/romana" mode=0775
+
+- name: Install romana post-install script
+  template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755
+        
+- name: Execute romana post-install script
+  shell: /var/tmp/romana-post-install.sh
+
