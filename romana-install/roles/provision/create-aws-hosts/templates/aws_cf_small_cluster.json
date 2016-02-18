@@ -1059,7 +1059,7 @@ under the License.
     "ComputeInstanceType": {
       "Description": "EC2 instance type for Compute Nodes",
       "Type": "String",
-      "Default": "t2.large",
+      "Default": "t2.small",
       "ConstraintDescription": "Must be a valid EC2 instance type."
     },
     "ComputeAMI": {

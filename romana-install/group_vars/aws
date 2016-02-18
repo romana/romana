@@ -1,4 +1,11 @@
 region: "us-west-1"
-instance_type: "t2.large"
+instance_type:
+  controller:
+    devstack: "t2.large"
+    kubernetes: "t2.small"
+  compute:
+    devstack: "t2.small"
+    kubernetes: "t2.small"
+
 controller_image: "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
 compute_image: "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
