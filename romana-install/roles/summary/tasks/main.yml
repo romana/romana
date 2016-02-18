@@ -1,4 +1,8 @@
 ---
-- name: Generate Stack Summary
+- name: Generate Stack Summary (devstack)
   template: src="devstack_stackinfo" dest="{{ stack_data_dir }}/stackinfo"
   when: stack_type == "devstack"
+
+- name: Generate Stack Summary (kubernetes)
+  template: src="kubernetes_stackinfo" dest="{{ stack_data_dir }}/stackinfo"
+  when: stack_type == "kubernetes"
