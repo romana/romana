@@ -27,10 +27,5 @@
   service: name="apache2" state="started"
   when: p.changed
 
-- name: Update /etc/hosts
-  become: true
-  become_user: root
-  template: src="stack_hosts" dest="/etc/hosts" mode=0644
-
 - name: Update ubuntu profile
   patch: src="ubuntu_profile_add_openrc.patch" basedir="/home/ubuntu"

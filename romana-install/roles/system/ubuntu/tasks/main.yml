@@ -1,4 +1,8 @@
 ---
+- include: hosts.yml
+  become: true
+  become_user: root
+
 - include: apt.yml
   become: true
   become_user: root
