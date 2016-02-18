@@ -12,7 +12,7 @@
   roles:
     - stack/kubernetes/prep
 
-- hosts: kube_
+- hosts: kube_master
   roles:
     - stack/kubernetes/install-master
 
