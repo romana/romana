@@ -1,0 +1,11 @@
+---
+- add_host: name="localhost" groups="vagrant"
+
+- name: Generate Vagrantfile for stack
+  template: src="Vagrantfile" dest="{{ stack_data_dir }}/Vagrantfile"
+
+- name: Create VMs
+  shell: chdir="{{ stack_data_dir }}" vagrant up
+
+- name: Generate inventory file for stack
+  template: src="vagrant_inventory" dest="{{ stack_data_dir }}/inventory"

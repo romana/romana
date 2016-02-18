@@ -1,0 +1,4 @@
+---
+- name: Generate Stack Summary
+  template: src="devstack_stackinfo" dest="{{ stack_data_dir }}/stackinfo"
+  when: platform == "devstack"
