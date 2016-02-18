@@ -1,0 +1,4 @@
+---
+- include: mysql.yml
+  become: true
+  become_user: root
