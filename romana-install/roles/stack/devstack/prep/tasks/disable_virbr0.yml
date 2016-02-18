@@ -1,6 +1,6 @@
 ---
 - name: Disable libvirt from being started on installation
-  command: printf "manual\n" > /etc/init/libvirt-bin.override
+  shell: printf "manual\n" > /etc/init/libvirt-bin.override
 - name: Install libvirt-bin
   apt: pkg="libvirt-bin"
 - name: Remove default networks
@@ -8,3 +8,5 @@
   with_items:
     - "/etc/libvirt/qemu/networks/default.xml"
     - "/etc/libvirt/qemu/networks/autostart/default.xml"
+- name: Start libvirt-bin service now (devstack expects it running)
+  service: name="libvirt-bin" state="started"
