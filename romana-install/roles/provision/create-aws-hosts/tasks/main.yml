@@ -1,6 +1,7 @@
 ---
 - name: Generate CloudFormation Template
   template: src="aws_cf_small_cluster.json" dest="{{ stack_data_dir }}/cloudformation.json"
+  register: cf
 
 - name: Create stack with Cloudformation. This may take around 5 minutes.
   cloudformation: stack_name="{{ stack_name }}" region="{{region}}" disable_rollback=true template="{{ stack_data_dir }}/cloudformation.json"
@@ -10,6 +11,7 @@
        ControllerAMI: "{{ controller_image }}"
        ComputeInstanceType: "{{ instance_type.compute[stack_type] }}"
        ComputeAMI: "{{ compute_image }}"
+  when: cf.changed
 
 - name: Collect dynamic information for stack
   command: >
