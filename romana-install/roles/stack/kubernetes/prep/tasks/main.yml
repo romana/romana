@@ -1,3 +1,6 @@
 ---
 - include: fetch.yml
 
+- include: docker.yml
+  become: true
+  become_user: root
