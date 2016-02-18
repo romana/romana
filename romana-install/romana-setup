@@ -60,6 +60,7 @@ if (( $# > 0 )); then
 				case "$2" in
 					[a-zA-Z][a-zA-Z0-9]*)
 						stack_name="$2"
+						shift 2
 						;;
 					*)
 						echo "Invalid stack name: '$2' (must start with a letter, and contain only letters and digits)"
@@ -90,12 +91,15 @@ if (( $# > 0 )); then
 				case "$2" in
 					devstack)
 						stack_type="devstack"
+						shift 2
 						;;
 					openstack)
 						stack_type="openstack"
+						shift 2
 						;;
-					kuberbnetes|k8s)
+					kubernetes|k8s)
 						stack_type="kubernetes"
+						shift 2
 						;;
 					*)
 						echo "Unknown stack type '$2'."
