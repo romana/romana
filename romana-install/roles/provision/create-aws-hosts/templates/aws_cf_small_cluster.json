@@ -576,6 +576,9 @@ under the License.
         "ImageId": {
           "Ref": "ControllerAMI"
         },
+{% if ec2_keypair != "" %}
+	"KeyName": "{{ ec2_keypair }}",
+{% endif %}
         "NetworkInterfaces": [
           {
             "NetworkInterfaceId": {
@@ -632,6 +635,9 @@ under the License.
         "ImageId": {
           "Ref": "ComputeAMI"
         },
+{% if ec2_keypair != "" %}
+	"KeyName": "{{ ec2_keypair }}",
+{% endif %}
         "NetworkInterfaces": [
           {
             "NetworkInterfaceId": {

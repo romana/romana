@@ -1,3 +1,4 @@
+ec2_keypair: ""
 region: "us-west-1"
 instance_type:
   controller:

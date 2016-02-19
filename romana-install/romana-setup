@@ -145,6 +145,14 @@ mkdir -p "${stack_data_dir}"
 
 ansible_args=( -e stack_name="$stack_name" -e platform="$platform" -e stack_type="$stack_type" -e stack_data_dir="$stack_data_dir" )
 
+# Add an EC2 keypair to the instance if there's one defined.
+if [[ "$platform" == "aws" ]] && [[ -r ~/.aws/ec2_keypair ]]; then
+	read ec2_keypair _ < ~/.aws/ec2_keypair
+	if [[ "$ec2_keypair" ]]; then
+		ansible_args+=( -e ec2_keypair="$ec2_keypair" )
+	fi
+fi
+
 case "$platform" in
 	aws|vagrant)
 		case "$action" in
