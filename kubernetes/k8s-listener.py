@@ -3,9 +3,16 @@ import requests
 import sys
 import simplejson
 import subprocess
+from optparse import OptionParser
 
 url = 'http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
 tenant_url = 'http://192.168.0.10:9602/tenants'
+
+parser = OptionParser(usage="%prog --agent")
+parser.add_option('--test', default=False, dest="test", action="store_true")
+parser.add_option('--agent', default=False, dest="agent", action="store_true",
+                  help="Act as agent listener")
+(options, args) = parser.parse_args()
 
 
 def _make_rule(chain_name, text):
@@ -354,6 +361,7 @@ def process(s):
         }
     }
 
+    # TODO post policy defenition to the all agents
     if op == 'ADDED':
         print "Adding policy: ", obj['object']['metadata']['name']
         policy_update(addr_scheme, policy_definition)
@@ -388,6 +396,50 @@ def main():
         if c != '\r' or c2 != '\n':
             raise "Expected CRLF, got %c%c" % (c, c2)
 
+def get_romana_hosts():
+    romana_hosts = []
+    topology_url = "http://192.168.0.10:9603/hosts"
+    r = requests.get(topology_url)
+    print 'Topology service returned %s' % r.content
+    hosts = simplejson.loads(r.content)
+    for host in hosts:
+        mask_idx = host["romana_ip"].index("/")
+        romana_hosts.append(host["romana_ip"][:mask_idx])
+    return romana_hosts
+
+def test():
+    print get_romana_hosts()
+
+from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+PORT_NUMBER = 9630
+class AgentHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+        # Send the html message
+        self.wfile.write("Hello Get !")
+        return
+
+    def do_POST(self):
+        self.send_response(200)
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+        # Send the html message
+        for char in self.rfile.read():
+           print char
+        # TODO unmarshall json in rfile and pass it into policy_update()
+        self.wfile.write("Hello Post !")
+        return
+
+def run_agent():
+    server = HTTPServer(('', PORT_NUMBER), AgentHandler)
+    server.serve_forever()
 
 if __name__ == "__main__":
-    main()
+    if options.agent:
+        run_agent()
+    elif options.test:
+        test()
+    else:
+        main()
