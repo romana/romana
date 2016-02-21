@@ -9,7 +9,6 @@ url = 'http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networ
 tenant_url = 'http://192.168.0.10:9602/tenants'
 
 parser = OptionParser(usage="%prog --agent")
-parser.add_option('--test', default=False, dest="test", action="store_true")
 parser.add_option('--agent', default=False, dest="agent", action="store_true",
                   help="Act as agent listener")
 (options, args) = parser.parse_args()
@@ -361,15 +360,18 @@ def process(s):
         }
     }
 
-    # TODO post policy defenition to the all agents
-    if op == 'ADDED':
-        print "Adding policy: ", obj['object']['metadata']['name']
-        policy_update(addr_scheme, policy_definition)
-    elif op == 'DELETED':
-        print "Deleting policy: ", obj['object']['metadata']['name']
-        policy_update(addr_scheme, policy_definition, delete_policy=True)
-    else:
-        print "Unknown operation: %s" % op
+    dispatch_orders(op, policy_definition)
+
+def dispatch_orders(method, policy_definition):
+    for host in get_romana_hosts():
+        data = {}
+        data["method"] = method
+        data["policy_definition"] = policy_definition
+        print "Attempting to send %s to %s" % (data, host)
+        try:
+            requests.post("http://" + host + ":" + str(PORT_NUMBER), data=simplejson.dumps(data))
+        except Exception, e:
+            print "Cannot sontact host %s: %s" % (host, e)
 
 def main():
     r = requests.get(url, stream=True)
@@ -407,10 +409,9 @@ def get_romana_hosts():
         romana_hosts.append(host["romana_ip"][:mask_idx])
     return romana_hosts
 
-def test():
-    print get_romana_hosts()
-
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from mimetools import Message
+from StringIO import StringIO
 PORT_NUMBER = 9630
 class AgentHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -422,14 +423,28 @@ class AgentHandler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
-        self.send_response(200)
         self.send_header('Content-type','text/html')
         self.end_headers()
         # Send the html message
-        for char in self.rfile.read():
-           print char
-        # TODO unmarshall json in rfile and pass it into policy_update()
-        self.wfile.write("Hello Post !")
+        headers = Message(StringIO(self.headers))
+        print headers["Content-Length"]
+        raw_data = self.rfile.read(int(headers["Content-Length"]))
+        json_data = simplejson.loads(raw_data)
+        if 'method' not in json_data.keys() or 'policy_definition' not in json_data.keys():
+            self.send_response(422)
+            self.wfile.write("""Expecting { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
+        elif json_data['method'] == 'ADDED':
+            self.send_response(200)
+            self.wfile.write("Policy definition accepted")
+            policy_update(addr_scheme, json_data['policy_definition'])
+        elif json_data['method'] == 'DELETED':
+            self.send_response(200)
+            self.wfile.write("Policy definition accepted")
+            policy_update(addr_scheme, json_data['policy_definition'], delete_policy=True)
+        else:
+            self.send_response(422)
+            self.wfile.write("""Expecting { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
+
         return
 
 def run_agent():
@@ -439,7 +454,5 @@ def run_agent():
 if __name__ == "__main__":
     if options.agent:
         run_agent()
-    elif options.test:
-        test()
     else:
         main()
