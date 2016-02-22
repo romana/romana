@@ -16,7 +16,7 @@ topology_url = "http://192.168.0.10:9603/hosts"
 
 parser = OptionParser(usage="%prog --agent")
 parser.add_option('--agent', default=False, dest="agent", action="store_true",
-                  help="Act as agent listener")
+                  help="Act as agent for the Kubernetes listener")
 (options, args) = parser.parse_args()
 
 
@@ -309,9 +309,14 @@ def get_tenants():
     Example:
         [{"Id":1,"Name":"t1","Segments":null,"Seq":1},{"Id":2,"Name":"t2","Segments":null,"Seq":2}]
     """
-    r = requests.get(tenant_url)
-    print 'Tenants service returned %s' % r.content
-    return simplejson.loads(r.content)
+    try:
+        r = requests.get(tenant_url)
+        print 'Tenants service returned %s' % r.content
+        tenants = simplejson.loads(r.content)
+    except Exception as e:
+        print "Failed to fetch romana tenants %s" % e
+        return None
+    return tenants
 
 def get_tenant_id_by_name(name, tenants):
     """
@@ -329,8 +334,13 @@ def get_segments(tenant_id):
     Example:
     [{"Id":1,"TenantId":1,"Name":"default","Seq":1},{"Id":3,"TenantId":1,"Name":"frontend","Seq":2},{"Id":4,"TenantId":1,"Name":"backend","Seq":3}]
     """
-    r = requests.get(tenant_url + '/' + str(tenant_id) + '/segments')
-    return simplejson.loads(r.content)
+    try:
+        r = requests.get(tenant_url + '/' + str(tenant_id) + '/segments')
+        segments = simplejson.loads(r.content)
+    except Exception as e:
+        print "Failed to fetch romana segments %s" % e
+        return None
+    return segments
 
 def get_segment_id_by_name(name, segments):
     """
@@ -452,9 +462,13 @@ def get_romana_hosts():
     """
 
     romana_hosts = []
-    r = requests.get(topology_url)
-    print 'Topology service returned %s' % r.content
-    hosts = simplejson.loads(r.content)
+    try:
+        r = requests.get(topology_url)
+        print 'Topology service returned %s' % r.content
+        hosts = simplejson.loads(r.content)
+    except Exception, e:
+        print "Failed to fetch romana hosts %s" % e
+        return None
 
     # romana_ip is a CIDR like 10.0.0.1/16
     # we only want ip part
@@ -504,7 +518,7 @@ class AgentHandler(BaseHTTPRequestHandler):
 
         elif json_data['method'] == 'DELETED':
             self.send_response(200)
-            self.wfile.write("Policy definition accepted")
+            self.wfile.write("Policy definition deleted")
             policy_update(addr_scheme, policy_def, delete_policy=True)
 
         return
