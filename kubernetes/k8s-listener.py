@@ -4,6 +4,11 @@ import sys
 import simplejson
 import subprocess
 from optparse import OptionParser
+from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from mimetools import Message
+from StringIO import StringIO
+PORT_NUMBER = 9630
+HTTP_Unprocessable_Entity = 422
 
 url = 'http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
 tenant_url = 'http://192.168.0.10:9602/tenants'
@@ -459,18 +464,13 @@ def get_romana_hosts():
     return romana_hosts
 
 # We want to receive json object as a POST.
-from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
-from mimetools import Message
-from StringIO import StringIO
-PORT_NUMBER = 9630
-HTTP_Unprocessable_Entity = 422
 class AgentHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type','text/html')
         self.end_headers()
         # Send the html message
-        self.wfile.write("Hello Get !")
+        self.wfile.write("Romana kubernetes listener")
         return
 
     def do_POST(self):
@@ -478,39 +478,34 @@ class AgentHandler(BaseHTTPRequestHandler):
         Processes POST requests
         extracts romana policy definition objects and passes it down for implementation
     
-        Expecting structure: { "method" : "ADDED|DELETED", "policy_definition" : "NP" }
+        Expected structure: { "method" : "ADDED|DELETED", "policy_definition" : "NP" }
         """
 
         self.send_header('Content-type','text/html')
         self.end_headers()
         # Send the html message
         headers = Message(StringIO(self.headers))
-        print headers["Content-Length"]
         raw_data = self.rfile.read(int(headers["Content-Length"]))
         json_data = simplejson.loads(raw_data)
 
         # Values of `method` are inherited directly from kubernetes create/delete policy event.
-        if 'method' not in json_data.keys() or 'policy_definition' not in json_data.keys():
-
+        method = json_data.get('method')
+        policy_def = json_data('policy_definition')
+        if method not in [ 'ADDED', 'DELETED' ] or not policy_def:
             # HTTP 422 - Unprocessable Entity seems to be relevant. We have verified that json is valid
             # but expected fields are missing
             self.send_response(HTTP_Unprocessable_Entity)
-            self.wfile.write("""Expecting { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
+            self.wfile.write("""Expected { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
 
         elif json_data['method'] == 'ADDED':
             self.send_response(200)
             self.wfile.write("Policy definition accepted")
-            policy_update(addr_scheme, json_data['policy_definition'])
+            policy_update(addr_scheme, policy_def)
 
         elif json_data['method'] == 'DELETED':
             self.send_response(200)
             self.wfile.write("Policy definition accepted")
-            policy_update(addr_scheme, json_data['policy_definition'], delete_policy=True)
-
-        else:
-            # Expected fields are in place but their values are incorrect
-            self.send_response(HTTP_Unprocessable_Entity)
-            self.wfile.write("""Expecting { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
+            policy_update(addr_scheme, policy_def, delete_policy=True)
 
         return
 
