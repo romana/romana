@@ -7,6 +7,7 @@ from optparse import OptionParser
 
 url = 'http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
 tenant_url = 'http://192.168.0.10:9602/tenants'
+topology_url = "http://192.168.0.10:9603/hosts"
 
 parser = OptionParser(usage="%prog --agent")
 parser.add_option('--agent', default=False, dest="agent", action="store_true",
@@ -280,6 +281,9 @@ def policy_update(romana_address_scheme, policy_definition, delete_policy=False)
 
 
 def parse_rule_specs(obj):
+    """
+    Parse out data from kubernetes original policy specification
+    """
     try:
         rule = {}
         rule["src_tenant"] = obj["object"]["metadata"]["labels"]["owner"]
@@ -294,24 +298,45 @@ def parse_rule_specs(obj):
         return None
 
 def get_tenants():
+    """
+    Returns romana tenants description
+
+    Example:
+        [{"Id":1,"Name":"t1","Segments":null,"Seq":1},{"Id":2,"Name":"t2","Segments":null,"Seq":2}]
+    """
     r = requests.get(tenant_url)
     print 'Tenants service returned %s' % r.content
     return simplejson.loads(r.content)
 
 def get_tenant_id_by_name(name, tenants):
+    """
+    Returns romana tenant id
+    Example : 1
+    """
     for tenant in tenants:
         if tenant['Name'] == name:
             return tenant['Id']
 
 def get_segments(tenant_id):
+    """
+    Returns a list of romana segments for particular tenant
+
+    Example:
+    [{"Id":1,"TenantId":1,"Name":"default","Seq":1},{"Id":3,"TenantId":1,"Name":"frontend","Seq":2},{"Id":4,"TenantId":1,"Name":"backend","Seq":3}]
+    """
     r = requests.get(tenant_url + '/' + str(tenant_id) + '/segments')
     return simplejson.loads(r.content)
 
 def get_segment_id_by_name(name, segments):
+    """
+    Returns romana segment id
+    Example : 1
+    """
     for segment in segments:
         if segment['Name'] == name:
             return segment['Seq']
 
+# TODO should probably discover this from romana root
 addr_scheme = {
     "network_width" : 8,
     "host_width" : 8,
@@ -323,7 +348,11 @@ addr_scheme = {
 }
 
 
+# Processing kubernetes events coming from api
 def process(s):
+
+    # Kube api listener is a GET request which will timeout eventually
+    # producing empty request.
     try:
         obj = simplejson.loads(s)
     except Exception as e:
@@ -335,6 +364,9 @@ def process(s):
     rule = parse_rule_specs(obj)
     if not rule:
         return
+
+    # Resolving romana tags found in original policy request
+    # into values known to romana
     tenants = get_tenants()
     print "Discovered tenants = %s" % tenants
     tenant_id = get_tenant_id_by_name(rule['src_tenant'], tenants)
@@ -349,6 +381,7 @@ def process(s):
     dst_segment_id = get_segment_id_by_name(rule['dst_segment'], segments)
     print "Discovered dst_segment_id = %s" % dst_segment_id
 
+    # That should be a romana policy object.
     policy_definition = {
         "policy_name" : obj['object']['metadata']['name'],
         "owner_tenant_id" : tenant_id,
@@ -363,6 +396,12 @@ def process(s):
     dispatch_orders(op, policy_definition)
 
 def dispatch_orders(method, policy_definition):
+    """
+    Kicks listener agents on every romana host
+    Expects:
+      method as a string ADDED|DELETED
+      policy_definition as a dict
+    """
     for host in get_romana_hosts():
         data = {}
         data["method"] = method
@@ -373,6 +412,8 @@ def dispatch_orders(method, policy_definition):
         except Exception, e:
             print "Cannot sontact host %s: %s" % (host, e)
 
+# Watch kubernetes events, they come as chunks
+# so we need to process them chunk by chink
 def main():
     r = requests.get(url, stream=True)
     iter = r.iter_content(1)
@@ -399,20 +440,30 @@ def main():
             raise "Expected CRLF, got %c%c" % (c, c2)
 
 def get_romana_hosts():
+    """
+    returns a list of romana host IPs
+    
+    Example: ["10.0.0.1", 10.1.0.1" ]
+    """
+
     romana_hosts = []
-    topology_url = "http://192.168.0.10:9603/hosts"
     r = requests.get(topology_url)
     print 'Topology service returned %s' % r.content
     hosts = simplejson.loads(r.content)
+
+    # romana_ip is a CIDR like 10.0.0.1/16
+    # we only want ip part
     for host in hosts:
         mask_idx = host["romana_ip"].index("/")
         romana_hosts.append(host["romana_ip"][:mask_idx])
     return romana_hosts
 
+# We want to receive json object as a POST.
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from mimetools import Message
 from StringIO import StringIO
 PORT_NUMBER = 9630
+HTTP_Unprocessable_Entity = 422
 class AgentHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -423,6 +474,13 @@ class AgentHandler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
+        """
+        Processes POST requests
+        extracts romana policy definition objects and passes it down for implementation
+    
+        Expecting structure: { "method" : "ADDED|DELETED", "policy_definition" : "NP" }
+        """
+
         self.send_header('Content-type','text/html')
         self.end_headers()
         # Send the html message
@@ -430,23 +488,33 @@ class AgentHandler(BaseHTTPRequestHandler):
         print headers["Content-Length"]
         raw_data = self.rfile.read(int(headers["Content-Length"]))
         json_data = simplejson.loads(raw_data)
+
+        # Values of `method` are inherited directly from kubernetes create/delete policy event.
         if 'method' not in json_data.keys() or 'policy_definition' not in json_data.keys():
-            self.send_response(422)
+
+            # HTTP 422 - Unprocessable Entity seems to be relevant. We have verified that json is valid
+            # but expected fields are missing
+            self.send_response(HTTP_Unprocessable_Entity)
             self.wfile.write("""Expecting { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
+
         elif json_data['method'] == 'ADDED':
             self.send_response(200)
             self.wfile.write("Policy definition accepted")
             policy_update(addr_scheme, json_data['policy_definition'])
+
         elif json_data['method'] == 'DELETED':
             self.send_response(200)
             self.wfile.write("Policy definition accepted")
             policy_update(addr_scheme, json_data['policy_definition'], delete_policy=True)
+
         else:
-            self.send_response(422)
+            # Expected fields are in place but their values are incorrect
+            self.send_response(HTTP_Unprocessable_Entity)
             self.wfile.write("""Expecting { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
 
         return
 
+# Running in HTTP server mode
 def run_agent():
     server = HTTPServer(('', PORT_NUMBER), AgentHandler)
     server.serve_forever()
