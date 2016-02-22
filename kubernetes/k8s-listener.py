@@ -490,7 +490,7 @@ class AgentHandler(BaseHTTPRequestHandler):
 
         # Values of `method` are inherited directly from kubernetes create/delete policy event.
         method = json_data.get('method')
-        policy_def = json_data('policy_definition')
+        policy_def = json_data.get('policy_definition')
         if method not in [ 'ADDED', 'DELETED' ] or not policy_def:
             # HTTP 422 - Unprocessable Entity seems to be relevant. We have verified that json is valid
             # but expected fields are missing
