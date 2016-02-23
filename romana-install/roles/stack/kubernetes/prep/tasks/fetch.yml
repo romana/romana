@@ -1,8 +1,0 @@
----
-- name: Fetch the Kubernetes release
-  get_url: url="{{ kubernetes_url }}" dest="./kubernetes.tar.gz" mode=0644
-
-- name: Validate the downloaded file
-  stat: path="./kubernetes.tar.gz"
-  register: k
-  failed_when: k.stat.checksum != "{{ kubernetes_sha1 }}"

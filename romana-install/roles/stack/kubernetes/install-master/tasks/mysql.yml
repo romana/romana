@@ -9,4 +9,4 @@
   command: mysqladmin password "{{ stack_password }}"
 
 - name: Install my.cnf
-  template: src="my.cnf" dest="~/.my.cnf" mode=0600
+  template: src="mysql/my.cnf" dest="~/.my.cnf" mode=0600

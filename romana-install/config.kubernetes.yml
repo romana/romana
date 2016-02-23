@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   tasks:
-    - add_host: name="{{ item }}" groups="kube_nodes,kube_master"
+    - add_host: name="{{ item }}" groups="kube_nodes,kube_master,kube_minions"
       with_items: groups.controller
       when: stack_type == "kubernetes"
     - add_host: name="{{ item }}" groups="kube_nodes,kube_minions"

@@ -1,6 +1,10 @@
 ---
-- include: fetch.yml
+- include: kubernetes_dl.yml
 
 - include: docker.yml
+  become: true
+  become_user: root
+
+- include: files.yml
   become: true
   become_user: root

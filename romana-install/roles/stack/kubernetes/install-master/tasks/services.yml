@@ -1,0 +1,14 @@
+---
+- name: Install service configurations
+  copy: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
+  with_items:
+    - etcd.conf
+    - kube-apiserver.conf
+    - kube-controller-manager.conf
+    - kube-scheduler.conf
+
+- name: Start services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - etcd
+    - kube-apiserver # this triggers controller-manager and scheduler

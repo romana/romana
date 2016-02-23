@@ -1,3 +1,7 @@
-kubernetes_version: "v1.2.0-alpha.7"
+kubernetes_version: "1.2.0-alpha.8"
 kubernetes_sha1: "695b20c4bf5385e6e71cef67d545ffb4e5d7701b"
-kubernetes_url: "https://github.com/kubernetes/kubernetes/releases/download/{{ kubernetes_version }}/kubernetes.tar.gz"
+kubernetes_url: "https://github.com/kubernetes/kubernetes/releases/download/v{{ kubernetes_version }}/kubernetes.tar.gz"
+
+kubernetes_dl_dir: "/var/tmp"
+kubernetes_x_dir: "/var/tmp"
+install_dir: "/usr/local"
