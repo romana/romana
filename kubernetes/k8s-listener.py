@@ -7,8 +7,13 @@ from optparse import OptionParser
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from mimetools import Message
 from StringIO import StringIO
+import logging
 PORT_NUMBER = 9630
 HTTP_Unprocessable_Entity = 422
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S')
 
 url = 'http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
 tenant_url = 'http://192.168.0.10:9602/tenants'
@@ -230,14 +235,13 @@ def apply_new_ruleset(rules):
                          stderr=subprocess.PIPE)
     out, err = p.communicate('\n'.join(rules))
     if err:
-        print "@@@ ERROR applying these rules..."
+        logging.info("@@@ ERROR applying these rules...")
         for i, r in enumerate(rules):
-            print "%3d: %s" % (i+1, r)
-        print
-        print "@@@ ERROR applying iptables: ", err
+            logging.info("%3d: %s" % (i+1, r))
+        logging.info("@@@ ERROR applying iptables: ", err)
         return False
     else:
-        print "@@@ iptables rules successfully applied."
+        logging.info("@@@ iptables rules successfully applied.")
         return True
 
 
@@ -299,7 +303,7 @@ def parse_rule_specs(obj):
         rule["protocol"] = obj["object"]["spec"]["allowIncoming"]["toPorts"][0]["protocol"]
         return rule
     except Exception, e:
-        print "Cannot parse %s: %s" % (obj, e)
+        logging.info("Cannot parse %s: %s" % (obj, e))
         return None
 
 def get_tenants():
@@ -311,10 +315,10 @@ def get_tenants():
     """
     try:
         r = requests.get(tenant_url)
-        print 'Tenants service returned %s' % r.content
+        logging.info('Tenants service returned %s' % r.content)
         tenants = simplejson.loads(r.content)
     except Exception as e:
-        print "Failed to fetch romana tenants %s" % e
+        logging.info("Failed to fetch romana tenants %s" % e)
         return None
     return tenants
 
@@ -338,7 +342,7 @@ def get_segments(tenant_id):
         r = requests.get(tenant_url + '/' + str(tenant_id) + '/segments')
         segments = simplejson.loads(r.content)
     except Exception as e:
-        print "Failed to fetch romana segments %s" % e
+        logging.info("Failed to fetch romana segments %s" % e)
         return None
     return segments
 
@@ -371,9 +375,9 @@ def process(s):
     try:
         obj = simplejson.loads(s)
     except Exception as e:
-        print "====== could not parse:"
-        print s
-        print "@@@@ Error: ", str(e)
+        logging.info("====== could not parse:")
+        logging.info(s)
+        logging.info("@@@@ Error: ", str(e))
         return
     op = obj["type"]
     rule = parse_rule_specs(obj)
@@ -383,18 +387,18 @@ def process(s):
     # Resolving romana tags found in original policy request
     # into values known to romana
     tenants = get_tenants()
-    print "Discovered tenants = %s" % tenants
+    logging.info("Discovered tenants = %s" % tenants)
     tenant_id = get_tenant_id_by_name(rule['src_tenant'], tenants)
-    print "Discovered tenant_id = %s" % tenant_id
+    logging.info("Discovered tenant_id = %s" % tenant_id)
     if not tenant_id:
-        print "Tenant %s not found" % rule['src_tenant']
+        logging.info("Tenant %s not found" % rule['src_tenant'])
         return
     segments = get_segments(tenant_id)
-    print "Discovered segments = %s" % segments
+    logging.info("Discovered segments = %s" % segments)
     src_segment_id = get_segment_id_by_name(rule['src_segment'], segments)
-    print "Discovered src_segment_id = %s" % src_segment_id
+    logging.info("Discovered src_segment_id = %s" % src_segment_id)
     dst_segment_id = get_segment_id_by_name(rule['dst_segment'], segments)
-    print "Discovered dst_segment_id = %s" % dst_segment_id
+    logging.info("Discovered dst_segment_id = %s" % dst_segment_id)
 
     # That should be a romana policy object.
     policy_definition = {
@@ -421,11 +425,11 @@ def dispatch_orders(method, policy_definition):
         data = {}
         data["method"] = method
         data["policy_definition"] = policy_definition
-        print "Attempting to send %s to %s" % (data, host)
+        logging.info("Attempting to send %s to %s" % (data, host))
         try:
             requests.post("http://" + host + ":" + str(PORT_NUMBER), data=simplejson.dumps(data))
         except Exception, e:
-            print "Cannot sontact host %s: %s" % (host, e)
+            logging.info("Cannot sontact host %s: %s" % (host, e))
 
 # Watch kubernetes events, they come as chunks
 # so we need to process them chunk by chink
@@ -444,7 +448,7 @@ def main():
             else:
                 len_buf += c
         len = int(len_buf, 16)
-        #        print "Chunk %s" % len
+        #        logging.info("Chunk %s" % len)
         buf = ""
         for i in range(len):
             buf += iter.next()
@@ -464,10 +468,10 @@ def get_romana_hosts():
     romana_hosts = []
     try:
         r = requests.get(topology_url)
-        print 'Topology service returned %s' % r.content
+        logging.info('Topology service returned %s' % r.content)
         hosts = simplejson.loads(r.content)
     except Exception, e:
-        print "Failed to fetch romana hosts %s" % e
+        logging.info("Failed to fetch romana hosts %s" % e)
         return None
 
     # romana_ip is a CIDR like 10.0.0.1/16
