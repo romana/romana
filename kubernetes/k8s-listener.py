@@ -330,6 +330,7 @@ def get_tenant_id_by_name(name, tenants):
     for tenant in tenants:
         if tenant['Name'] == name:
             return tenant['Id']
+    return None
 
 def get_segments(tenant_id):
     """
@@ -379,21 +380,32 @@ def process(s):
         logging.info(s)
         logging.info("@@@@ Error: ", str(e))
         return
-    op = obj["type"]
+    op = obj.get("type")
+    if not op:
+        logging.warning("Failed to parse event type from out of %s" % obj)
+        return
+
     rule = parse_rule_specs(obj)
     if not rule:
+        logging.warning("Failed to parse network policy rules out of %s" % obj)
         return
 
     # Resolving romana tags found in original policy request
     # into values known to romana
     tenants = get_tenants()
+    if not tenants:
+        logging.warning("Failed to to process even %s - skipping" % obj)
+        return
     logging.info("Discovered tenants = %s" % tenants)
     tenant_id = get_tenant_id_by_name(rule['src_tenant'], tenants)
-    logging.info("Discovered tenant_id = %s" % tenant_id)
     if not tenant_id:
-        logging.info("Tenant %s not found" % rule['src_tenant'])
+        logging.warning("Failed to resolve tenant_id for tenant %s - skipping event %s" % (rule['src_tenant'], obj)
         return
+    logging.info("Discovered tenant_id = %s" % tenant_id)
     segments = get_segments(tenant_id)
+    if not segments:
+        logging.warning("Failed to resolve segments for tenant %s - skipping event %s" % (rule['src_tenant'], obj)
+        return
     logging.info("Discovered segments = %s" % segments)
     src_segment_id = get_segment_id_by_name(rule['src_segment'], segments)
     logging.info("Discovered src_segment_id = %s" % src_segment_id)
@@ -504,7 +516,11 @@ class AgentHandler(BaseHTTPRequestHandler):
         # Send the html message
         headers = Message(StringIO(self.headers))
         raw_data = self.rfile.read(int(headers["Content-Length"]))
-        json_data = simplejson.loads(raw_data)
+        try:
+            json_data = simplejson.loads(raw_data)
+        except Exception, e:
+            logging.warning("Cannot parse %s" % raw_data))
+            return
 
         # Values of `method` are inherited directly from kubernetes create/delete policy event.
         method = json_data.get('method')
