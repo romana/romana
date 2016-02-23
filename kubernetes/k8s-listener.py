@@ -3,9 +3,26 @@ import requests
 import sys
 import simplejson
 import subprocess
+from optparse import OptionParser
+from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from mimetools import Message
+from StringIO import StringIO
+import logging
+PORT_NUMBER = 9630
+HTTP_Unprocessable_Entity = 422
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S')
 
 url = 'http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/?watch=true'
 tenant_url = 'http://192.168.0.10:9602/tenants'
+topology_url = "http://192.168.0.10:9603/hosts"
+
+parser = OptionParser(usage="%prog --agent")
+parser.add_option('--agent', default=False, dest="agent", action="store_true",
+                  help="Act as agent for the Kubernetes listener")
+(options, args) = parser.parse_args()
 
 
 def _make_rule(chain_name, text):
@@ -218,14 +235,13 @@ def apply_new_ruleset(rules):
                          stderr=subprocess.PIPE)
     out, err = p.communicate('\n'.join(rules))
     if err:
-        print "@@@ ERROR applying these rules..."
+        logging.info("@@@ ERROR applying these rules...")
         for i, r in enumerate(rules):
-            print "%3d: %s" % (i+1, r)
-        print
-        print "@@@ ERROR applying iptables: ", err
+            logging.info("%3d: %s" % (i+1, r))
+        logging.info("@@@ ERROR applying iptables: ", err)
         return False
     else:
-        print "@@@ iptables rules successfully applied."
+        logging.info("@@@ iptables rules successfully applied.")
         return True
 
 
@@ -274,6 +290,9 @@ def policy_update(romana_address_scheme, policy_definition, delete_policy=False)
 
 
 def parse_rule_specs(obj):
+    """
+    Parse out data from kubernetes original policy specification
+    """
     try:
         rule = {}
         rule["src_tenant"] = obj["object"]["metadata"]["labels"]["owner"]
@@ -284,28 +303,60 @@ def parse_rule_specs(obj):
         rule["protocol"] = obj["object"]["spec"]["allowIncoming"]["toPorts"][0]["protocol"]
         return rule
     except Exception, e:
-        print "Cannot parse %s: %s" % (obj, e)
+        logging.info("Cannot parse %s: %s" % (obj, e))
         return None
 
 def get_tenants():
-    r = requests.get(tenant_url)
-    print 'Tenants service returned %s' % r.content
-    return simplejson.loads(r.content)
+    """
+    Returns romana tenants description
+
+    Example:
+        [{"Id":1,"Name":"t1","Segments":null,"Seq":1},{"Id":2,"Name":"t2","Segments":null,"Seq":2}]
+    """
+    try:
+        r = requests.get(tenant_url)
+        logging.info('Tenants service returned %s' % r.content)
+        tenants = simplejson.loads(r.content)
+    except Exception as e:
+        logging.info("Failed to fetch romana tenants %s" % e)
+        return None
+    return tenants
 
 def get_tenant_id_by_name(name, tenants):
+    """
+    Returns romana tenant id
+    Example : 1
+    """
     for tenant in tenants:
         if tenant['Name'] == name:
             return tenant['Id']
+    return None
 
 def get_segments(tenant_id):
-    r = requests.get(tenant_url + '/' + str(tenant_id) + '/segments')
-    return simplejson.loads(r.content)
+    """
+    Returns a list of romana segments for particular tenant
+
+    Example:
+    [{"Id":1,"TenantId":1,"Name":"default","Seq":1},{"Id":3,"TenantId":1,"Name":"frontend","Seq":2},{"Id":4,"TenantId":1,"Name":"backend","Seq":3}]
+    """
+    try:
+        r = requests.get(tenant_url + '/' + str(tenant_id) + '/segments')
+        segments = simplejson.loads(r.content)
+    except Exception as e:
+        logging.info("Failed to fetch romana segments %s" % e)
+        return None
+    return segments
 
 def get_segment_id_by_name(name, segments):
+    """
+    Returns romana segment id
+    Example : 1
+    """
     for segment in segments:
         if segment['Name'] == name:
             return segment['Seq']
 
+# TODO should probably discover this from romana root
 addr_scheme = {
     "network_width" : 8,
     "host_width" : 8,
@@ -317,32 +368,51 @@ addr_scheme = {
 }
 
 
+# Processing kubernetes events coming from api
 def process(s):
+
+    # Kube api listener is a GET request which will timeout eventually
+    # producing empty request.
     try:
         obj = simplejson.loads(s)
     except Exception as e:
-        print "====== could not parse:"
-        print s
-        print "@@@@ Error: ", str(e)
+        logging.info("====== could not parse:")
+        logging.info(s)
+        logging.info("@@@@ Error: ", str(e))
         return
-    op = obj["type"]
+    op = obj.get("type")
+    if not op:
+        logging.warning("Failed to parse event type from out of %s" % obj)
+        return
+
     rule = parse_rule_specs(obj)
     if not rule:
+        logging.warning("Failed to parse network policy rules out of %s" % obj)
         return
-    tenants = get_tenants()
-    print "Discovered tenants = %s" % tenants
-    tenant_id = get_tenant_id_by_name(rule['src_tenant'], tenants)
-    print "Discovered tenant_id = %s" % tenant_id
-    if not tenant_id:
-        print "Tenant %s not found" % rule['src_tenant']
-        return
-    segments = get_segments(tenant_id)
-    print "Discovered segments = %s" % segments
-    src_segment_id = get_segment_id_by_name(rule['src_segment'], segments)
-    print "Discovered src_segment_id = %s" % src_segment_id
-    dst_segment_id = get_segment_id_by_name(rule['dst_segment'], segments)
-    print "Discovered dst_segment_id = %s" % dst_segment_id
 
+    # Resolving romana tags found in original policy request
+    # into values known to romana
+    tenants = get_tenants()
+    if not tenants:
+        logging.warning("Failed to to process even %s - skipping" % obj)
+        return
+    logging.info("Discovered tenants = %s" % tenants)
+    tenant_id = get_tenant_id_by_name(rule['src_tenant'], tenants)
+    if not tenant_id:
+        logging.warning("Failed to resolve tenant_id for tenant %s - skipping event %s" % (rule['src_tenant'], obj))
+        return
+    logging.info("Discovered tenant_id = %s" % tenant_id)
+    segments = get_segments(tenant_id)
+    if not segments:
+        logging.warning("Failed to resolve segments for tenant %s - skipping event %s" % (rule['src_tenant'], obj)
+        return
+    logging.info("Discovered segments = %s" % segments)
+    src_segment_id = get_segment_id_by_name(rule['src_segment'], segments)
+    logging.info("Discovered src_segment_id = %s" % src_segment_id)
+    dst_segment_id = get_segment_id_by_name(rule['dst_segment'], segments)
+    logging.info("Discovered dst_segment_id = %s" % dst_segment_id)
+
+    # That should be a romana policy object.
     policy_definition = {
         "policy_name" : obj['object']['metadata']['name'],
         "owner_tenant_id" : tenant_id,
@@ -354,15 +424,27 @@ def process(s):
         }
     }
 
-    if op == 'ADDED':
-        print "Adding policy: ", obj['object']['metadata']['name']
-        policy_update(addr_scheme, policy_definition)
-    elif op == 'DELETED':
-        print "Deleting policy: ", obj['object']['metadata']['name']
-        policy_update(addr_scheme, policy_definition, delete_policy=True)
-    else:
-        print "Unknown operation: %s" % op
+    dispatch_orders(op, policy_definition)
 
+def dispatch_orders(method, policy_definition):
+    """
+    Kicks listener agents on every romana host
+    Expects:
+      method as a string ADDED|DELETED
+      policy_definition as a dict
+    """
+    for host in get_romana_hosts():
+        data = {}
+        data["method"] = method
+        data["policy_definition"] = policy_definition
+        logging.info("Attempting to send %s to %s" % (data, host))
+        try:
+            requests.post("http://" + host + ":" + str(PORT_NUMBER), data=simplejson.dumps(data))
+        except Exception, e:
+            logging.info("Cannot sontact host %s: %s" % (host, e))
+
+# Watch kubernetes events, they come as chunks
+# so we need to process them chunk by chink
 def main():
     r = requests.get(url, stream=True)
     iter = r.iter_content(1)
@@ -378,7 +460,7 @@ def main():
             else:
                 len_buf += c
         len = int(len_buf, 16)
-        #        print "Chunk %s" % len
+        #        logging.info("Chunk %s" % len)
         buf = ""
         for i in range(len):
             buf += iter.next()
@@ -388,6 +470,86 @@ def main():
         if c != '\r' or c2 != '\n':
             raise "Expected CRLF, got %c%c" % (c, c2)
 
+def get_romana_hosts():
+    """
+    returns a list of romana host IPs
+    
+    Example: ["10.0.0.1", 10.1.0.1" ]
+    """
+
+    romana_hosts = []
+    try:
+        r = requests.get(topology_url)
+        logging.info('Topology service returned %s' % r.content)
+        hosts = simplejson.loads(r.content)
+    except Exception, e:
+        logging.info("Failed to fetch romana hosts %s" % e)
+        return None
+
+    # romana_ip is a CIDR like 10.0.0.1/16
+    # we only want ip part
+    for host in hosts:
+        mask_idx = host["romana_ip"].index("/")
+        romana_hosts.append(host["romana_ip"][:mask_idx])
+    return romana_hosts
+
+# We want to receive json object as a POST.
+class AgentHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+        # Send the html message
+        self.wfile.write("Romana kubernetes listener")
+        return
+
+    def do_POST(self):
+        """
+        Processes POST requests
+        extracts romana policy definition objects and passes it down for implementation
+    
+        Expected structure: { "method" : "ADDED|DELETED", "policy_definition" : "NP" }
+        """
+
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+        # Send the html message
+        headers = Message(StringIO(self.headers))
+        raw_data = self.rfile.read(int(headers["Content-Length"]))
+        try:
+            json_data = simplejson.loads(raw_data)
+        except Exception, e:
+            logging.warning("Cannot parse %s" % raw_data)
+            return
+
+        # Values of `method` are inherited directly from kubernetes create/delete policy event.
+        method = json_data.get('method')
+        policy_def = json_data.get('policy_definition')
+        if method not in [ 'ADDED', 'DELETED' ] or not policy_def:
+            # HTTP 422 - Unprocessable Entity seems to be relevant. We have verified that json is valid
+            # but expected fields are missing
+            self.send_response(HTTP_Unprocessable_Entity)
+            self.wfile.write("""Expected { "method" : "ADDED|DELETED", "policy_definition" : "NP" } """)
+
+        elif json_data['method'] == 'ADDED':
+            self.send_response(200)
+            self.wfile.write("Policy definition accepted")
+            policy_update(addr_scheme, policy_def)
+
+        elif json_data['method'] == 'DELETED':
+            self.send_response(200)
+            self.wfile.write("Policy definition deleted")
+            policy_update(addr_scheme, policy_def, delete_policy=True)
+
+        return
+
+# Running in HTTP server mode
+def run_agent():
+    server = HTTPServer(('', PORT_NUMBER), AgentHandler)
+    server.serve_forever()
 
 if __name__ == "__main__":
-    main()
+    if options.agent:
+        run_agent()
+    else:
+        main()
