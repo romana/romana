@@ -5,11 +5,10 @@
     - name: Wait for cloud-init to complete
       wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
 
-# Apply 
+# Apply common settings to all nodes prior to installation
 - hosts: stack_nodes
   roles:
     - system/ubuntu
-
 
 # Include stack playbooks. Only the configured stack will be installed.
 - include: config.devstack.yml
