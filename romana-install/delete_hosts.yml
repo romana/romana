@@ -1,3 +1,12 @@
 ---
 - include: delete_hosts.aws.yml
 - include: delete_hosts.vagrant.yml
+
+- hosts: localhost
+  tasks:
+    - name: Remove stackinfo
+      file: path="{{ stack_data_dir }}/stackinfo" state=absent
+    - name: Remove inventory
+      file: path="{{ stack_data_dir }}/inventory" state=absent
+    - name: Remove stack data dir
+      file: path="{{ stack_data_dir }}" state=absent

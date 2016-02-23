@@ -38,3 +38,8 @@ romana add-tier t1 backend
 romana add-tier t1 frontend
 romana create-owner t2
 romana add-tier t2 default
+
+# Configure kubectl
+kubectl config set-cluster romana-cni-cluster --server=http://192.168.99.10:8080
+kubectl config set-context romana-cni-context --cluster=romana-cni-cluster
+kubectl config use-context romana-cni-context

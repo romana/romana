@@ -9,3 +9,5 @@
   tasks:
    - name: Destroy VMs
      shell: chdir="{{ stack_data_dir }}" vagrant destroy -f
+   - name: Remove Vagrantfile
+     file: path="{{ stack_data_dir }}/Vagrantfile" state=absent
