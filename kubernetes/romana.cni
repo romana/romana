@@ -1,0 +1,195 @@
+#!/bin/bash -e
+# Copyright (c) 2016 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# Romana CNI plugin for kubernetes.
+# This plugin integrated with Romana IPAM and will not honour k8s IPAM config.
+# It is a pure demo designed to demonstrate romana networking with kubernetes
+# TODO plugin need to be redesigned to take in account segments and possibly 
+# other romana tags, romana url and ports should be taken from configuration
+# communication with kubernetes might be better off via API.
+
+# DEPENDENCIES
+# - nsenter
+# - kubectl
+# - curl
+# - jq
+
+# We need to be very careful with stdout because kubernetes wants valid json
+# So we going to save it
+exec 6>&1
+
+# and replace stdout with logfile
+LOGFILE=/tmp/romana-cni.log
+exec &>> $LOGFILE
+
+# -- Const
+NETWORK_NAME="romana-k8s-network"
+PLUGIN_TYPE="romana"
+IPAM_TYPE="romana-ipam"
+
+# -- Helpers
+get_pod            () { while read line; do [[ ${line/=*/} == "K8S_POD_NAME" ]] && echo ${line/*=/} || :; done; }
+get_tenant         () { while read line; do [[ ${line/=*/} == "owner" ]] && echo ${line/*=/} || :; done; }
+get_segment        () { while read line; do [[ ${line/=*/} == "tier" ]] && echo ${line/*=/} || :; done; }
+get_labels         () { awk '/Labels/ { print $2}' | xargs -d"," -n1 ; } 
+get_json_kv        () { sed 's/["{}]//g' | xargs -d "," -n1; }
+get_ip             () { while read line; do [[ ${line/:*/} == "ip" ]] && echo ${line/*:/} || :; done; }
+get_nspid          () { echo $1 | awk -F"/" '{ print $3 }'; }
+get_args           () { echo $CNI_ARGS | xargs -d";" -n1 ;}
+get_config_item    () { echo $INPUT | jq -r ".${1}"; }
+get_romana_gate    () { A=$(ip a show romana-gw | awk '/inet / { print $2 }'); echo ${A%%/*}; }
+get_romana_mask    () { A=$(ip a show romana-gw | awk '/inet / { print $2 }'); echo ${A##*/}; }
+log                () { echo "$*"; }
+log_env            () { env; }
+die () {
+	echo $1
+	# Restore stdout - before reporting an error to Kube
+	exec 1>&6
+
+	printf '{ "Error": "%s" }' "$1"
+	exit $2
+}
+
+trap "die 'CNI plugin - Unexpected error'" EXIT
+
+# -- Config
+# Kubernetes pases config via stdin
+while read line; do 
+	INPUT="$INPUT$line"
+done
+
+# Looping over top level json keys
+for k in $(echo $INPUT | jq -r 'keys[]'); do
+        case $k in
+        name)
+                [[ $NETWORK_NAME == $(get_config_item $k) ]] || die  "Bad network name - only romana-k8s-network is supported"
+                ;;
+        kubectl_binary)
+                KUBECTL=$(get_config_item $k)
+                ;;
+	ipam)
+		[[ $(get_config_item $k.type) == "romana-ipam" ]] || die  "Bad ipam - only romana-ipam is supported"
+		;;
+	kube_master_ip)
+		KUBE_MASTER_IP=$(get_config_item $k)
+		;;
+	kubectl_args)
+		KUBEARGS=$(get_config_item $k)
+		;;
+	romana_master_ip)
+		ROMANA_MASTER_IP=$(get_config_item $k)
+		;;
+        esac
+done
+
+# -- Defaults
+[[ $KUBE_MASTER_IP ]]   || die "kube_master_ip required in network config - not found" 1
+[[ $ROMANA_MASTER_IP ]] || ROMANA_MASTER_IP=$KUBE_MASTER_IP
+[[ $KUBECTL ]]          || KUBECTL=kubectl
+[[ $KUBEARGS ]]         || KUBEARGS=" -s $KUBE_MASTER_IP:8080"
+GATE_SRC=$(get_romana_gate)
+GATE_MASK=$(get_romana_mask)
+
+log "Romana CNI plugin"
+log "$*"
+log_env
+
+result () {
+	ip=$1
+	mask=$2
+	printf '{ "cniVersion": "0.1.0", "ip4": { "ip": "%s/%s" } }' $ip $mask
+}
+
+req () {
+	# TODO currently romana agent expects valid mac address on k8s endpoint even though it not needed there
+	iface=$1
+	ip=$2
+	printf '{ "interface_name": "%s", "mac_address": "de:ad:be:ef:00:00", "ip_address" : "%s"  }' $iface $ip
+}
+
+ipam_allocate_ip () {
+	# CNI expects us to read ipam config from stdin, but for demo config is static anyway.
+	tenant=$1
+	segment=$2
+	node=$3
+	IP=$(curl -s "http://$ROMANA_MASTER_IP:9601/allocateIpByName?tenantName=${tenant}&segmentName=${segment}&hostName=${node}&instanceId=0" | get_json_kv | get_ip)
+	echo $IP
+}
+
+set_up_pod () {
+	# Getting additional information from kubernetes
+	log "--- ADD --"
+	NSPID=$(get_nspid "$CNI_NETNS")
+	log "--- nspid = $NSPID ---"
+	POD=$(get_args | get_pod)
+	log "--- POD = $POD ---"
+	TENANT=$( $KUBECTL $KUBEARGS describe pod $POD | get_labels | get_tenant )
+	log "--- TENANT = $TENANT ---"
+	SEGMENT=$( $KUBECTL $KUBEARGS describe pod $POD | get_labels | get_segment )
+	log "--- SEGMENT = $SEGMENT ---"
+	NODE=$( $KUBECTL $KUBEARGS get pods -o wide | grep "$POD " | awk '{ print $6 }' )
+	log "--- NODE = $NODE ---"
+
+	# Asking romana ipam for an IP address, based on `tenant` label.
+	log "--- PRE-IPAM ---"
+	[[ $SEGMENT ]] || SEGMENT=default
+	IP=$(ipam_allocate_ip $TENANT $SEGMENT $NODE)
+	log "--- POST-IPAM IP=$IP---"
+	[[ $IP ]] || die "Failed to allocate IP address for pod $POD on node $NODE with tenant $TENANT" 2
+
+	# Setting up the networking for Infra namespace
+	sudo ip link add type veth
+	sudo ip link set veth0 name "veth0-${NSPID}"
+	sudo ip link set veth1 name "veth1-${NSPID}"
+	sudo ip link set "veth1-${NSPID}" netns ${NSPID}
+	sudo nsenter -t ${NSPID} -n ip link set "veth1-${NSPID}" name eth0
+	sudo nsenter -t ${NSPID} -n ip link set eth0 up
+	sudo nsenter -t ${NSPID} -n ip addr add $IP/$GATE_MASK dev eth0
+	sudo nsenter -t ${NSPID} -n ip ro add 0.0.0.0/0 dev eth0
+	sudo ip link set "veth0-${NSPID}" up
+
+	# Romana agent does the rest (endpoint route and firewall)
+	curl -s -H 'content-type: application/json' -XPOST -d "$(req "veth0-${NSPID}" "$IP")" http://localhost:9604/kubernetes-pod-up 2>&1 >> $LOGFILE
+
+	log "$(req "veth0-${NSPID}" "$IP")"
+	log "--- Setup with infra pod = $POD pid = $PID, PEERIFx = $PEERIFx, PEERIFn=$PEERIFn, TENANT=$TENANT, NODE=$NODE, IP=$IP"
+	R=$(result "$IP" "$GATE_MASK")
+	log "$R"
+
+	# Restore stdout - ready to talk back to kubernetes
+	exec 1>&6
+
+	# Kubernetes expects valid json on output so no one above should echo anything in stdout
+	echo -n $R
+}
+
+case $CNI_COMMAND in
+	ADD)
+		set_up_pod
+		;;
+	DEL)
+		# Currently not implemented
+		# interfaces and routes will go away automatically
+		# iptables rules need to be deleted but agent is not ready yet
+		:
+		;;
+	STATUS)
+		# Not implemented in kubernetes yet
+		:
+		;;
+esac
+# normal exit shouldn't trigger trap
+trap - EXIT

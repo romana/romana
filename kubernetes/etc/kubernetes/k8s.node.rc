@@ -1,0 +1,9 @@
+screen -t kubelet
+select 0
+stuff "until nc -z __MASTER_IP__ 8080; do sleep 10; done; /home/ubuntu/kubernetes/cluster/ubuntu/binaries/minion/kubelet --address=0.0.0.0 --hostname-override=__MASTER_ID__ --api-servers=http://__MASTER_IP__:8080 --network-plugin=cni --network-plugin-dir=/etc/cni/net.d^M"
+screen -t kube-proxy
+select 1
+stuff "until nc -z __MASTER_IP__ 8080; do sleep 10; done; /home/ubuntu/kubernetes/cluster/ubuntu/binaries/minion/kube-proxy --master=http://__MASTER_IP__:8080^M"
+screen -t network-policy-agent
+select 2
+stuff "until curl -s http://__MASTER_IP__:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/ | grep -q policy; do sleep 10; done; python /home/ubuntu/romana/kubernetes/k8s-listener.py --agent^M"
