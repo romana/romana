@@ -22,8 +22,8 @@
 
 # Include romana+stack playbooks. Only the configured stack will be applied
 - include: romana.devstack.yml
-# - include: romana.devstack.yml
-# - include: romana.devstack.yml
+# - include: romana.openstack.yml
+- include: romana.kubernetes.yml
 
 # Install and launch agent (must be after other stages)
 - hosts: stack_nodes
