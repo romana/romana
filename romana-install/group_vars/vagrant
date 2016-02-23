@@ -1,0 +1,7 @@
+ram_size:
+  controller:
+    devstack: 4096
+    kubernetes: 1024
+  compute:
+    devstack: 1024
+    kubernetes: 512

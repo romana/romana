@@ -18,7 +18,7 @@ Vagrant.configure(2) do |config|
     controller.vm.network "private_network", ip: "{{ stack_nodes.Controller.mgmt_ip }}"
     controller.vm.provider "virtualbox" do |vb|
       vb.name = "{{ stack_name }}-controller"
-      vb.memory = "4096"
+      vb.memory = "{{ ram_size.controller[stack_type] }}"
       vb.customize ["modifyvm", :id, "--natnet1", "172.16.0.0/12"]
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
@@ -32,7 +32,7 @@ Vagrant.configure(2) do |config|
     compute.vm.network "private_network", ip: "{{ stack_nodes[node].mgmt_ip }}"
     compute.vm.provider "virtualbox" do |vb|
       vb.name = "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}"
-      vb.memory = "1024"
+      vb.memory = "{{ ram_size.compute[stack_type] }}"
       vb.customize ["modifyvm", :id, "--natnet1", "172.16.0.0/12"]
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
