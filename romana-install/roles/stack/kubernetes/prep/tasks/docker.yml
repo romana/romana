@@ -18,3 +18,7 @@
   apt: pkg="{{ item }}" state=latest
   with_items:
     - docker-engine
+
+- name: Add ubuntu user to docker group (for convenience, so user can run docker commands)
+  user: name="ubuntu" append=yes groups="docker"
+
