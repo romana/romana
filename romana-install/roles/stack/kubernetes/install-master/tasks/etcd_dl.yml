@@ -3,8 +3,6 @@
   get_url: url="{{ etcd_url }}" dest="{{ kubernetes_dl_dir}}/etcd.tar.gz" mode=0644
   register: dl
 
-- debug: var=dl
-
 - name: Validate the downloaded file
   stat: path="{{ kubernetes_dl_dir}}/etcd.tar.gz"
   register: k

@@ -3,7 +3,6 @@
   tasks:
    - name: Create path for stack files
      file: path="./{{ stack_data_dir }}" state="directory"
-   - debug: var=stack_data_dir
 
 # Only the target platform will be created
 - include: create_hosts.aws.yml
