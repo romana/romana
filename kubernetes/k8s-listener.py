@@ -399,7 +399,7 @@ def process(s):
     logging.info("Discovered tenants = %s" % tenants)
     tenant_id = get_tenant_id_by_name(rule['src_tenant'], tenants)
     if not tenant_id:
-        logging.warning("Failed to resolve tenant_id for tenant %s - skipping event %s" % (rule['src_tenant'], obj)
+        logging.warning("Failed to resolve tenant_id for tenant %s - skipping event %s" % (rule['src_tenant'], obj))
         return
     logging.info("Discovered tenant_id = %s" % tenant_id)
     segments = get_segments(tenant_id)
@@ -519,7 +519,7 @@ class AgentHandler(BaseHTTPRequestHandler):
         try:
             json_data = simplejson.loads(raw_data)
         except Exception, e:
-            logging.warning("Cannot parse %s" % raw_data))
+            logging.warning("Cannot parse %s" % raw_data)
             return
 
         # Values of `method` are inherited directly from kubernetes create/delete policy event.
