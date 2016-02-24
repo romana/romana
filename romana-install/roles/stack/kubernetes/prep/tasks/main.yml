@@ -1,5 +1,6 @@
 ---
 - include: kubernetes_dl.yml
+- include: romana_kube.yml
 
 - include: docker.yml
   become: true
