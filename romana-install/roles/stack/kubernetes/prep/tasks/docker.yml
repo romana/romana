@@ -4,6 +4,8 @@
 
 - name: Add Docker key
   apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+  retries: 3
+  delay: 5
 
 - name: Update apt cache
   apt: update_cache=yes
