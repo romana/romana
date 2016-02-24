@@ -4,6 +4,7 @@ INSTANCE_TAGS=""
 STACK_NAME=""
 ROMANA_BRANCH=""
 CORE_BRANCH=""
+KUBE_BRANCH=""
 MASTER_IP=""
 MASTER_ID=""
 AWS_REGION=""
@@ -47,6 +48,7 @@ get_romana_branch () {
 	STACK_PARAMETERS=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --region $AWS_REGION --query "Stacks[0].Parameters")
 	ROMANA_BRANCH=$(echo $STACK_PARAMETERS | jq '.[] | if .ParameterKey=="RomanaBranch" then .ParameterValue else "" end' -r | xargs)
 	CORE_BRANCH=$(echo $STACK_PARAMETERS | jq '.[] | if .ParameterKey=="CoreBranch" then .ParameterValue else "" end' -r | xargs)
+	KUBE_BRANCH=$(echo $STACK_PARAMETERS | jq '.[] | if .ParameterKey=="KubeBranch" then .ParameterValue else "" end' -r | xargs)
 }
 
 get_stack_resources () {
@@ -117,6 +119,9 @@ clone_romana () {
 	if ! test -d $R_HOME; then
 	    sudo su - ubuntu -c "git clone https://github.com/romana/romana --branch=$ROMANA_BRANCH $R_HOME"
 	fi
+	if ! test -d $U_HOME/kube; then
+	    sudo su - ubuntu -c "git clone https://github.com/romana/kube --branch=$KUBE_BRANCH $U_HOME/kube"
+        fi
 }
 
 

@@ -42,7 +42,8 @@ configure_cni_plugin () {
 	cp -r /home/ubuntu/romana/kubernetes/etc/cni /etc/
 	sed -i "s/__MASTER_IP__/$MASTER_IP/g" /etc/cni/net.d/10-romana.conf
 	mkdir -p /opt/cni/bin/
-	cp -f /home/ubuntu/romana/kubernetes/romana.cni /opt/cni/bin/romana
+	# cp -f /home/ubuntu/romana/kubernetes/romana.cni /opt/cni/bin/romana
+	cp -f /home/ubuntu/kube/CNI/romana /opt/cni/bin/romana
 	chmod +x /opt/cni/bin/romana
 }
 
