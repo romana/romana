@@ -4,6 +4,7 @@
   with_items:
     - kubelet.conf
     - kube-proxy.conf
+    - romana-kube-agent.conf
 
 - name: Start services
   service: name="{{ item }}" state="started"

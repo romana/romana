@@ -9,7 +9,15 @@
   file: path="/opt/cni/bin" state="directory"
 
 - name: CNI plugin executable
-  copy: src="cni/romana" dest="/opt/cni/bin/romana" mode=0755
+  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kube/CNI/romana /opt/cni/bin/romana
+
+- name: CNI agent executable
+  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kube/NetworkPolicy/k8s-listener.py /usr/local/lib/romana-kube-agent
+  args:
+    creates: /usr/local/lib/romana-kube-agent
+  
+- name: Configure IP Address for agent
+  replace: dest="/usr/local/lib/romana-kube-agent" regexp="192\.168\.0\.10" replace="{{ stack_nodes.Controller.mgmt_ip }}"
 
 - name: Install nsenter
   get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/nsenter" dest="/usr/local/bin/" mode=0755
