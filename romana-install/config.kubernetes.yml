@@ -19,3 +19,7 @@
 - hosts: kube_minions
   roles:
     - stack/kubernetes/install-minion
+
+- hosts: kube_master
+  roles:
+    - stack/kubernetes/postinstall
