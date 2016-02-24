@@ -11,5 +11,5 @@ KUBE_ETCD_SERVERS="--etcd-servers=http://{{ stack_nodes.Controller.mgmt_ip}}:237
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"
 
 # Add your own!
-KUBE_API_ARGS=""
+KUBE_API_ARGS="--runtime-config=extensions/v1beta1=true,extensions/v1beta1/thirdpartyresources=true"
 
