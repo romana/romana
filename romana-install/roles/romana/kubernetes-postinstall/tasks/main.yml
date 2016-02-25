@@ -1,6 +1,6 @@
 ---
-# Make sure the bin directory exists
-- file: path="/home/ubuntu/bin/" mode=0775 state=directory
+- name: Create bin directory
+  file: path="/home/ubuntu/bin/" mode=0775 state=directory
 
 - name: Install romana tool
   template: src="../cmd/romana.k8s" dest="/home/ubuntu/bin/romana" mode=0775
@@ -11,3 +11,25 @@
 - name: Execute romana post-install script
   shell: /var/tmp/romana-post-install.sh
 
+- name: Create demo directory
+  file: path="/home/ubuntu/demo/" mode=0775 state=directory
+
+- name: Install additional tools
+  become: true
+  become_user: root
+  apt: pkg="{{ item }}"
+  with_items:
+    - tmux
+    - pv
+
+- name: Copy files to demo directory
+  copy: src="demo/{{ item }}" dest="/home/ubuntu/demo/{{ item }}"
+  with_items:
+    - demo.sh
+    - example-controller.yaml
+    - pod-backend.yaml
+    - pod-frontend.yaml
+    - romana-np-frontend-to-backend.json
+
+- name: Make demo script executable
+  file: path="/home/ubuntu/demo/demo.sh" mode=0755
