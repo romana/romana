@@ -33,6 +33,7 @@ usage() {
 	echo "    remove-tier"
 	echo "    add-policy"
 	echo "    remove-policy"
+	echo "    show-policy"
 }
 
 # Variables used within the script
@@ -235,10 +236,77 @@ add_policy() {
 		echo "Unable to find file '$policy_file'"
 		return
 	fi
-	echo "Sending request to '${kube_apiserver_url}${romana_policy_path}': '@$policy_file'"
+	echo "Sending POST request to '${kube_apiserver_url}${romana_policy_path}': '@$policy_file'"
 	curl -s -X POST -H "Content-Type: application/json" --data "@$policy_file" "${kube_apiserver_url}${romana_policy_path}"; printf "\n"
 }
-	
+
+remove_policy() {
+	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
+		echo "romana add-policy <policy-file>"
+		return
+	fi
+	if (( $# != 1 )); then
+		echo "ERROR: expected 1 parameters, received $#"
+		return
+	fi
+	local policy_name="$1"
+	echo "Sending DELETE request to '${kube_apiserver_url}${romana_policy_path}/$policy_name'"
+	curl -s -X DELETE "${kube_apiserver_url}${romana_policy_path}/$policy_name"; printf "\n"
+}
+
+show_policy() {
+	# Without arguments, show all the policys
+	if (( $# == 0 )); then
+		show_policies
+		return
+	fi
+
+	# Show usage.
+	# TODO: What if the policy's name is 'help' ?
+	if [[ "$1" == "help" ]]; then
+		echo "romana show-policy [policy-name...]"
+		return
+	fi
+
+	# Get a list of all the policies, save the data
+	if ! response=$(curl -s -f -H "Content-Type: application/json" "${kube_apiserver_url}${romana_policy_path}"); then
+		echo "Unable to fetch policies using URL '${kube_apiserver_url}${romana_policy_path}'"
+		return
+	fi
+
+	# For each policy name...
+	for i in "$@"; do
+		# Find the policy with that name
+		len=$(jq -r --arg name "$i" '.items[] | select(.apiVersion=="romana.io/demo/v1") | select(.metadata.name==$name) | length' <<< "$response")
+		if (( len == 0 )); then
+			echo "Unable to find policy '$i'"
+			continue
+		fi
+		printf "policy: %s\n" "$1"
+		jq -r --arg name "$i" '.items[] | select(.apiVersion=="romana.io/demo/v1") | select(.metadata.name==$name) | .spec' <<< "$response"
+	done
+}
+
+show_policies() {
+	# Get the list of policies
+	if ! response=$(curl -s -f -H "Content-Type: application/json" "${kube_apiserver_url}${romana_policy_path}"); then
+		echo "Unable to fetch policies using URL '${kube_apiserver_url}${romana_policy_path}'"
+		return
+	fi
+	# Determine the number of policies
+	num_policies=$(jq 'length' <<< "$response")
+	if (( num_policies == 0 )); then
+		echo "No policies found."
+		return
+	fi
+	# List the policies
+	printf "Listing %d policies\n" "$num_policies"
+	while read -r policy _; do
+		printf "%-32s\n" "$policy"
+	done < <(jq -r '.items[] | select(.apiVersion=="romana.io/demo/v1") | "\(.metadata.name)" ' <<< "$response")
+}
+
+
 # Show usage if no subcommand was provided
 if (( $# == 0 )); then
 	usage
@@ -314,7 +382,15 @@ case "$1" in
 		add_policy "$@"
 		;;
 	remove-policy)
-		echo "$1: Not implemented yet"
+		shift
+		remove_policy "$@"
+		;;
+	show-policy)
+		shift
+		show_policy "$@"
+		;;
+	show-policies)
+		show_policies
 		;;
 	help)
 		usage
