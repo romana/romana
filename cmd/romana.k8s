@@ -294,7 +294,7 @@ show_policies() {
 		return
 	fi
 	# Determine the number of policies
-	num_policies=$(jq 'length' <<< "$response")
+	num_policies=$(jq '.items[] | select(.apiVersion=="romana.io/demo/v1") | length' <<< "$response")
 	if (( num_policies == 0 )); then
 		echo "No policies found."
 		return
