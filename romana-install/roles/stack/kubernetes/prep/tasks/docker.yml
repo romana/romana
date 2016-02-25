@@ -17,9 +17,9 @@
     - docker.io
 
 - name: Install Docker
-  apt: pkg="{{ item }}" state=latest
+  apt: pkg="{{ item }}"
   with_items:
-    - docker-engine
+    - docker-engine=1.9.1-0~trusty
 
 - name: Add ubuntu user to docker group (for convenience, so user can run docker commands)
   user: name="ubuntu" append=yes groups="docker"
