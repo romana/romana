@@ -22,7 +22,7 @@
     - docker-engine=1.9.1-0~trusty
 
 - name: Put a hold on docker package
-  command: apt-mark hold docker-engine
+  command: aptitude hold docker-engine
 
 - name: Add ubuntu user to docker group (for convenience, so user can run docker commands)
   user: name="ubuntu" append=yes groups="docker"
