@@ -31,6 +31,8 @@ usage() {
 	echo "    show-owner"
 	echo "    add-tier"
 	echo "    remove-tier"
+	echo "    add-policy"
+	echo "    remove-policy"
 }
 
 # Variables used within the script
@@ -38,6 +40,8 @@ tenant_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9602/
 tenant_path="tenants"
 topology_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9603/
 topology_path="hosts"
+kube_apiserver_url=http://{{ stack_nodes.Controller.mgmt_ip }}:8080/
+romana_policy_path="apis/romana.io/demo/v1/namespaces/default/networkpolicys"
 
 add_host() {
 	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
@@ -217,6 +221,24 @@ add_tier() {
 	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tier_path}"; printf "\n"
 }
 
+add_policy() {
+	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
+		echo "romana add-policy <policy-file>"
+		return
+	fi
+	if (( $# != 1 )); then
+		echo "ERROR: expected 1 parameters, received $#"
+		return
+	fi
+	local policy_file="$1"
+	if ! [[ -f "$policy_file" ]]; then
+		echo "Unable to find file '$policy_file'"
+		return
+	fi
+	echo "Sending request to '${kube_apiserver_url}${romana_policy_path}': '@$policy_file'"
+	curl -s -X POST -H "Content-Type: application/json" --data "@$policy_file" "${kube_apiserver_url}${romana_policy_path}"; printf "\n"
+}
+	
 # Show usage if no subcommand was provided
 if (( $# == 0 )); then
 	usage
@@ -285,6 +307,13 @@ case "$1" in
 		add_tier "$@"
 		;;
 	remove-tier)
+		echo "$1: Not implemented yet"
+		;;
+	add-policy)
+		shift
+		add_policy "$@"
+		;;
+	remove-policy)
 		echo "$1: Not implemented yet"
 		;;
 	help)
