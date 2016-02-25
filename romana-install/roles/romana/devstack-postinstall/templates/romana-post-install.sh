@@ -26,9 +26,9 @@ exec > /dev/null
 # to configure the hosts/tenants/segments used in a simple setup.
 
 # Create hosts
-romana add-host ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }} {{ stack_nodes.Controller.mgmt_ip }} {{ stack_nodes.Controller.gateway | ipaddr(0) }} 9604
+romana add-host ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }} {{ stack_nodes.Controller.mgmt_ip }} {{ stack_nodes.Controller.gateway }} 9604
 {% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
-romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_nodes[node].mgmt_ip }} {{ stack_nodes[node].gateway | ipaddr(0) }} 9604
+romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_nodes[node].mgmt_ip }} {{ stack_nodes[node].gateway }} 9604
 {% endfor %}
 
 # Create tenants and segments
