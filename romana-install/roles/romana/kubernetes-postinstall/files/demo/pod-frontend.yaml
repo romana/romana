@@ -9,6 +9,6 @@ metadata:
 spec:
   containers:
   - name: nginx
-    image: nginx
+    image: rstarmer/nginx-curl
     ports:
     - containerPort: 80

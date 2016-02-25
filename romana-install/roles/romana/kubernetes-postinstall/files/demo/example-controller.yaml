@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: nginx-default
-        image: nginx
+        image: rstarmer/nginx-curl
         ports:
         - containerPort: 80
 
