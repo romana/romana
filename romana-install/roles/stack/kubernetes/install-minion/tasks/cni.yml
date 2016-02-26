@@ -19,6 +19,9 @@
 - name: Configure IP Address for agent
   replace: dest="/usr/local/lib/romana-kube-agent" regexp="192\.168\.0\.10" replace="{{ stack_nodes.Controller.mgmt_ip }}"
 
+- name: Tweak rule names
+  replace: dest="/usr/local/lib/romana-kube-agent" regexp="pani" replace="ROMANA"
+
 - name: Install nsenter
   get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/nsenter" dest="/usr/local/bin/" mode=0755
 

@@ -1,6 +1,6 @@
 ---
 - name: Get the romana/kube repository
-  git: repo="https://github.com/romana/kube" dest="{{ kubernetes_x_dir}}/kube"
+  git: repo="https://github.com/romana/kube" version="{{ romana_kube_branch }}" dest="{{ kubernetes_x_dir}}/kube"
 
 - name: Install additional packages
   become: true

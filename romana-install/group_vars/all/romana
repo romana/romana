@@ -1,3 +1,4 @@
 romana_dir: "/home/ubuntu/romana"
-romana_core_branch: "feature/k8s-handler"
+romana_core_branch: "merge-test/features-and-fixes"
+romana_kube_branch: "feature/timeouts-handling"
 romana_networking_branch: "v0.6.4-stable/liberty"
