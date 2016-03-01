@@ -76,7 +76,7 @@ if (( $# > 0 )); then
 						shift 2
 						;;
 					vagrant)
-						platform="$2"
+						platform="vagrant"
 						required+=( "vagrant" )
 						shift 2
 						;;
