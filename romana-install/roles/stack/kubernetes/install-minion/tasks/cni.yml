@@ -16,7 +16,7 @@
   args:
     creates: /usr/local/lib/romana-kube-agent
   
-- name: Configure IP Address for agent
+- name: Configure IP address for agent
   replace: dest="/usr/local/lib/romana-kube-agent" regexp="192\.168\.0\.10" replace="{{ stack_nodes.Controller.mgmt_ip }}"
 
 - name: Tweak rule names
