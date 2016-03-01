@@ -24,7 +24,7 @@ usage() {
 	echo ""
 	echo "Stack Name:  used-defined stack name (default: $USER)"
 	echo "Platforms:   aws (default), vagrant"
-	echo "Stack Types: devstack (default)"
+	echo "Stack Types: devstack (default), kubernetes"
 	echo "Actions:     install (default), uninstall"
 	echo ""
 	echo "Example: ./romana-setup install -e stack_name=xyzdemo"
