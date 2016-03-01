@@ -1,9 +1,8 @@
 # The Romana Project
 
-[Romana](https://romana.io) is a new [Software Defined Network (SDN)](http://romana.io/cloud/cloud_native_sdn/) solution
-specifically designed for the Cloud Native architectural style. 
-The result of this focus is that Romana cloud networks are less expensive to build, 
-easier to operate and deliver higher performance than cloud networks built using alternative SDN designs.
+Romana is a new Software Defined Network solution specifically designed for Cloud Native applications. Romana allows multi-tenant cloud computing networks for OpenStack, Docker and Kubernetes to be built without encapsulation or a virtual network overlay.
+
+Romana networks are less expensive to build, easier to operate and deliver higher performance than networks built using alternative overlay based SDN designs.
 
 # Code
 
