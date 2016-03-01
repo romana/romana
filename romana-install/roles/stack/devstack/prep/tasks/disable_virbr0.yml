@@ -1,4 +1,6 @@
 ---
+# These actions prevent libvirt's default setup from adding a
+# default virbr0 interface and iptables rules.
 - name: Disable libvirt from being started on installation
   shell: printf "manual\n" > /etc/init/libvirt-bin.override
 - name: Install libvirt-bin
