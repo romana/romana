@@ -14,7 +14,7 @@
 - name: Create demo directory
   file: path="/home/ubuntu/demo/" mode=0775 state=directory
 
-- name: Install additional tools
+- name: Install additional tools (required for demo script)
   become: true
   become_user: root
   apt: pkg="{{ item }}"
@@ -22,7 +22,7 @@
     - tmux
     - pv
 
-- name: Copy files to demo directory
+- name: Copy examples and demo script to demo directory
   copy: src="demo/{{ item }}" dest="/home/ubuntu/demo/{{ item }}"
   with_items:
     - demo.sh
