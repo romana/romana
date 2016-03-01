@@ -4,7 +4,7 @@
   register: cf
 
 - name: Create new EC2 instances with Cloudformation. This may take around 5 minutes.
-  cloudformation: stack_name="{{ stack_name }}" region="{{region}}" disable_rollback=true template="{{ stack_data_dir }}/cloudformation.json"
+  cloudformation: stack_name="{{ stack_name }}" region="us-west-1" disable_rollback=true template="{{ stack_data_dir }}/cloudformation.json"
   args:
      template_parameters:
        ControllerInstanceType: "{{ instance_type.controller[stack_type] }}"
