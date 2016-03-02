@@ -66,11 +66,11 @@ Controller
 IP: 52.xx.yy.zz
 http://52.xx.yy.zz
 (username: admin, password: secrete)
-ssh -i /Users/cgilmour/Development/romana/romana/romana-install/romana_id_rsa ubuntu@52.xx.yy.zz
+ssh -i /.../romana-install/romana_id_rsa ubuntu@52.xx.yy.zz
 
 Other Nodes
 -----------
-ssh -i /Users/cgilmour/Development/romana/romana/romana-install/romana_id_rsa ubuntu@54.zz.yy.xx
+ssh -i /.../romana/romana-install/romana_id_rsa ubuntu@54.zz.yy.xx
 ```
 
 You can now proceed to [Using Romana on Devstack](romana_devstack.md).
