@@ -49,7 +49,7 @@ Other Nodes
 ssh -i /.../romana/romana-install/romana_id_rsa ubuntu@54.zz.yy.xx
 ```
 
-You can now proceed to [Using Romana on Devstack](romana_devstack.md).
+You can now proceed to [Using Romana on Devstack](devstack_romana.md).
 
 # Uninstall
 
