@@ -92,3 +92,80 @@ After adding new segments, they can be used when booting new instances via nova.
 
 To experience the segment isolation, create instances inside the same segment and in different segments or even for different tenants.
 You will notice that they cannot contact each other, while instances within the same segment can communicate just fine.
+
+Create some instances in `frontend` and `backend segments.
+```sh-session
+ubuntu@ip-192-168-99-10:~$ nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=frontend fe-1
+ubuntu@ip-192-168-99-10:~$ nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=frontend fe-2
+ubuntu@ip-192-168-99-10:~$ nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=frontend fe-3
+ubuntu@ip-192-168-99-10:~$ nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=frontend fe-4
+ubuntu@ip-192-168-99-10:~$ nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=backend be-1
+ubuntu@ip-192-168-99-10:~$ nova boot --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id=$(neutron net-show romana -Fid -f value) --meta romanaSegment=backend be-2
+ubuntu@ip-192-168-99-10:~$ nova list
++--------------------------------------+------------------+--------+------------+-------------+------------------+
+| ID                                   | Name             | Status | Task State | Power State | Networks         |
++--------------------------------------+------------------+--------+------------+-------------+------------------+
+| 16af339f-75ad-4729-ad64-c700f10edba9 | be-1             | ACTIVE | -          | Running     | romana=10.0.19.3 |
+| 3914c9ea-1ec4-4173-b798-92b4d02ccb88 | be-2             | ACTIVE | -          | Running     | romana=10.0.19.4 |
+| 3a21fbec-253f-4e9a-94eb-d81148520bc4 | example-instance | ACTIVE | -          | Running     | romana=10.0.17.3 |
+| a4711980-b53c-4b0a-9fdb-e700c96a4d00 | fe-1             | ACTIVE | -          | Running     | romana=10.0.18.3 |
+| 0f5fefd2-db80-4661-939e-129b59840581 | fe-2             | ACTIVE | -          | Running     | romana=10.1.18.3 |
+| dae5eaa8-e370-413d-88bc-c21bda13aa63 | fe-3             | ACTIVE | -          | Running     | romana=10.0.18.4 |
+| 0452b5e0-74e6-4e9f-b02a-f00210ae0ca6 | fe-4             | ACTIVE | -          | Running     | romana=10.0.18.5 |
++--------------------------------------+------------------+--------+------------+-------------+------------------+
+```
+
+Connect to an instance in `frontend`, eg: `fe-1`
+```sh-session
+ubuntu@ip-192-168-99-10:~$ ssh cirros@10.0.18.3
+The authenticity of host '10.0.18.3 (10.0.18.3)' can't be established.
+RSA key fingerprint is d9:4c:80:c4:cc:46:1b:0d:26:14:d1:b3:9c:b3:b1:1d.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '10.0.18.3' (RSA) to the list of known hosts.
+$ 
+```
+Check that we can reach other hosts within the segment
+```sh-session
+$ ping 10.0.18.4
+PING 10.0.18.4 (10.0.18.4): 56 data bytes
+64 bytes from 10.0.18.4: seq=0 ttl=63 time=1393.203 ms
+64 bytes from 10.0.18.4: seq=1 ttl=63 time=391.037 ms
+64 bytes from 10.0.18.4: seq=2 ttl=63 time=0.857 ms
+^C
+--- 10.0.18.4 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max = 0.857/595.032/1393.203 ms
+$ ping 10.0.18.5
+PING 10.0.18.5 (10.0.18.5): 56 data bytes
+64 bytes from 10.0.18.5: seq=0 ttl=63 time=700.079 ms
+64 bytes from 10.0.18.5: seq=1 ttl=63 time=1.018 ms
+^C
+--- 10.0.18.5 ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 1.018/350.548/700.079 ms
+$ ping 10.1.18.3
+PING 10.1.18.3 (10.1.18.3): 56 data bytes
+64 bytes from 10.1.18.3: seq=0 ttl=62 time=7.332 ms
+64 bytes from 10.1.18.3: seq=1 ttl=62 time=1.919 ms
+^C
+--- 10.1.18.3 ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 1.919/4.625/7.332 ms
+$ 
+```
+
+Check that we're forbidden from reaching hosts in other segments.
+```sh-session
+$ ping 10.0.19.4
+PING 10.0.19.4 (10.0.19.4): 56 data bytes
+^C
+--- 10.0.19.4 ping statistics ---
+8 packets transmitted, 0 packets received, 100% packet loss
+$ ping 10.0.17.3
+PING 10.0.17.3 (10.0.17.3): 56 data bytes
+^C
+--- 10.0.17.3 ping statistics ---
+6 packets transmitted, 0 packets received, 100% packet loss
+$ 
+```
+
