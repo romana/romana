@@ -9,18 +9,18 @@ This should be done on your host. A 'run from a VM' option is being developed, f
 
 To run this installation, you will need
 * [Vagrant](https://www.vagrantup.com/downloads.html) installed (and [tested](https://www.vagrantup.com/docs/getting-started/) to be sure it works)
-* [ansible](https://www.ansible.com) and supporting python tools / libraries
+* [ansible](https://www.ansible.com) v1.9.4 or higher, and supporting python tools / libraries
 
 ## Set up Ansible
 
 ```bash
 # Ubuntu
 sudo apt-get install git python-pip python-dev
-sudo pip install ansible==1.9.4 netaddr
+sudo pip install ansible netaddr
 
 # OS X
 sudo easy_install pip
-sudo pip install ansible==1.9.4 netaddr
+sudo pip install ansible netaddr
 ```
 
 # Install

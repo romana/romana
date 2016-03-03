@@ -10,18 +10,18 @@ If you do not wish to install additional tools in your host, you can create a VM
 To run this installation, you will need
 * an AWS account. You can create one at [http://aws.amazon.com](http://aws.amazon.com)
 * credentials for an [AWS IAM](https://console.aws.amazon.com/iam/home) User/Role that permits creating EC2 instances
-* [ansible](https://www.ansible.com) and supporting python tools / libraries
+* [ansible](https://www.ansible.com) v1.9.4 or higher, and supporting python tools / libraries
 
 ## Set up Ansible
 
 ```bash
 # Ubuntu
 sudo apt-get install git python-pip python-dev
-sudo pip install ansible==1.9.4 boto awscli netaddr
+sudo pip install ansible boto awscli netaddr
 
 # OS X
 sudo easy_install pip
-sudo pip install ansible==1.9.4 boto awscli netaddr
+sudo pip install ansible boto awscli netaddr
 ```
 
 ## Set up AWS tools
