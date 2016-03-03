@@ -1,0 +1,15 @@
+---
+- name: Copy third-party resource
+  copy: src="romana-thirdparty-resource.yaml" dest="{{ kubernetes_x_dir }}/romana-third-party-resource.yaml"
+  register: tpr
+
+- name: kubectl configuration
+  when: tpr.changed
+  command: "{{ item }}"
+  with_items:
+    - kubectl config set-cluster romana-cni-cluster --server="http://{{ stack_nodes.Controller.mgmt_ip }}:8080"
+    - kubectl config set-context romana-cni-context --cluster=romana-cni-cluster
+    - kubectl config use-context romana-cni-context
+    - kubectl create --validate=false -f {{ kubernetes_x_dir }}/romana-third-party-resource.yaml
+
+

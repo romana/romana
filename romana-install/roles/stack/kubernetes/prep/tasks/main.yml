@@ -1,0 +1,11 @@
+---
+- include: kubernetes_dl.yml
+- include: romana_kube.yml
+
+- include: docker.yml
+  become: true
+  become_user: root
+
+- include: files.yml
+  become: true
+  become_user: root

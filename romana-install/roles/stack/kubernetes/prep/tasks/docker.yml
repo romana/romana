@@ -1,0 +1,29 @@
+---
+- name: Add Docker apt source
+  copy: src=docker.list dest=/etc/apt/sources.list.d/ owner=root group=root mode=0664
+
+- name: Add Docker key
+  apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+  retries: 3
+  delay: 5
+
+- name: Update apt cache
+  apt: update_cache=yes
+
+- name: Ensure other packages are not present
+  apt: pkg="{{ item }}" state="absent" purge="yes"
+  with_items:
+    - lxc-docker
+    - docker.io
+
+- name: Install Docker
+  apt: pkg="{{ item }}"
+  with_items:
+    - docker-engine=1.9.1-0~trusty
+
+- name: Put a hold on docker package
+  command: aptitude hold docker-engine
+
+- name: Add ubuntu user to docker group (for convenience, so user can run docker commands)
+  user: name="ubuntu" append=yes groups="docker"
+

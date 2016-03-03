@@ -1,0 +1,2 @@
+# Simple predefined inventory to suppress warnings when provisioning/terminating hosts
+localhost ansible_connection=local

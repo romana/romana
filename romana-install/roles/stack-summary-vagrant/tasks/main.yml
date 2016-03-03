@@ -1,3 +1,0 @@
----
-- name: "Generate Stack Summary"
-  template: src=vagrant-stackinfo.txt dest=./vagrant-stackinfo.txt

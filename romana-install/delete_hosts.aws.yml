@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - add_host: name="localhost" groups="aws" ansible_connection="local"
+      when: platform == "aws"
+
+- hosts: aws
+  tasks:
+    - name: Destroy Stack with Cloudformation. This may take a couple of minutes.
+      cloudformation: stack_name="{{ stack_name }}" region="us-west-1" state=absent template="{{ stack_data_dir }}/cloudformation.json"
+    - name: Remove cloudformation file
+      file: path="{{ stack_data_dir }}/cloudformation.json" state=absent

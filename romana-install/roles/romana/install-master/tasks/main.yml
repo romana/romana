@@ -1,0 +1,8 @@
+---
+- name: Install core romana applications for master node
+  include: files.yml
+
+- name: Enable romana services for master node
+  become: true
+  become_user: root
+  include: services.yml

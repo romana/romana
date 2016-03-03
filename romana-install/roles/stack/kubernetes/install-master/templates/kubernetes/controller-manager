@@ -1,0 +1,4 @@
+###
+# kubernetes controller-manager config
+
+# default config should be adequate

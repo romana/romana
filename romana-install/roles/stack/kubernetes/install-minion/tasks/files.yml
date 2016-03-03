@@ -1,0 +1,14 @@
+---
+- name: kubernetes minion config files
+  template: src="kubernetes/{{ item }}" dest="/etc/kubernetes/{{ item }}"
+  with_items:
+    - kubelet
+    - proxy
+
+- name: kubernetes binaries
+  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kubernetes/server/bin/{{ item }} /usr/local/bin/{{ item }}
+  args:
+    creates: /usr/local/bin/{{ item }}
+  with_items:
+    - kubelet
+    - kube-proxy

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-frontend
+  labels:
+    app: nginx
+    owner: t1
+    tier: frontend
+spec:
+  containers:
+  - name: nginx
+    image: rstarmer/nginx-curl
+    ports:
+    - containerPort: 80

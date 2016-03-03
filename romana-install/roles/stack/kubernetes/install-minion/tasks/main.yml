@@ -1,0 +1,12 @@
+---
+- include: files.yml
+  become: true
+  become_user: root
+
+- include: services.yml
+  become: true
+  become_user: root
+
+- include: cni.yml
+  become: true
+  become_user: root

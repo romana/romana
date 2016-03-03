@@ -1,0 +1,17 @@
+{% for i in stackinfo %}
+{{ i.Name }} ansible_ssh_host="{{ i.IP }}" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}" stack_host="{{ i.Host }}"
+{% endfor %}
+
+[stack_nodes:children]
+controller
+computes
+
+[controller]
+{% for i in stackinfo %}{% if i.Role == "Controller" %}
+{{ i.Name }}
+{% endif %}{% endfor %}
+
+[computes]
+{% for i in stackinfo %}{% if i.Role == "Compute" %}
+{{ i.Name }}
+{% endif %}{% endfor %}

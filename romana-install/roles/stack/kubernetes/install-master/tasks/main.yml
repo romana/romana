@@ -1,0 +1,14 @@
+---
+- include: mysql.yml
+  become: true
+  become_user: root
+
+- include: etcd_dl.yml
+
+- include: files.yml
+  become: true
+  become_user: root
+
+- include: services.yml
+  become: true
+  become_user: root

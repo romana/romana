@@ -1,0 +1,8 @@
+---
+# Wait until the host's SSH port is open before proceeding
+# This is less-noisy than ping failures while it's still activating
+- hosts: localhost
+  tasks:
+    - name: Wait for SSH Port to become active
+      wait_for: host="{{ hostvars[item].ansible_ssh_host }}" port="{{ hostvars[item].ansible_ssh_port | default(22) }}"
+      with_items: groups.stack_nodes

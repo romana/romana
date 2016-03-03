@@ -16,21 +16,25 @@
 # under the License.
 
 usage() {
-	echo ""
 	echo "romana-setup: executes the ansible playbooks for installing romana"
-	echo "Usage: romana-setup [-t targetname] [action]"
-	echo "       romana-setup [-t targetname] <action> [ansible-options]"
+	echo "Usage: romana-setup [-n stackname] [-p platform ] [-s stacktype] [action]"
+	echo "       romana-setup [-n stackname] [-p platform ] [-s stacktype] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
-	echo "Targets: aws (default), vagrant"
-	echo "Actions: install (default), uninstall"
+	echo "Stack Name:  user-defined stack name (default: $USER)"
+	echo "Platforms:   aws (default), vagrant"
+	echo "Stack Types: devstack (default), kubernetes"
+	echo "Actions:     install (default), uninstall"
 	echo ""
-	echo "Example: ./romana-setup install -e stack_name=xyzdemo"
-	echo "Example: ./romana-setup uninstall -e stack_name=xyzdemo"
-	echo "Example: ./romana-setup install -e stack_name=xyzdemo \\"
-	echo "           -e instance_type=t2.medium \\"
-	echo "           -e romana_core_branch=master \\"
-	echo "           -e romana_networking_branch=stable/liberty"
+	echo "Example 1: Romana with Kubernetes on AWS"
+	echo "./romana-setup -p aws -s kubernetes install"
+	echo "./romana-setup -p aws -s kubernetes uninstall"
+	echo "Example 2: Additional AWS cluster, using a different name"
+	echo "./romana-setup -n xyz -p aws -s kubernetes install"
+	echo "./romana-setup -n xyz -p aws -s kubernetes uninstall"
+	echo "Example 3: Romana with Devstack on Vagrant"
+	echo "./romana-setup -p vagrant -s devstack install"
+	echo "./romana-setup -p vagrant -s devstack uninstall"
 	echo ""
 }
 
@@ -40,8 +44,13 @@ if ! cd "${0%/*}"; then
 	exit 1
 fi
 
+# Default / initial values
+stack_name="$USER"
+platform="aws"
+stack_type="devstack"
+required=( ansible-playbook )
+
 # Process command-line options
-target=aws
 if (( $# > 0 )); then 
 	while [[ $1 == -* ]]; do
 		case "$1" in
@@ -49,14 +58,53 @@ if (( $# > 0 )); then
 				usage
 				exit 0
 				;;
-			-t|--target)
+			-n|--name)
 				case "$2" in
-					aws|vagrant)
-						target="$2"
+					[a-zA-Z][a-zA-Z0-9]*)
+						stack_name="$2"
 						shift 2
 						;;
 					*)
-						echo "Unknown install target '$2'."
+						echo "Invalid stack name: '$2' (must start with a letter, and contain only letters and digits)"
+						exit 1
+						;;
+				esac
+				;;
+			-p|--platform)
+				case "$2" in
+					aws)
+						platform="aws"
+						required+=( "aws" )
+						shift 2
+						;;
+					vagrant)
+						platform="vagrant"
+						required+=( "vagrant" )
+						shift 2
+						;;
+					*)
+						echo "Unknown platform '$2'."
+						usage
+						exit 1
+						;;
+				esac
+				;;
+			-s|--stack)
+				case "$2" in
+					devstack)
+						stack_type="devstack"
+						shift 2
+						;;
+					openstack)
+						stack_type="openstack"
+						shift 2
+						;;
+					kubernetes|k8s)
+						stack_type="kubernetes"
+						shift 2
+						;;
+					*)
+						echo "Unknown stack type '$2'."
 						usage
 						exit 1
 						;;
@@ -80,66 +128,69 @@ if (( $# > 0 )); then
 			shift
 			;;
 		*)
-			echo "Unknown action '$1' for target '$target'."
+			echo "Unknown action '$1' for platform '$platform'."
 			usage
 			exit 1
 	esac
 fi
 
-# Check Ansible is installed. May need to check additional commands
-required=( ansible-playbook )
+# Check if required commands are installed.
 for i in "${required[@]}"; do
 	if ! command -v "$i" > /dev/null; then
-		echo "Required command '$i' not found. Please check your Ansible installation."
+		echo "Required command '$i' not found. Please check your installation."
 		exit 1
 	fi
 done
 
-case "$target" in
-	aws)
-		case "$action" in
-			install)
-				ansible-playbook "$@" -i /dev/null create_aws.yml &&
-					ansible-playbook "$@" -i ec2.py config_aws.yml &&
-					[[ -f "aws-stackinfo.txt" ]] && cat aws-stackinfo.txt
-				;;
-			uninstall)
-				ansible-playbook "$@" -i /dev/null destroy_aws.yml
-				# Cleanup generated files
-				for f in devstack_lite.json aws-stackinfo.txt; do
-					[[ -f "$f" ]] && echo "Deleting $f" && rm "$f"
-				done
-				;;
-			*)
-				echo "Unknown action '$action' for target '$target'"
-				exit 1
-				;;
-		esac
-		;;
-	vagrant)
-		case "$action" in
-			install)
-				# echo "Not implemented yet"
-				ansible-playbook "$@" -i /dev/null create_vagrant.yml; # &&
-					ansible-playbook "$@" -i vagrant.py config_vagrant.yml &&
-					[[ -f "vagrant-stackinfo.txt" ]] && cat vagrant-stackinfo.txt
-				;;
-			uninstall)
-				ansible-playbook "$@" -i /dev/null destroy_vagrant.yml
-				# Cleanup generated files
-				for f in Vagrantfile vagrant-stackinfo.txt; do
-					[[ -f "$f" ]] && echo "Deleting $f" && rm "$f"
-				done
-				;;
-			*)
-				echo "Unknown action '$action' for target '$target'"
-				exit 1
-			;;
-		esac
-		;;
+stack_data_dir="stacks/${stack_name}_${platform}_${stack_type}"
+mkdir -p "${stack_data_dir}"
 
+ansible_args=( -e stack_name="$stack_name" -e platform="$platform" -e stack_type="$stack_type" -e stack_data_dir="$stack_data_dir" )
+
+# Add an EC2 keypair to the instance if there's one defined.
+if [[ "$platform" == "aws" ]] && [[ -r ~/.aws/ec2_keypair ]]; then
+	read ec2_keypair _ < ~/.aws/ec2_keypair
+	if [[ "$ec2_keypair" ]]; then
+		ansible_args+=( -e ec2_keypair="$ec2_keypair" )
+	fi
+fi
+
+case "$platform" in
+	aws|vagrant)
+		case "$action" in
+			install)
+				ansible-playbook "$@" "${ansible_args[@]}" -i localhost create_hosts.yml  || exit 1
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-create.yml &&
+				hosts_ready=0
+				for ((i=0; i < 5; i++)); do
+					echo "Attempting to connect to hosts"
+					if ansible -i "${stack_data_dir}/inventory" stack_nodes -m ping; then
+						hosts_ready=1
+						break
+					fi
+					echo "Retrying in 10 seconds."
+					sleep 10
+					
+				done
+				if (( ! hosts_ready )); then
+					echo "Unable to reach host(s). Exiting"
+					exit 1
+				fi
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
+					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
+				;;
+			uninstall)
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
+				ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
+				;;
+			*)
+				echo "Unknown action '$action' for platform '$platform'"
+				exit 1
+				;;
+		esac
+		;;
 	*)
-		echo "Unknown target '$target'"
+		echo "Unknown platform '$platform'"
 		exit 1
 		;;
 esac

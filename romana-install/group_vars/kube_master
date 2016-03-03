@@ -1,0 +1,4 @@
+etcd_version: "2.2.1"
+etcd_sha1: "7c267daf8bc7d70af71fd7717d00be2ce1c5f894"
+etcd_url: "https://github.com/coreos/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+etcd_cluster: "kubernetes"

@@ -1,8 +1,0 @@
----
-- hosts: localhost
-  connection: local
-  roles:
-    - generate-vagrantfile
-  tasks:
-    - name: Destroy VMs
-      command: vagrant destroy -f
