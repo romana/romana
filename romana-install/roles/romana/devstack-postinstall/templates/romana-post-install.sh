@@ -34,8 +34,8 @@ romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_
 # Create tenants and segments
 romana create-tenant admin
 romana add-segment admin default
-romana add-segment admin s1
-romana add-segment admin s2
+romana add-segment admin frontend
+romana add-segment admin backend
 romana create-tenant demo
 romana add-segment demo default
 romana add-segment demo s1
