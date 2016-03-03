@@ -71,7 +71,7 @@ Minions
 ssh -i /.../romana/romana-install/romana_id_rsa ubuntu@54.zz.yy.xx
 ```
 
-You can now proceed to [Using Romana on Kubernetes](romana_kubernetes.md).
+You can now proceed to [Using Romana on Kubernetes](kubernetes_romana.md).
 
 # Uninstall
 
