@@ -20,6 +20,7 @@ cf_data:
       xref3: "c28a2f33-4f51-45fc-80ba-69855f6847b5"
       xref4: "4a4e4f11-e8cb-4f6c-b0ae-594fb364350c"
     Compute02:
+      suffix: "02"
       nic: "nic2"
       uuid: "bc0c66d8-8a7d-4b7e-8799-4e043f1c899d"
       nic_uuid: "844f2842-9076-451d-bfca-989a224152a2"
@@ -28,6 +29,7 @@ cf_data:
       xref3: "5fd19de7-f390-459d-9ded-e53c71dfa967"
       xref4: "a6288198-5e69-4863-bc1f-3445a18d512e"
     Compute03:
+      suffix: "03"
       nic: "nic3"
       uuid: "18630951-f2bf-454f-87fa-98dedc3c374d"
       nic_uuid: "8db2cdc3-e2c0-45f3-a684-17ebf2aea9d4"
@@ -36,6 +38,7 @@ cf_data:
       xref3: "8f9888c8-0d57-457f-948f-f5213334c1ff"
       xref4: "2fb1fcdf-706b-4676-8d79-cdd3417b41cf"
     Compute04:
+      suffix: "04"
       nic: "nic4"
       uuid: "1e99d5b9-7fee-43ae-80ed-372f8473be7a"
       nic_uuid: "b5d7c59d-0138-4210-adb6-63ba3c89f3b2"
