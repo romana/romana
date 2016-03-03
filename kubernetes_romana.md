@@ -65,4 +65,6 @@ Make changes to the setup using the `romana` CLI tool.
 - Add new owners: `romana create-owner <name>`
 - Add new tiers: `romana add-tier <owner> <tier-name>
 
+These owners and tiers can be used when creating Kubernetes resources using kubectl.
 
+Look into the demo script and resources (`.yaml` files) in `~/demo` to see how owners and tiers are applied to Kubernetes resources.
