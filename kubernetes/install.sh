@@ -59,6 +59,8 @@ create_topology_record () {
 	ROMANA_NET=$3
 	AGENT_PORT=$4
 
+	until nc -z $MASTER_IP 9603; do echo "Waiting for topology to show up"; sleep 10; done
+
         REQ='{"Ip" : "__IP__", "name": "__NAME__", "romana_ip" : "__ROMANA_IP__", "agent_port" : __PORT__ }'
         REQ=$(echo $REQ | sed "s/__IP__/$IP"/)
         REQ=$(echo $REQ | sed "s/__NAME__/$NAME/")
