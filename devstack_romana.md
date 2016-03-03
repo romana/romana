@@ -30,7 +30,7 @@ c858ac6ab9534f8f86f2fe9a731277e1 (admin)
 7b593643644243e48915acd98df7b0d0 (demo)
 ubuntu@ip-192-168-99-10:~$ romana show-tenant admin
 Tenant:c858ac6ab9534f8f86f2fe9a731277e1 (admin)
-Segments: default, s1, s2
+Segments: default, frontend, backend
 ```
 
 We've also created `admin` and `demo` tenants, with segments. If a new instance is created for a tenant, a segment name needs to be provided.
