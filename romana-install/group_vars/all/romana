@@ -1,4 +1,4 @@
 romana_dir: "/home/ubuntu/romana"
 romana_core_branch: "merge-test/features-and-fixes"
-romana_kube_branch: "feature/timeouts-handling"
+romana_kube_branch: "d8eb56d5a3cbec8e56b75ab0b2c0ff255d3569ee" # master @ merge of feature/timeouts-handling
 romana_networking_branch: "v0.6.4-stable/liberty"
