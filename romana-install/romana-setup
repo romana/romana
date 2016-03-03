@@ -16,23 +16,25 @@
 # under the License.
 
 usage() {
-	echo ""
 	echo "romana-setup: executes the ansible playbooks for installing romana"
 	echo "Usage: romana-setup [-n stackname] [-p platform ] [-s stacktype] [action]"
 	echo "       romana-setup [-n stackname] [-p platform ] [-s stacktype] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
-	echo "Stack Name:  used-defined stack name (default: $USER)"
+	echo "Stack Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:   aws (default), vagrant"
 	echo "Stack Types: devstack (default), kubernetes"
 	echo "Actions:     install (default), uninstall"
 	echo ""
-	echo "Example: ./romana-setup install -e stack_name=xyzdemo"
-	echo "Example: ./romana-setup uninstall -e stack_name=xyzdemo"
-	echo "Example: ./romana-setup install -e stack_name=xyzdemo \\"
-	echo "           -e instance_type=t2.medium \\"
-	echo "           -e romana_core_branch=master \\"
-	echo "           -e romana_networking_branch=stable/liberty"
+	echo "Example 1: Romana with Kubernetes on AWS"
+	echo "./romana-setup -p aws -s kubernetes install"
+	echo "./romana-setup -p aws -s kubernetes uninstall"
+	echo "Example 2: Additional AWS cluster, using a different name"
+	echo "./romana-setup -n xyz -p aws -s kubernetes install"
+	echo "./romana-setup -n xyz -p aws -s kubernetes uninstall"
+	echo "Example 3: Romana with Devstack on Vagrant"
+	echo "./romana-setup -p vagrant -s devstack install"
+	echo "./romana-setup -p vagrant -s devstack uninstall"
 	echo ""
 }
 
