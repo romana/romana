@@ -19,7 +19,7 @@ Press Enter to proceed through the steps.
 
 ## Look up information
 
-A `romana` tool has been provided that lets you see details about the setup, and make changes.
+A `romana` command-line tool has been provided that lets you see details about the setup, and make changes.
 ```sh-session
 ubuntu@ip-192-168-99-10:~$ romana show-hosts
 Listing 2 host(s)
@@ -30,7 +30,7 @@ ip-192-168-99-10       192.168.99.10        10.0.0.1/16     0
 ubuntu@ip-192-168-99-10:~$ romana show-host ip-192-168-99-11
 ip-192-168-99-11       192.168.99.11        10.1.0.1/16     0
 ```
-By default, we have two hosts (`192.168.99.10` and `192.168.99.11`). Each host has its own CIDR (`10.0.0.1/16`, `10.1.0.1/16`) that it will use when allocating IP addresses.
+By default, we have two hosts (`192.168.99.10` and `192.168.99.11`). Each host has its own CIDR (`10.0.0.1/16`, `10.1.0.1/16`) that Romana will use when allocating IP addresses to Kubernetes pods on that host.
 
 ```sh-session
 ubuntu@ip-192-168-99-10:~$ romana show-owners
@@ -65,4 +65,4 @@ Make changes to the setup using the `romana` CLI tool.
 - Add new owners: `romana create-owner <name>`
 - Add new tiers: `romana add-tier <owner> <tier-name>
 
-After creating things, they should be immediately available for use when creating new pods within Kubernetes.
+

@@ -19,8 +19,10 @@ The READMEs of those repos contain more information about the source code and ho
 #  Installation
 
 To get up and running with Romana, some scripts and Ansible playbooks have been provided to automate the setup and deployment.
-It currently supports [Amazon EC2](https://aws.amazon.com/ec2/) instances and [Vagrant](https://www.vagrantup.com/) VMs,
-integrated with either [Kubernetes](http://kubernetes.io) or [Devstack](http://docs.openstack.org/developer/devstack/).
+This can be used to set up a cluster for experimenting with Romana, exploring how it works and learning how it interacts with Kubernetes and/or Openstack.
+
+The installer is currently capable of setting up a stand-alone [Kubernetes](http://kubernetes.io) or [OpenStack-Devstack](http://docs.openstack.org/developer/devstack/) cluster.
+As deployment targets for those clusters, it supports [Amazon EC2](https://aws.amazon.com/ec2/) or local  [Vagrant](https://www.vagrantup.com/) VMs.
 
 * [Romana on AWS EC2 with Kubernetes](aws_kubernetes.md)
 * [Romana on AWS EC2 with Devstack](aws_devstack.md)
@@ -32,7 +34,8 @@ You can express your interest in specific platforms or get help with manually in
 
 # Using Romana
 
-Now that Romana is installed, choose your stack type below for more information on what you can do.
+Once you have Romana installed and running in a cluster, you might like to test its capabilities and see it in action.
+The two links below give you cluster specific suggestions of what to try and what to explore and look at.
 
 * [Romana with Kubernetes](kubernetes_romana.md)
 * [Romana with Devstack](devstack_romana.md)

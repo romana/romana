@@ -10,7 +10,7 @@ These can be used to log into the host using the generated SSH key. Use the SSH 
 
 ## Look up information
 
-A `romana` tool has been provided that lets you see details about the setup, and make changes.
+A `romana` command-line tool has been provided that lets you see details about the setup, and make changes.
 ```sh-session
 ubuntu@ip-192-168-99-10:~$ romana show-hosts
 Listing 2 host(s)
@@ -21,7 +21,7 @@ ip-192-168-99-10       192.168.99.10        10.0.0.1/16     0
 ubuntu@ip-192-168-99-10:~$ romana show-host ip-192-168-99-11
 ip-192-168-99-11       192.168.99.11        10.1.0.1/16     0
 ```
-By default, we have two hosts (`192.168.99.10` and `192.168.99.11`). Each host has its own CIDR (`10.0.0.1/16`, `10.1.0.1/16`) that it will use when allocating IP addresses.
+By default, we have two hosts (`192.168.99.10` and `192.168.99.11`). Each host has its own CIDR (`10.0.0.1/16`, `10.1.0.1/16`) that Romana will use when allocating IP addresses to OpenStack guests on that host.
 
 ```sh-session
 ubuntu@ip-192-168-99-10:~$ romana show-tenants
@@ -33,7 +33,7 @@ Tenant:c858ac6ab9534f8f86f2fe9a731277e1 (admin)
 Segments: default, s1, s2
 ```
 
-We've also created `admin` and `demo` tenants, with segments. If the `admin` user creates a new instance, it needs to provide a named segment.
+We've also created `admin` and `demo` tenants, with segments. If a new instance is created for a tenant, a segment name needs to be provided.
 This will create an IP address within that segment and configure `iptables` rules to restrict communication to hosts within that segment.
 
 ## Create a new instance
@@ -64,7 +64,8 @@ ubuntu@ip-192-168-99-10:~$ nova list
 
 ```
 
-A new instance was created, and has IP `10.0.17.3`. You can SSH into this from the host it was created on.
+A new instance was created, and the IP address `10.0.17.3` was assigned to it. You can SSH into this from the host it was created on.
+We can also see from the IP address's network prefix (`10.0/16`) that this instance was created on host `ip-192-168-99-10`. (See the `romana show-host` details above.)
 
 ```
 ubuntu@ip-192-168-99-10:~$ ssh cirros@10.0.17.3
@@ -87,7 +88,7 @@ Make changes to the setup using the `romana` CLI tool.
 - Add new tenants: `romana create-tenant <name>` (name should exist in Openstack)
 - Add new segments: `romana add-segment <tenant-name> <segment-name>
 
-After creating things, they should be immediately available for use when creating new instances.
+After adding new segments, they can be used when booting new instances via nova.
 
-To experience the segment isolation, create instances inside the same segment and in different tenants.
-Then, log into one of them and see what other instances are reachable.
+To experience the segment isolation, create instances inside the same segment and in different segments or even for different tenants.
+You will notice that they cannot contact each other, while instances within the same segment can communicate just fine.
