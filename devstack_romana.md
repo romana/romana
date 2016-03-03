@@ -78,7 +78,8 @@ $
 
 ## Details
 
-- See what `iptables` were configured: `sudo iptables -nL`
+- See what `iptables` routes were configured: `sudo iptables -nL`
+- See routes that were configured: `ip route`
 - Log files: these are in `/var/log/upstart/`
 
 ## Experiment

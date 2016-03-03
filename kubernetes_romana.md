@@ -55,7 +55,8 @@ See the example `yaml` files in the `demo` folder. Romana is operating behind-th
 
 ## Details
 
-- See what `iptables` were configured: `sudo iptables -nL`
+- See what `iptables` rules were configured: `sudo iptables -nL`
+- See routes that were configured: `ip route`
 - Log files: these are in `/var/log/upstart/`
 
 ## Experiment
