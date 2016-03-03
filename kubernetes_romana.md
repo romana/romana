@@ -61,7 +61,6 @@ See the example `yaml` files in the `demo` folder. Romana is operating behind-th
 ## Experiment
 
 Make changes to the setup using the `romana` CLI tool.
-- Add new hosts: `romana add-host <hostname> <host-ip> <romana-cidr> <agent-port>`
 - Add new owners: `romana create-owner <name>`
 - Add new tiers: `romana add-tier <owner> <tier-name>
 

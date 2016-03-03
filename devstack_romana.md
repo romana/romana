@@ -84,7 +84,6 @@ $
 ## Experiment
 
 Make changes to the setup using the `romana` CLI tool.
-- Add new hosts: `romana add-host <hostname> <host-ip> <romana-cidr> <agent-port>`
 - Add new tenants: `romana create-tenant <name>` (name should exist in Openstack)
 - Add new segments: `romana add-segment <tenant-name> <segment-name>
 
