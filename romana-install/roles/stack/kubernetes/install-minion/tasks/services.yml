@@ -1,0 +1,13 @@
+---
+- name: Install service configurations
+  copy: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
+  with_items:
+    - kubelet.conf
+    - kube-proxy.conf
+    - romana-kube-agent.conf
+
+- name: Start services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - kubelet
+    - kube-proxy

@@ -1,0 +1,9 @@
+{
+  "name": "romana-k8s-network",
+  "type": "romana",
+  "kube_master_ip": "{{ stack_nodes.Controller.mgmt_ip }}",
+  "ipam": {
+      "type": "romana-ipam"
+  }
+}
+

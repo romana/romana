@@ -1,0 +1,13 @@
+---
+- name: Install additional packages
+  apt: pkg={{ item }} state=latest
+  with_items:
+    - python-pip
+
+- name: Remove conflicting packages
+  apt: pkg={{ item }} state=absent
+  with_items:
+    - python-six
+    - python-yaml
+    - python-openssl
+    - python-json-pointer

@@ -1,0 +1,7 @@
+kubernetes_version: "1.1.8"
+kubernetes_sha1: "496e4e214804df9271c1065150a9e553b518dd42"
+kubernetes_url: "https://github.com/kubernetes/kubernetes/releases/download/v{{ kubernetes_version }}/kubernetes.tar.gz"
+
+kubernetes_dl_dir: "/var/tmp"
+kubernetes_x_dir: "/var/tmp"
+install_dir: "/usr/local"

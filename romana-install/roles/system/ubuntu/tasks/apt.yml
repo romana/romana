@@ -1,0 +1,9 @@
+---
+- name: Perform a "safe" upgrade
+  apt: update_cache=yes upgrade=safe
+
+- name: Install additional packages
+  apt: pkg={{ item }} state=latest
+  with_items:
+    - git
+    - vim

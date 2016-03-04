@@ -1,0 +1,30 @@
+---
+# Check if the romana-gw already exists
+- shell: /sbin/ip link show romana-gw 2>/dev/null
+  register: gw
+  ignore_errors: True
+
+# If the previous command failed, create the gateway and configure it.
+- name: Create romana gateway
+  shell: "{{ item }}"
+  with_items:
+    - /sbin/ip link add romana-gw type dummy
+    - /sbin/ip link set romana-gw up
+    - /sbin/ip addr add {{ stack_nodes[stack_host].gateway }} dev romana-gw
+  when: gw.rc != 0
+
+# This rule is to ensure DHCP responses can correctly reach the VM instances.
+# When passed across the dummy link to the instance's TAP interface, the host kernel doesn't examine the checksum
+# but when received by the VM behind that interface, it would be invalid. This rule forces the checksum to be rewritten
+- name: UDP Checksum fix
+  shell: if ! /sbin/iptables -C {{ item }}; then /sbin/iptables -A {{ item }}; fi
+  with_items:
+    - POSTROUTING -t mangle -p udp --dport 68 -j CHECKSUM --checksum-fill
+
+# Ensure ARP requests/replies can be handled across interfaces.
+# This is so that endpoints behind TAP interfaces can reach the host/gateway.
+- name: Enable kernel proxy_arp setting
+  shell: if [ $(sysctl -n "{{ item }}") != "1" ]; then sysctl "{{ item }}"=1; fi
+  with_items:
+    - net.ipv4.conf.default.proxy_arp
+    - net.ipv4.conf.all.proxy_arp

@@ -1,0 +1,27 @@
+---
+- name: Generate CloudFormation Template
+  template: src="aws_cf_small_cluster.json" dest="{{ stack_data_dir }}/cloudformation.json"
+  register: cf
+
+- name: Create new EC2 instances with Cloudformation. This may take around 5 minutes.
+  cloudformation: stack_name="{{ stack_name }}" region="us-west-1" disable_rollback=true template="{{ stack_data_dir }}/cloudformation.json"
+  args:
+     template_parameters:
+       ControllerInstanceType: "{{ instance_type.controller[stack_type] }}"
+       ControllerAMI: "{{ controller_image }}"
+       ComputeInstanceType: "{{ instance_type.compute[stack_type] }}"
+       ComputeAMI: "{{ compute_image }}"
+  when: cf.changed
+
+- name: Collect dynamic information for EC2 instances
+  command: >
+    aws ec2 describe-instances --output json
+    --filters 'Name=tag:aws:cloudformation:stack-name,Values={{ stack_name }}' 'Name=instance-state-name,Values=running'
+    --query 'Reservations[*].Instances[0].{Name:Tags[?Key==`Name`].Value|[0],IP:PublicIpAddress,Host:Tags[?Key==`StackHost`].Value|[0],Role:Tags[?Key==`StackRole`].Value|[0]}'
+  register: info
+
+- set_fact:
+    stackinfo: "{{ info.stdout | from_json }}"
+
+- name: Generate inventory file for EC2 instances
+  template: src="aws_inventory" dest="{{ stack_data_dir }}/inventory"

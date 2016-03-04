@@ -1,0 +1,31 @@
+---
+- name: Install controller local.conf
+  template: src="local.conf" dest="~/devstack/local.conf"
+
+- name: Run devstack "stack" script. This may take around 10 minutes.
+  shell: chdir="~/devstack" creates="~/devstack/stack.sh.log" ./stack.sh
+  async: 3600
+  poll: 30
+
+- name: Patch in Horizon/UI changes
+  patch: src="dashboard_romana_segment.patch" basedir="/opt/stack/horizon" strip=1
+  register: p
+
+- name: Stop Web Server (if patch applied)
+  become: true
+  become_user: root
+  service: name="apache2" state="stopped"
+  when: p.changed
+
+- name: Make sure webserver stopped completely
+  wait_for: port=80 state=stopped
+  when: p.changed
+
+- name: Start Web Server (if patch applied)
+  become: true
+  become_user: root
+  service: name="apache2" state="started"
+  when: p.changed
+
+- name: Update ubuntu profile
+  patch: src="ubuntu_profile_add_openrc.patch" basedir="/home/ubuntu"

@@ -1,0 +1,5 @@
+---
+- name: Generate SSH keypair for romana installer
+  command: ssh-keygen -t rsa -b 2048 -f "{{ romana_ssh_key }}" -N ""
+  args:
+    creates: "{{ romana_ssh_key }}"

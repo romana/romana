@@ -1,0 +1,12 @@
+---
+- name: Install mysql packages
+  apt: pkg="mysql-server"
+
+- name: Make sure mysql has started
+  service: name="mysql" state="started"
+
+- name: Set mysql password
+  command: mysqladmin password "{{ stack_password }}"
+
+- name: Install my.cnf
+  template: src="mysql/my.cnf" dest="~/.my.cnf" mode=0600

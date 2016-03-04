@@ -1,6 +1,11 @@
-key_name: "shared-key-1"
+ec2_keypair: ""
+instance_type:
+  controller:
+    devstack: "t2.large"
+    kubernetes: "t2.small"
+  compute:
+    devstack: "t2.small"
+    kubernetes: "t2.small"
 
-region: "us-west-1"
-instance_type: "t2.large"
 controller_image: "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
 compute_image: "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS

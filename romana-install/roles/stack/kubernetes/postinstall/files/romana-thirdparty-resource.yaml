@@ -1,0 +1,7 @@
+metadata:
+  name: network-policy.romana.io
+apiVersion: extensions/v1beta1
+kind: ThirdPartyResource
+description: "Network policy"
+versions:
+- name: demo/v1

@@ -1,6 +1,0 @@
----
-- name: Copy pip cache from S3 bucket
-  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/devstack/{{ devstack_pip_cache }}" dest="/var/tmp/{{ devstack_pip_cache }}" mode=0644
-
-- name: Unpack pip cache
-  unarchive: copy=no src="/var/tmp/{{ devstack_pip_cache }}" dest="/root/"

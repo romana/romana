@@ -1,0 +1,35 @@
+---
+- name: Create bin directory
+  file: path="/home/ubuntu/bin/" mode=0775 state=directory
+
+- name: Install romana tool
+  template: src="../cmd/romana.k8s" dest="/home/ubuntu/bin/romana" mode=0775
+
+- name: Install romana post-install script
+  template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755
+        
+- name: Execute romana post-install script
+  shell: /var/tmp/romana-post-install.sh
+
+- name: Create demo directory
+  file: path="/home/ubuntu/demo/" mode=0775 state=directory
+
+- name: Install additional tools (required for demo script)
+  become: true
+  become_user: root
+  apt: pkg="{{ item }}"
+  with_items:
+    - tmux
+    - pv
+
+- name: Copy examples and demo script to demo directory
+  copy: src="demo/{{ item }}" dest="/home/ubuntu/demo/{{ item }}"
+  with_items:
+    - demo.sh
+    - example-controller.yaml
+    - pod-backend.yaml
+    - pod-frontend.yaml
+    - romana-np-frontend-to-backend.json
+
+- name: Make demo script executable
+  file: path="/home/ubuntu/demo/demo.sh" mode=0755
