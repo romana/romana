@@ -23,6 +23,7 @@ replicationcontroller "nginx-default" created
 
 Start example pods for another tenant
 ```
+root@ip-192-168-0-10:/home/ubuntu# kubectl create -f romana/kubernetes/isolated-namespace.yaml
 root@ip-192-168-0-10:/home/ubuntu# kubectl create -f romana/kubernetes/pod-frontend.yaml 
 pod "nginx-frontend" created
 ```
@@ -137,13 +138,13 @@ logout
 
 Create network policy object to allow access from nginx-frontend to nginx-backend
 ```
-root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-network-policy-request.json http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/
+root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-network-policy-request.json http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/tenantA/networkpolicys/
 {
   "apiVersion": "romana.io/demo/v1",
   "kind": "NetworkPolicy",
   "metadata": {
     "name": "pol1",
-    "namespace": "default",
+    "namespace": "tenantA",
     "selfLink": "/apis/romana.io/demo/v1/namespaces/default/networkpolicys/pol1",
     "uid": "262fd5e3-d109-11e5-8078-06f9d64b8ea3",
     "resourceVersion": "307",
@@ -210,5 +211,5 @@ Commercial support is available at
 
 Thats how you can delete policy 
 ```
-curl -X DELETE  http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/default/networkpolicys/pol1
+curl -X DELETE  http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/tenantA/networkpolicys/pol1
 ```
