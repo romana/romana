@@ -138,7 +138,7 @@ logout
 
 Create network policy object to allow access from nginx-frontend to nginx-backend
 ```
-root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-network-policy-request.json http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/tenantA/networkpolicys/
+root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-network-policy-request.json http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys/
 {
   "apiVersion": "romana.io/demo/v1",
   "kind": "NetworkPolicy",
