@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: nginx-backend
-  namespace: tenantA
+  namespace: tenant-a
   labels:
     app: nginx
     segment: backend

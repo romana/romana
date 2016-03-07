@@ -912,7 +912,7 @@ CREATE TABLE `tenants` (
 
 LOCK TABLES `tenants` WRITE;
 /*!40000 ALTER TABLE `tenants` DISABLE KEYS */;
-INSERT INTO `tenants` VALUES (1,'default',1),(2,'tenantA',2);
+INSERT INTO `tenants` VALUES (1,'default',1),(2,'tenant-a',2);
 /*!40000 ALTER TABLE `tenants` ENABLE KEYS */;
 UNLOCK TABLES;
 
