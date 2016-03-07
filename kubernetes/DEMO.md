@@ -144,7 +144,7 @@ root@ip-192-168-0-10:/home/ubuntu# curl -X POST -d @romana/kubernetes/romana-net
   "kind": "NetworkPolicy",
   "metadata": {
     "name": "pol1",
-    "namespace": "tenantA",
+    "namespace": "tenant-a",
     "selfLink": "/apis/romana.io/demo/v1/namespaces/default/networkpolicys/pol1",
     "uid": "262fd5e3-d109-11e5-8078-06f9d64b8ea3",
     "resourceVersion": "307",
@@ -211,5 +211,5 @@ Commercial support is available at
 
 Thats how you can delete policy 
 ```
-curl -X DELETE  http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/tenantA/networkpolicys/pol1
+curl -X DELETE  http://192.168.0.10:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys/pol1
 ```
