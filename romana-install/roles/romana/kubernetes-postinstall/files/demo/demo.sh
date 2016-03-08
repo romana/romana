@@ -82,7 +82,7 @@ desc "let's have our frontend load data from the backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "we can add isolation too. Let's see that. Quick cleanup first"
-run "kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend"
+run "kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; sleep 5"
 
 desc "enable isolation for 'tenant-a' namespace."
 run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.alpha.kubernetes.io/network-isolation=on'"
