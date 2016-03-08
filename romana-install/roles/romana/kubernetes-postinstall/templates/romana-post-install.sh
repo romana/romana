@@ -32,9 +32,9 @@ romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_
 {% endfor %}
 
 # Create owners and tiers
-romana create-owner t1
-romana add-tier t1 default
-romana add-tier t1 backend
-romana add-tier t1 frontend
-romana create-owner t2
-romana add-tier t2 default
+romana create-tenant default
+romana add-segment default default
+romana create-tenant tenant-a
+romana add-segment tenant-a default
+romana add-segment tenant-a backend
+romana add-segment tenant-a frontend
