@@ -38,8 +38,8 @@ romana add-segment admin frontend
 romana add-segment admin backend
 romana create-tenant demo
 romana add-segment demo default
-romana add-segment demo s1
-romana add-segment demo s2
+romana add-segment demo frontend
+romana add-segment demo backend
 
 # Create romana network and subnet
 if ! neutron net-show romana 2>/dev/null; then
