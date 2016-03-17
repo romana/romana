@@ -27,6 +27,7 @@
   with_items:
     - demo.sh
     - example-controller.yaml
+    - namespace-tenant-a.yaml
     - pod-backend.yaml
     - pod-frontend.yaml
     - romana-np-frontend-to-backend.json

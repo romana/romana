@@ -26,14 +26,13 @@ usage() {
 	echo "    add-host"
 	echo "    remove-host"
 	echo "    show-host"
-	echo "    create-owner"
-	echo "    delete-owner"
-	echo "    show-owner"
-	echo "    add-tier"
-	echo "    remove-tier"
+	echo "    create-tenant"
+	echo "    delete-tenant"
+	echo "    show-tenant"
+	echo "    add-segment"
+	echo "    remove-segment"
 	echo "    add-policy"
 	echo "    remove-policy"
-	echo "    show-policy"
 }
 
 # Variables used within the script
@@ -42,7 +41,8 @@ tenant_path="tenants"
 topology_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9603/
 topology_path="hosts"
 kube_apiserver_url=http://{{ stack_nodes.Controller.mgmt_ip }}:8080/
-romana_policy_path="apis/romana.io/demo/v1/namespaces/default/networkpolicys"
+romana_policy_path="apis/romana.io/%s/namespaces/%s/networkpolicys"
+romana_policy_version="demo/v1"
 
 add_host() {
 	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
@@ -112,200 +112,149 @@ show_hosts() {
 	done < <(jq -r '.[].name' <<< "$response")
 }
 
-create_owner() {
+create_tenant() {
 	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
-		echo "romana create-owner <name>"
+		echo "romana create-tenant <name>"
 		return
 	fi
 	if (( $# != 1 )); then
 		echo "ERROR: expected 1 parameters, received $#"
 		return
 	fi
-	local owner_name="$1"
-	post_data=$(printf '{"id": 0, "name": "%s"}' "$owner_name")
+	local tenant_name="$1"
+	post_data=$(printf '{"id": 0, "name": "%s"}' "$tenant_name")
 	echo "Sending request to '${tenant_url}${tenant_path}': '$post_data'"
 	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tenant_path}"; printf "\n"
 }
 
-show_owner() {
-	# Without arguments, show all the owners
+show_tenant() {
+	# Without arguments, show all the tenants
 	if (( $# == 0 )); then
-		show_owners
+		show_tenants
 		return
 	fi
 
 	# Show usage.
-	# TODO: What if the owner's name is 'help' ?
+	# TODO: What if the tenant's name is 'help' ?
 	if [[ "$1" == "help" ]]; then
-		echo "romana show-owner [owner-name...]"
+		echo "romana show-tenant [tenant-name...]"
 		return
 	fi
 
-	# Get a list of all the owners, save the data
+	# Get a list of all the tenants, save the data
 	if ! response=$(curl -s -f -H "Content-Type: application/json" "${tenant_url}${tenant_path}"); then
-		echo "Unable to fetch owners using URL '${tenant_url}${tenant_path}'"
+		echo "Unable to fetch tenants using URL '${tenant_url}${tenant_path}'"
 		return
 	fi
 
-	# For each owner name...
+	# For each tenant name...
 	for i in "$@"; do
-		# Find the owner with that name
+		# Find the tenant with that name
 		len=$(jq -r --arg name "$i" '.[] | select(.Name==$name) | length' <<< "$response")
 		if (( len == 0 )); then
-			echo "Unable to find tenant '$project' ($i)"
+			echo "Unable to find tenant '$i'"
 			continue
 		fi
 
 		read -r id _ < <(jq -r --arg name "$i" '.[] | select(.Name==$name) | "\(.Id)"' <<< "$response")
 
-		# Get the list of tiers
-		if ! tier_list=$(curl -s -f -H "Content-Type: application/json" "${tenant_url}${tenant_path}/${id}/segments"); then
-			echo "Unable to list tiers for owner '$i'"
+		# Get the list of segments
+		if ! segment_list=$(curl -s -f -H "Content-Type: application/json" "${tenant_url}${tenant_path}/${id}/segments"); then
+			echo "Unable to list segments for tenant '$i'"
 			continue
 		fi
 
 		# Write the data
-		printf "owner:%-32s\n" "$i"
-		printf "tiers: "
+		printf "tenant:%s\n" "$i"
+		printf "segments: "
 		sep=""
-		while read -r tier_name _; do
-			printf "%s%s" "$sep" "$tier_name"
+		while read -r segment_name _; do
+			printf "%s%s" "$sep" "$segment_name"
 			sep=", "
-		done < <(jq -r '.[].Name' <<< "$tier_list")
+		done < <(jq -r '.[].Name' <<< "$segment_list")
 		printf "\n"
 	done
 }
 
-show_owners() {
-	# Get the list of owners
+show_tenants() {
+	# Get the list of tenants
 	if ! response=$(curl -s -f -H "Content-Type: application/json" "${tenant_url}${tenant_path}"); then
-		echo "Unable to fetch owners using URL '${tenant_url}${tenant_path}'"
+		echo "Unable to fetch tenants using URL '${tenant_url}${tenant_path}'"
 		return
 	fi
-	# Determine the number of owners
-	num_owners=$(jq 'length' <<< "$response")
-	if (( num_owners == 0 )); then
-		echo "No owners found."
+	# Determine the number of tenants
+	num_tenants=$(jq 'length' <<< "$response")
+	if (( num_tenants == 0 )); then
+		echo "No tenants found."
 		return
 	fi
-	# List the owners
-	printf "Listing %d owner(s)\n" "$num_owners"
-	while read -r owner _; do
-		printf "%-32s\n" "$owner"
+	# List the tenants
+	printf "Listing %d tenant(s)\n" "$num_tenants"
+	while read -r tenant _; do
+		printf "%s\n" "$tenant"
 	done < <(jq -r '.[].Name' <<< "$response")
 }
 
-add_tier() {
+add_segment() {
 	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
-		echo "romana add-tier <owner-name> <segment-name>"
+		echo "romana add-segment <tenant-name> <segment-name>"
 		return
 	fi
 	if (( $# != 2 )); then
 		echo "ERROR: expected 2 parameters, received $#"
 		return
 	fi
-	local owner_name="$1" tier_name="$2"
+	local tenant_name="$1" segment_name="$2"
 	if ! response=$(curl -s -f -H "Content-Type: application/json" "${tenant_url}${tenant_path}"); then
-		echo "Unable to fetch owners using URL '${tenant_url}${tenant_path}'"
+		echo "Unable to fetch tenants using URL '${tenant_url}${tenant_path}'"
 		return
 	fi
-	read -r owner_id _ < <(jq -r --arg name "$owner_name" '.[] | select(.Name==$name) | "\(.Id)"' <<< "$response")
+	read -r tenant_id _ < <(jq -r --arg name "$tenant_name" '.[] | select(.Name==$name) | "\(.Id)"' <<< "$response")
 
-	if ! [[ "$owner_id" ]]; then
-		echo "Unable to find owner id using owner ref '$owner_name'"
+	if ! [[ "$tenant_id" ]]; then
+		echo "Unable to find tenant id using tenant ref '$tenant_name'"
 		return
 	fi
 
-	post_data=$(printf '{"id": 0, "name": "%s"}' "$tier_name")
-	tier_path="$tenant_path/$owner_id/segments"
-	echo "Sending request to '${tenant_url}${tier_path}': '$post_data'"
-	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${tier_path}"; printf "\n"
+	post_data=$(printf '{"id": 0, "name": "%s"}' "$segment_name")
+	segment_path="$tenant_path/$tenant_id/segments"
+	echo "Sending request to '${tenant_url}${segment_path}': '$post_data'"
+	curl -s -X POST -H "Content-Type: application/json" --data "$post_data" "${tenant_url}${segment_path}"; printf "\n"
 }
 
 add_policy() {
 	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
-		echo "romana add-policy <policy-file>"
+		echo "romana add-policy <tenant> <policy-file>"
 		return
 	fi
-	if (( $# != 1 )); then
-		echo "ERROR: expected 1 parameters, received $#"
+	if (( $# != 2 )); then
+		echo "ERROR: expected 2 parameters, received $#"
 		return
 	fi
-	local policy_file="$1"
+	local tenant="$1" policy_file="$2"
 	if ! [[ -f "$policy_file" ]]; then
 		echo "Unable to find file '$policy_file'"
 		return
 	fi
-	echo "Sending POST request to '${kube_apiserver_url}${romana_policy_path}': '@$policy_file'"
-	curl -s -X POST -H "Content-Type: application/json" --data "@$policy_file" "${kube_apiserver_url}${romana_policy_path}"; printf "\n"
+	local url=$(printf "${kube_apiserver_url}${romana_policy_path}" "$romana_policy_version" "$tenant")
+	echo "Sending POST request to '$url': '@$policy_file'"
+	curl -s -X POST -H "Content-Type: application/json" --data "@$policy_file" "$url"; printf "\n"
 }
 
 remove_policy() {
 	if (( $# == 0 )) || [[ "$1" == "help" ]]; then
-		echo "romana add-policy <policy-file>"
+		echo "romana remove-policy <tenant> <policy-name>"
 		return
 	fi
-	if (( $# != 1 )); then
+	if (( $# != 2 )); then
 		echo "ERROR: expected 1 parameters, received $#"
 		return
 	fi
-	local policy_name="$1"
-	echo "Sending DELETE request to '${kube_apiserver_url}${romana_policy_path}/$policy_name'"
-	curl -s -X DELETE "${kube_apiserver_url}${romana_policy_path}/$policy_name"; printf "\n"
+	local tenant="$1" policy_name="$2"
+	local url=$(printf "${kube_apiserver_url}${romana_policy_path}/$policy_name" "$romana_policy_version" "$tenant")
+	echo "Sending DELETE request to '$url'"
+	curl -s -X DELETE "$url"; printf "\n"
 }
-
-show_policy() {
-	# Without arguments, show all the policys
-	if (( $# == 0 )); then
-		show_policies
-		return
-	fi
-
-	# Show usage.
-	# TODO: What if the policy's name is 'help' ?
-	if [[ "$1" == "help" ]]; then
-		echo "romana show-policy [policy-name...]"
-		return
-	fi
-
-	# Get a list of all the policies, save the data
-	if ! response=$(curl -s -f -H "Content-Type: application/json" "${kube_apiserver_url}${romana_policy_path}"); then
-		echo "Unable to fetch policies using URL '${kube_apiserver_url}${romana_policy_path}'"
-		return
-	fi
-
-	# For each policy name...
-	for i in "$@"; do
-		# Find the policy with that name
-		len=$(jq -r --arg name "$i" '.items[] | select(.apiVersion=="romana.io/demo/v1") | select(.metadata.name==$name) | length' <<< "$response")
-		if (( len == 0 )); then
-			echo "Unable to find policy '$i'"
-			continue
-		fi
-		printf "policy: %s\n" "$1"
-		jq -r --arg name "$i" '.items[] | select(.apiVersion=="romana.io/demo/v1") | select(.metadata.name==$name) | .spec' <<< "$response"
-	done
-}
-
-show_policies() {
-	# Get the list of policies
-	if ! response=$(curl -s -f -H "Content-Type: application/json" "${kube_apiserver_url}${romana_policy_path}"); then
-		echo "Unable to fetch policies using URL '${kube_apiserver_url}${romana_policy_path}'"
-		return
-	fi
-	# Determine the number of policies
-	num_policies=$(jq '.items[] | select(.apiVersion=="romana.io/demo/v1") | length' <<< "$response")
-	if (( num_policies == 0 )); then
-		echo "No policies found."
-		return
-	fi
-	# List the policies
-	printf "Listing %d policies\n" "$num_policies"
-	while read -r policy _; do
-		printf "%-32s\n" "$policy"
-	done < <(jq -r '.items[] | select(.apiVersion=="romana.io/demo/v1") | "\(.metadata.name)" ' <<< "$response")
-}
-
 
 # Show usage if no subcommand was provided
 if (( $# == 0 )); then
@@ -313,14 +262,14 @@ if (( $# == 0 )); then
 	exit 9
 fi
 
-# Undocumented options to set topology and owner URLs
+# Undocumented options to set topology and tenant URLs
 while [[ "$1" = -* ]]; do
 	case "$1" in
-		--owner-url)
+		--tenant-url)
 			tenant_url="$2"
 			shift 2
 			;;
-		--owner-url=*)
+		--tenant-url=*)
 			tenant_url="${1:13}"
 			shift
 			;;
@@ -356,25 +305,25 @@ case "$1" in
 	show-hosts)
 		show_hosts
 		;;
-	create-owner)
+	create-tenant)
 		shift
-		create_owner "$@"
+		create_tenant "$@"
 		;;
-	delete-owner)
+	delete-tenant)
 		echo "$1: Not implemented yet"
 		;;
-	show-owner)
+	show-tenant)
 		shift
-		show_owner "$@"
+		show_tenant "$@"
 		;;
-	show-owners)
-		show_owners
+	show-tenants)
+		show_tenants
 		;;
-	add-tier)
+	add-segment)
 		shift
-		add_tier "$@"
+		add_segment "$@"
 		;;
-	remove-tier)
+	remove-segment)
 		echo "$1: Not implemented yet"
 		;;
 	add-policy)
@@ -384,13 +333,6 @@ case "$1" in
 	remove-policy)
 		shift
 		remove_policy "$@"
-		;;
-	show-policy)
-		shift
-		show_policy "$@"
-		;;
-	show-policies)
-		show_policies
 		;;
 	help)
 		usage

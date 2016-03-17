@@ -21,7 +21,7 @@ function maybe_first_prompt() {
 }
 function run() {
     maybe_first_prompt
-    rate=25
+    rate=$((25 * (1 + ${#1} / 30)))
     if [ -n "$DEMO_RUN_FAST" ]; then
       rate=1000
     fi
@@ -44,10 +44,10 @@ function relative() {
     done
 }
 function get_pods() {
-    kubectl get pods -o json | jq '.items[] | { Name: .metadata.name, podIP: .status.podIP, NodeID: .spec.nodeName, Status: .status.phase }'
+    kubectl ${1:+--namespace "$1"} get pods -o json | jq '.items[] | { Name: .metadata.name, podIP: .status.podIP, NodeID: .spec.nodeName, Status: .status.phase }'
 }
 function get_pod_ip() {
-    kubectl get pod "$1" -o json | jq -r '.status.podIP'
+    kubectl ${2:+--namespace "$2"} get pod "$1" -o json | jq -r '.status.podIP'
 }
 
 SSH_NODE=$(kubectl get nodes | tail -1 | cut -f1 -d' ')
@@ -64,25 +64,40 @@ run "kubectl create -f example-controller.yaml"
 desc "anybody here now?"
 run "get_pods"
 
-desc "create a pod on 'frontend' segment in 't1' tenant/owner"
+desc "create the namespace for some additional pods"
+run "kubectl create -f namespace-tenant-a.yaml"
+desc "create a pod on 'frontend' segment in 'tenant-a' namespace"
 run "kubectl create -f pod-frontend.yaml"
 
-desc "create a pod on 'backend' segment in 't1' tenant/owner"
+desc "create a pod on 'backend' segment in 'tenant-a' namespace"
 run "kubectl create -f pod-backend.yaml; sleep 5"
 
-desc "Let’s find out where the pods are"
-run "get_pods"
+desc "let’s find out where the pods are"
+run "get_pods; get_pods 'tenant-a'"
 
 desc "we should only see our 'internal' local interface"
-run "kubectl exec nginx-frontend -- ip addr"
+run "kubectl --namespace=tenant-a exec nginx-frontend -- ip addr"
 
-desc "Let's look at the state in the frontend segment"
-run "kubectl exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend') --connect-timeout 5"
+desc "let's have our frontend load data from the backend"
+run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
-desc "Now let's add a policy that permits frontend to connect to the backend"
-run "romana add-policy romana-np-frontend-to-backend.json; sleep 5"
-desc "Let's look at the state in the frontend segment"
-run "kubectl exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend') --connect-timeout 5"
+desc "we can add isolation too. Let's see that. Quick cleanup first"
+run "kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; sleep 5"
+
+desc "enable isolation for 'tenant-a' namespace."
+run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.alpha.kubernetes.io/network-isolation=on'"
+
+desc "create the frontend and backend pods"
+run "kubectl create -f pod-frontend.yaml; kubectl create -f pod-backend.yaml; sleep 5"
+
+desc "let's try to have the frontend load data from the backend"
+run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
+
+desc "now let's add a policy that permits frontend to connect to the backend"
+run "romana add-policy tenant-a romana-np-frontend-to-backend.json; sleep 5"
+
+desc "this permits us to connect from frontend to backend"
+run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "Demo completed (cleaning up)"
-run "romana remove-policy pol1; kubectl delete pod nginx-backend; kubectl delete pod nginx-frontend; kubectl delete replicationcontroller nginx-default"
+run "romana remove-policy tenant-a pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"

@@ -8,8 +8,7 @@ spec:
     metadata:
       labels:
         app: guestbook
-        tier: default
-        owner: t2
+        segment: default
     spec:
       containers:
       - name: nginx-default
