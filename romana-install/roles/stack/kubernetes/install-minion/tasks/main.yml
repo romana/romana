@@ -3,10 +3,10 @@
   become: true
   become_user: root
 
-- include: services.yml
+- include: cni.yml
   become: true
   become_user: root
 
-- include: cni.yml
+- include: services.yml
   become: true
   become_user: root
