@@ -2,7 +2,7 @@
    "metadata": {
      "name" : "pol1"
    },
-   "apiVersion" : "romana.io/demo/v1",
+   "groupVersion" : "romana.io/demo/v1",
    "kind" : "NetworkPolicy",
    "spec" : { 
                "podSelector" : { 
