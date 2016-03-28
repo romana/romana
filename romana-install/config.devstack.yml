@@ -3,10 +3,8 @@
   tasks:
     - add_host: name="{{ item }}" groups="devstack_nodes,devstack_controller"
       with_items: groups.controller
-      when: stack_type == "devstack"
     - add_host: name="{{ item }}" groups="devstack_nodes,devstack_computes"
       with_items: groups.computes
-      when: stack_type == "devstack"
 
 - hosts: devstack_nodes
   roles:
