@@ -17,12 +17,13 @@
 
 usage() {
 	echo "romana-setup: executes the ansible playbooks for installing romana"
-	echo "Usage: romana-setup [-n stackname] [-p platform ] [-s stacktype] [action]"
-	echo "       romana-setup [-n stackname] [-p platform ] [-s stacktype] <action> [ansible-options]"
+	echo "Usage: romana-setup [-n stackname] [-p platform ] [ -d distro ] [-s stacktype] [action]"
+	echo "       romana-setup [-n stackname] [-p platform ] [ -d distro ] [-s stacktype] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
 	echo "Stack Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:   aws (default), vagrant"
+	echo "Distro:      ubuntu (default), centos"
 	echo "Stack Types: devstack (default), kubernetes"
 	echo "Actions:     install (default), uninstall"
 	echo ""
@@ -46,6 +47,7 @@ fi
 
 # Default / initial values
 stack_name="$USER"
+distro="ubuntu"
 platform="aws"
 stack_type="devstack"
 required=( ansible-playbook )
@@ -66,6 +68,18 @@ if (( $# > 0 )); then
 						;;
 					*)
 						echo "Invalid stack name: '$2' (must start with a letter, and contain only letters and digits)"
+						exit 1
+						;;
+				esac
+				;;
+			-d|--distro)
+				case "$2" in
+					ubuntu|centos)
+						distro="$2"
+						shift 2
+						;;
+					*)
+						echo "Invalid distro: '$2'"
 						exit 1
 						;;
 				esac
@@ -142,10 +156,10 @@ for i in "${required[@]}"; do
 	fi
 done
 
-stack_data_dir="stacks/${stack_name}_${platform}_${stack_type}"
+stack_data_dir="stacks/${stack_name}_${platform}_${distro}_${stack_type}"
 mkdir -p "${stack_data_dir}"
 
-ansible_args=( -e stack_name="$stack_name" -e platform="$platform" -e stack_type="$stack_type" -e stack_data_dir="$stack_data_dir" )
+ansible_args=( -e stack_name="$stack_name" -e platform="$platform" -e distro="$distro" -e stack_type="$stack_type" -e stack_data_dir="$stack_data_dir" )
 
 # Add an EC2 keypair to the instance if there's one defined.
 if [[ "$platform" == "aws" ]] && [[ -r ~/.aws/ec2_keypair ]]; then
