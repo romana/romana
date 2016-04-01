@@ -1,0 +1,11 @@
+---
+# The first-run is required for these services to create the database schema.
+- name: Start root service
+  service: name="romana-root" state="started"
+
+- name: Execute first-run for other services
+  shell: "{{ romana_bin_dir }}/{{ item }} -overwriteSchema -rootUrl http://{{ stack_nodes.Controller.mgmt_ip }}:9600"
+  with_items:
+    - topology
+    - tenant
+    - ipam

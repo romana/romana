@@ -1,0 +1,5 @@
+---
+- name: Install root service
+  template: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
+  with_items:
+    - romana-root.conf

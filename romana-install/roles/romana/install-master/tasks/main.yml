@@ -1,8 +1,25 @@
 ---
 - name: Install core romana applications for master node
-  include: files.yml
-
-- name: Enable romana services for master node
   become: true
   become_user: root
-  include: services.yml
+  include: romana_files.yml
+
+- name: Install configurations for romana root service
+  become: true
+  become_user: root
+  include: "root_service_{{ ansible_service_mgr }}.yml"
+
+- name: Execute first-run for other services (sets up the database)
+  become: true
+  become_user: root
+  include: "first_run.yml"
+
+- name: Install configurations for other romana services
+  become: true
+  become_user: root
+  include: "other_services_{{ ansible_service_mgr }}.yml"
+
+- name: Start romana services
+  become: true
+  become_user: root
+  include: start_services.yml
