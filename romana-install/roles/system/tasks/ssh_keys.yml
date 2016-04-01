@@ -6,6 +6,6 @@
   copy: src="{{ romana_ssh_key}}.pub" dest="~/.ssh/id_rsa.pub" mode=0644
 
 - name: Add public key to authorised keys
-  authorized_key: user=ubuntu key="{{ item }}" state=present
+  authorized_key: user="{{ ansible_ssh_user }}" key="{{ item }}" state=present
   with_file:
     - "{{ romana_ssh_key }}.pub"
