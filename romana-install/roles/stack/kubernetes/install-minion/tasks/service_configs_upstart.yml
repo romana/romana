@@ -7,4 +7,3 @@
   with_items:
     - kubelet.conf
     - kube-proxy.conf
-    - romana-kube-agent.conf

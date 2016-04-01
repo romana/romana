@@ -10,7 +10,6 @@
   with_items:
     - kubelet.service
     - kube-proxy.service
-    - romana-kube-agent.service
 
 - name: Create WorkingDirectory
   file: path="/var/lib/kubelet" state="directory" owner="root" group="root"
