@@ -4,11 +4,12 @@
   tasks:
     - name: Wait for cloud-init to complete
       wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
+      when: platform == "aws"
 
 # Apply common settings to all nodes prior to installation
 - hosts: stack_nodes
   roles:
-    - system/ubuntu
+    - system
 
 # Include stack-specific config stage
 - include: "config.{{ stack_type }}.yml"
