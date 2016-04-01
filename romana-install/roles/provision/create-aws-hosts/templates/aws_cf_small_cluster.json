@@ -607,7 +607,7 @@ under the License.
               "",
               [
                 "#!/bin/bash", "\n",
-{% for cmd in cf_data.bootstrap %}
+{% for cmd in distro_info[distro].bootstrap %}
                 {{ cmd | to_json }}, "\n",
 {% endfor %}
                 ""
@@ -666,7 +666,7 @@ under the License.
               "",
               [
                 "#!/bin/bash", "\n",
-{% for cmd in cf_data.bootstrap %}
+{% for cmd in distro_info[distro].bootstrap %}
                 {{ cmd | to_json }}, "\n",
 {% endfor %}
                 ""
@@ -1052,27 +1052,19 @@ under the License.
   "Parameters": {
     "ControllerInstanceType": {
       "Description": "EC2 instance type for Controller Node",
-      "Type": "String",
-      "Default": "t2.large",
-      "ConstraintDescription": "Must be a valid EC2 instance type."
+      "Type": "String"
     },
     "ControllerAMI": {
       "Description": "AMI to use on Controller Node",
-      "Type": "String",
-      "Default": "ami-df6a8b9b",
-      "ConstraintDescription": "Ubuntu 14.04"
+      "Type": "String"
     },
     "ComputeInstanceType": {
       "Description": "EC2 instance type for Compute Nodes",
-      "Type": "String",
-      "Default": "t2.small",
-      "ConstraintDescription": "Must be a valid EC2 instance type."
+      "Type": "String"
     },
     "ComputeAMI": {
       "Description": "AMI to use on Compute Nodes",
-      "Type": "String",
-      "Default": "ami-df6a8b9b",
-      "ConstraintDescription": "Ubuntu 14.04"
+      "Type": "String"
     }
   }
 }

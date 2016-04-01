@@ -8,9 +8,9 @@
   args:
      template_parameters:
        ControllerInstanceType: "{{ instance_type.controller[stack_type] }}"
-       ControllerAMI: "{{ controller_image }}"
+       ControllerAMI: "{{ distro_info[distro].ami }}"
        ComputeInstanceType: "{{ instance_type.compute[stack_type] }}"
-       ComputeAMI: "{{ compute_image }}"
+       ComputeAMI: "{{ distro_info[distro].ami }}"
   when: cf.changed
 
 - name: Collect dynamic information for EC2 instances

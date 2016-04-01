@@ -1,8 +1,5 @@
 ---
 cf_data:
-  bootstrap:
-    - apt-get install python-apt
-    - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   compute_hosts:
     - Compute01
     - Compute02
