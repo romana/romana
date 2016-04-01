@@ -6,4 +6,3 @@
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
-    - romana-kube-np

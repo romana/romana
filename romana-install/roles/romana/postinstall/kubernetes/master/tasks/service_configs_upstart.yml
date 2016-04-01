@@ -2,7 +2,4 @@
 - name: Install service configurations
   copy: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
   with_items:
-    - etcd.conf
-    - kube-apiserver.conf
-    - kube-controller-manager.conf
-    - kube-scheduler.conf
+    - romana-kube-np.conf
