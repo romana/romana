@@ -1,0 +1,4 @@
+---
+- hosts: kube_minions
+  roles:
+    - romana/postinstall/kubernetes/agent

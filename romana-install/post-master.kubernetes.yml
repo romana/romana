@@ -1,0 +1,4 @@
+---
+- hosts: kube_master
+  roles:
+    - romana/postinstall/kubernetes/master

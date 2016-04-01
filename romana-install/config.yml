@@ -18,14 +18,16 @@
 - hosts: controller
   roles:
     - romana/install-master
-
-# Include romana+stack playbook
-- include: "romana.{{ stack_type }}.yml"
+# Stack-specific postinstall after installing master
+- include: "post-master.{{ stack_type }}.yml"
 
 # Install and launch agent (must be after other stages)
 - hosts: stack_nodes
   roles:
     - romana/install-agent
+
+# Stack-specific postinstall after installing agent
+- include: "post-agent.{{ stack_type }}.yml"
 
 # Generate a summary
 - hosts: localhost

@@ -2,5 +2,7 @@
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
-    - dnsmasq-calico
-    - romana-agent
+    - romana-kube-agent
+  become: true
+  become_user: root
+
