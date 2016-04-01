@@ -1,0 +1,10 @@
+---
+- name: Remove if binaries exist
+  file: path="{{ romana_bin_dir }}/{{ item }}" state=absent
+  with_items:
+    - agent
+
+- name: Download latest binaries
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_bin_dir }}/{{ item }}" mode=0755
+  with_items:
+    - agent

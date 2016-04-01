@@ -1,0 +1,7 @@
+---
+- name: Install additional packages
+  apt: pkg="{{ item }}"
+  with_items:
+    - dnsmasq-base
+    - libnettle4
+    - libhogweed2

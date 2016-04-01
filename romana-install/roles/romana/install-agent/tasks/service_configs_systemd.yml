@@ -1,0 +1,6 @@
+---
+- name: Install service configurations
+  template: src="systemd/{{ item }}" dest="/usr/lib/systemd/system/{{ item }}"
+  with_items:
+    - dnsmasq-calico.service
+    - romana-agent.service

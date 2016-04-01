@@ -1,0 +1,12 @@
+[Unit]
+Description=dnsmasq customized by calico
+Documentation=
+
+[Service]
+#User=...
+ExecStart={{ romana_bin_dir }}/dnsmasq-calico --no-daemon --dhcp-range={{ stack_nodes[stack_host].gateway | ipaddr('address') }},{{ stack_nodes[stack_host].gateway | ipaddr('address') }},static,{{ stack_nodes[stack_host].gateway | ipaddr('netmask') }},infinite --bridge-interface=romana-gw,tap* --interface romana-gw --interface tap* --read-ethers --bind-dynamic
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
