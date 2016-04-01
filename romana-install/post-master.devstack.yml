@@ -1,0 +1,4 @@
+---
+- hosts: devstack_controller
+  roles:
+    - romana/postinstall/devstack/master

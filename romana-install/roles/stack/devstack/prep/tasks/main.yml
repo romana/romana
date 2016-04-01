@@ -1,5 +1,17 @@
 ---
-- include: packages.yml
+- name: Disable libvirt from being started on installation
+  shell: printf "manual\n" > /etc/init/libvirt-bin.override
+  when: ansible_service_mgr == "upstart"
+  become: true
+  become_user: root
+
+- include: "{{ item }}"
+  with_first_found:
+    - files: 
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
   become: true
   become_user: root
 
@@ -10,5 +22,15 @@
   become_user: root
 
 - include: disable_virbr0.yml
+  become: true
+  become_user: root
+  
+- include: "{{ item }}"
+  with_first_found:
+    - files: 
+      - "start_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "start_services_{{ ansible_distribution|lower }}.yml"
+      - "start_services_{{ ansible_os_family|lower }}.yml"
+      skip: true
   become: true
   become_user: root

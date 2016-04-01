@@ -1,8 +1,9 @@
 ---
 - name: Install additional packages
-  apt: pkg={{ item }} state=latest
+  apt: pkg="{{ item }}"
   with_items:
     - python-pip
+    - libvirt-bin
 
 - name: Remove conflicting packages
   apt: pkg={{ item }} state=absent
