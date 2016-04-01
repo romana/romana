@@ -1,7 +1,27 @@
 ram_size:
   controller:
     devstack: 4096
-    kubernetes: 1024
+    kubernetes: 2048
   compute:
     devstack: 1024
-    kubernetes: 512
+    kubernetes: 2048
+
+distro_info:
+  "ubuntu":
+    box:     "ubuntu/trusty64"
+    box_url: "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+    user: "ubuntu"
+    bootstrap:
+      - apt-get install python-apt
+      - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
+  "centos":
+    box:     "centos/7"
+    box_url: "http://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1602_02.VirtualBox.box"
+    user:    "centos"
+    bootstrap:
+      - groupadd -g 1001 centos
+      - useradd -u 1001 -g centos -m centos
+      - install -d -o centos -g centos -m 0700 /home/centos/.ssh
+      - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/centos/.ssh/authorized_keys
+      - printf 'centos   ALL=(ALL) NOPASSWD:ALL\n' >> /etc/sudoers.d/centos
+      - chmod 0440 /etc/sudoers.d/centos

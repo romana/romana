@@ -7,5 +7,18 @@ instance_type:
     devstack: "t2.small"
     kubernetes: "t2.small"
 
-controller_image: "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
-compute_image: "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
+distro_info:
+  "ubuntu":
+    ami:  "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
+    user: "ubuntu"
+    bootstrap:
+      - apt-get install python-apt
+      - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
+  "centos":
+    ami:  "ami-af4333cf" # CentOS Linux 7 x86_64 HVM EBS 1602
+    user: "centos"
+    bootstrap:
+      - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/centos/.ssh/authorized_keys
+      - sed '/^Defaults[[:space:]][[:space:]]*requiretty$/s/^/##/' /etc/sudoers > /tmp/sudoers
+      - visudo -c -f /tmp/sudoers && cp -f /tmp/sudoers /etc/sudoers
+      - rm /tmp/sudoers
