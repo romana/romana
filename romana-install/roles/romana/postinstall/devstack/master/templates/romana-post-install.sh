@@ -17,6 +17,8 @@
 
 if [[ -f $HOME/.profile ]]; then
 	source "$HOME/.profile"
+elif [[ -f $HOME/.bash_profile ]]; then
+	source "$HOME/.bash_profile"
 fi
 
 # Suppress output
