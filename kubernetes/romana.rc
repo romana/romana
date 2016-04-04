@@ -3,13 +3,13 @@ select 0
 stuff "/bin/root -c /home/ubuntu/romana.conf^M"
 screen -t romana-topology
 select 1
-stuff "/bin/topology -rootUrl http://__MASTER_IP__:9600^M"
+stuff "/bin/topology -rootURL http://__MASTER_IP__:9600^M"
 screen -t romana-tenant
 select 2
-stuff "sleep 3 && /bin/tenant -rootUrl http://__MASTER_IP__:9600^M"
+stuff "sleep 3 && /bin/tenant -rootURL http://__MASTER_IP__:9600^M"
 screen -t romana-ipam
 select 3
-stuff "sleep 3 && /bin/ipam -rootUrl http://__MASTER_IP__:9600^M"
+stuff "sleep 3 && /bin/ipam -rootURL http://__MASTER_IP__:9600^M"
 screen -t romana-agent
 select 4
-stuff "until ip link | grep -q romana-gw; do sleep 10; done; /bin/agent -rootUrl http://__MASTER_IP__:9600^M"
+stuff "until ip link | grep -q romana-gw; do sleep 10; done; /bin/agent -rootURL http://__MASTER_IP__:9600^M"
