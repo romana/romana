@@ -8,7 +8,7 @@
 
 # The first-run is required for these services to create the database schema.
 - name: Execute first-run for other services
-  shell: "{{ romana_dir }}/bin/{{ item }} -overwriteSchema -rootUrl http://{{ stack_nodes.Controller.mgmt_ip }}:9600"
+  shell: "{{ romana_dir }}/bin/{{ item }} -overwriteSchema -rootURL http://{{ stack_nodes.Controller.mgmt_ip }}:9600"
   with_items:
     - ipam
     - tenant
