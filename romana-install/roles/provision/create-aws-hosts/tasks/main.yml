@@ -1,7 +1,6 @@
 ---
 - name: Generate CloudFormation Template
   template: src="aws_cf_small_cluster.json" dest="{{ stack_data_dir }}/cloudformation.json"
-  register: cf
 
 - name: Create new EC2 instances with Cloudformation. This may take around 5 minutes.
   cloudformation: stack_name="{{ stack_name }}" region="us-west-1" disable_rollback=true template="{{ stack_data_dir }}/cloudformation.json"
@@ -11,7 +10,6 @@
        ControllerAMI: "{{ distro_info[distro].ami }}"
        ComputeInstanceType: "{{ instance_type.compute[stack_type] }}"
        ComputeAMI: "{{ distro_info[distro].ami }}"
-  when: cf.changed
 
 - name: Collect dynamic information for EC2 instances
   command: >
