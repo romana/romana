@@ -5,7 +5,7 @@ Documentation=https://github.com/romana/core
 [Service]
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/agent
-ExecStart={{ romana_bin_dir }}/agent -rootUrl http://{{ stack_nodes.Controller.mgmt_ip }}:9600
+ExecStart={{ romana_bin_dir }}/agent -rootURL http://{{ stack_nodes.Controller.mgmt_ip }}:9600
 Restart=on-failure
 LimitNOFILE=65536
 
