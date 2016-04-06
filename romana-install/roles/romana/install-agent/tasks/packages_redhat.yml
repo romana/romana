@@ -1,6 +1,0 @@
----
-- name: Install additional packages
-  yum: pkg="{{ item }}"
-  with_items:
-    - tmux
-    - pv
