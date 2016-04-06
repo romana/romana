@@ -1,0 +1,5 @@
+---
+inventory_data:
+  username:
+    ubuntu: "ubuntu"
+    centos: "centos"

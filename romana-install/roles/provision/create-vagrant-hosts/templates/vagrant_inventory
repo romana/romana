@@ -1,6 +1,6 @@
-{{ stack_name }}-controller ansible_ssh_host="{{ stack_nodes.Controller.mgmt_ip }}" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}" stack_host="Controller"
+{{ stack_name }}-controller ansible_ssh_host="{{ stack_nodes.Controller.mgmt_ip }}" ansible_ssh_user="{{ distro_info[distro].user }}" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}" stack_host="Controller"
 {% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
-{{ stack_name }}-compute{{ '%02d' | format(loop.index) }} ansible_ssh_host="{{ stack_nodes[node].mgmt_ip }}" ansible_ssh_user="ubuntu" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}" stack_host="{{ node }}"
+{{ stack_name }}-compute{{ '%02d' | format(loop.index) }} ansible_ssh_host="{{ stack_nodes[node].mgmt_ip }}" ansible_ssh_user="{{ distro_info[distro].user }}" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}" stack_host="{{ node }}"
 {% endfor %}
 
 [stack_nodes:children]

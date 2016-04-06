@@ -1,0 +1,7 @@
+---
+- name: Install additional packages
+  yum: pkg="{{ item }}"
+  with_items:
+    - mariadb-server
+    - python-simplejson
+    - python-requests

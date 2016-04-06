@@ -1,0 +1,5 @@
+---
+- name: Install service configurations
+  copy: src="systemd/{{ item }}" dest="/usr/lib/systemd/system/{{ item }}"
+  with_items:
+    - romana-kube-agent.service

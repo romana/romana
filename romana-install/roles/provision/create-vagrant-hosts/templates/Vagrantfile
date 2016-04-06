@@ -3,12 +3,13 @@
 
 Vagrant.configure(2) do |config|
   # Common VM configuration
-  config.vm.box = "ubuntu/trusty64"
-  config.vm.box_url = "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+  config.vm.box = "{{ distro_info[distro].box }}"
+  config.vm.box_url = "{{ distro_info[distro].box_url }}"
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provision "shell", inline: <<-EOF
-    apt-get install python-apt
-    printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
+{% for cmd in distro_info[distro].bootstrap %}
+    {{ cmd }}
+{% endfor %}
   EOF
   # ---
 

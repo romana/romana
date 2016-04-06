@@ -1,0 +1,6 @@
+---
+- name: Start services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - kubelet
+    - kube-proxy

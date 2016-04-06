@@ -1,0 +1,5 @@
+---
+- name: Start services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - libvirtd

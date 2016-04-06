@@ -1,0 +1,8 @@
+---
+- name: Start services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - etcd
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler

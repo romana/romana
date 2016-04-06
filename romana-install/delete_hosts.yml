@@ -1,6 +1,5 @@
 ---
-- include: delete_hosts.aws.yml
-- include: delete_hosts.vagrant.yml
+- include: "delete_hosts.{{ platform }}.yml"
 
 - hosts: localhost
   tasks:

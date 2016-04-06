@@ -1,0 +1,18 @@
+---
+- name: Add Docker apt source
+  template: src="docker.list" dest="/etc/apt/sources.list.d/docker.list" owner=root group=root mode=0664
+
+- name: Add Docker key
+  apt_key: keyserver="hkp://p80.pool.sks-keyservers.net:80" id="58118E89F3A912897C070ADBF76221572C52609D"
+  retries: 3
+  delay: 5
+
+- name: Update apt cache
+  apt: update_cache=yes
+
+- name: Install additional packages
+  apt: pkg="{{ item }}"
+  with_items:
+    - docker-engine
+    - python-simplejson
+    - jq

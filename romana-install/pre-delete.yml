@@ -3,4 +3,5 @@
   tasks:
     - name: Remove IPs from known_hosts
       known_hosts: host="{{ hostvars[item].ansible_ssh_host }}" state=absent
-      with_items: groups.stack_nodes
+      with_items: "{{ groups.stack_nodes | default([]) }}"
+      failed_when: false

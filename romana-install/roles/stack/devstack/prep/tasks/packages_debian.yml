@@ -1,0 +1,14 @@
+---
+- name: Install additional packages
+  apt: pkg="{{ item }}"
+  with_items:
+    - python-pip
+    - libvirt-bin
+
+- name: Remove conflicting packages
+  apt: pkg={{ item }} state=absent
+  with_items:
+    - python-six
+    - python-yaml
+    - python-openssl
+    - python-json-pointer

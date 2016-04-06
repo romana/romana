@@ -1,0 +1,27 @@
+---
+# Make sure the bin directory exists
+- file: path="/home/{{ ansible_ssh_user }}/bin/" mode=0775 state=directory
+
+# Ensure the jq tool is installed
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  become: true
+  become_user: root
+
+- name: Update user profile
+  patch: src="{{ ansible_ssh_user }}_profile_add_openrc.patch" basedir="/home/{{ ansible_ssh_user }}"
+
+- name: Install romana tool
+  template: src="../cmd/romana.ds" dest="/home/{{ ansible_ssh_user }}/bin/romana" mode=0775
+
+- name: Install romana post-install script
+  template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755
+        
+- name: Execute romana post-install script
+  shell: /var/tmp/romana-post-install.sh
+

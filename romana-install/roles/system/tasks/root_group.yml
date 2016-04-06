@@ -1,0 +1,4 @@
+---
+- name: Add user to root group (for convenience, so user can read /var/log/upstart )
+  user: name="{{ ansible_ssh_user }}" append=yes groups="root"
+  when: ansible_service_mgr == "upstart"

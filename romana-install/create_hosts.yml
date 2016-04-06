@@ -4,6 +4,4 @@
    - name: Create path for stack files
      file: path="./{{ stack_data_dir }}" state="directory"
 
-# Only the target platform will be created
-- include: create_hosts.aws.yml
-- include: create_hosts.vagrant.yml
+- include: "create_hosts.{{ platform }}.yml"

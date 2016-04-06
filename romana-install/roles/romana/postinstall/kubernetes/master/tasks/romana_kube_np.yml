@@ -1,0 +1,8 @@
+---
+- name: Romana-Kubernetes Network Policy service
+  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kube/NetworkPolicy/k8s-listener.py /usr/local/lib/romana-kube-np
+  args:
+    creates: /usr/local/lib/romana-kube-np
+
+- name: Configure IP Address for service
+  replace: dest="/usr/local/lib/romana-kube-np" regexp="192\.168\.0\.10" replace="{{ stack_nodes.Controller.mgmt_ip }}"

@@ -1,0 +1,8 @@
+---
+- name: Install mariadb server
+  yum: pkg="{{ item }}"
+  with_items:
+    - mariadb-server
+
+- name: Install configuration with bind-address
+  template: src="server.cnf" dest="/etc/my.cnf.d/server.cnf"

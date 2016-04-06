@@ -1,4 +1,6 @@
-romana_dir: "/home/ubuntu/romana"
-romana_core_branch: "v0.6.4-1"
-romana_kube_branch: "7ac9dbf7e17a1c61cf5b8a2e8f94ff47d97df5a9" # master @ merge of feature/namespace-per-tenant
-romana_networking_branch: "v0.6.4-stable/liberty"
+romana_bin_dir: "/usr/local/bin"
+romana_lib_dir: "/usr/local/lib"
+romana_etc_dir: "/etc/romana"
+romana_core_branch: "v0.8.0"
+romana_kube_branch: "v0.8.0"
+romana_networking_branch: "v0.8.0-stable/liberty"

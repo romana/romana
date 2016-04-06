@@ -1,0 +1,7 @@
+---
+- name: Install additional packages
+  yum: pkg="{{ item }}"
+  with_items:
+    - python-pip
+    - libvirt
+    - patch

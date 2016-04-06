@@ -1,0 +1,4 @@
+# Apply nicer defaults for vim for the new instances.
+- name: Update global vimrc
+  patch: src="vimrc.patch" basedir="/etc/vim"
+  when: ansible_os_family|lower == "debian"

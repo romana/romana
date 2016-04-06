@@ -1,12 +1,30 @@
 ---
-- include: files.yml
+- include: kube_files.yml
   become: true
   become_user: root
 
-- include: cni.yml
+- include: "{{ item }}"
+  with_first_found:
+    - files: 
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
   become: true
   become_user: root
 
-- include: services.yml
+- include: docker_groups.yml
+  become: true
+  become_user: root
+
+- include: romana_cni.yml
+  become: true
+  become_user: root
+
+- include: "service_configs_{{ ansible_service_mgr }}.yml"
+  become: true
+  become_user: root
+
+- include: start_services.yml
   become: true
   become_user: root

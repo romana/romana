@@ -1,0 +1,25 @@
+---
+- include: hosts.yml
+  become: true
+  become_user: root
+
+- include: "{{ item }}"
+  with_first_found:
+    - files: 
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  become: true
+  become_user: root
+
+- include: vim.yml
+  become: true
+  become_user: root
+
+- include: root_group.yml
+  become: true
+  become_user: root
+  when: ansible_service_mgr == "upstart"
+
+- include: ssh_keys.yml

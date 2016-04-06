@@ -1,0 +1,11 @@
+---
+- name: Add Docker yum source
+  template: src="docker.repo" dest="/etc/yum.repos.d/docker.repo" owner=root group=root mode=0664
+
+- name: Install additional packages
+  yum: pkg="{{ item }}"
+  with_items:
+    - docker-engine
+    - python-simplejson
+    - python-requests
+    - jq

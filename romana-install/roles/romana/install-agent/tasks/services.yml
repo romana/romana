@@ -1,8 +1,0 @@
----
-- name: Install upstart services
-  template: src="romana-{{ item }}.conf" dest="/etc/init/romana-{{ item }}.conf" mode=0644
-  with_items:
-    - agent
-
-- name: Launch romana-agent
-  service: name="romana-agent" state="started"

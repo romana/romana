@@ -1,3 +1,0 @@
----
-- name: Add ubuntu user to root group (for convenience, so user can read /var/log/upstart )
-  user: name="ubuntu" append=yes groups="root"

@@ -1,0 +1,8 @@
+---
+- name: Install service configurations
+  copy: src="systemd/{{ item }}" dest="/usr/lib/systemd/system/{{ item }}"
+  with_items:
+    - etcd.service
+    - kube-apiserver.service
+    - kube-controller-manager.service
+    - kube-scheduler.service

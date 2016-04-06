@@ -1,0 +1,7 @@
+---
+- name: Start services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - romana-topology
+    - romana-tenant
+    - romana-ipam

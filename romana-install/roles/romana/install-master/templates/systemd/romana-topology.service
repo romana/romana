@@ -1,0 +1,15 @@
+[Unit]
+Description=Romana Cloud Native Networking Topology Service
+Documentation=https://github.com/romana/core
+After=romana-root.service
+Wants=romana-root.service
+
+[Service]
+#User=...
+EnvironmentFile=-{{ romana_etc_dir }}/topology
+ExecStart={{ romana_bin_dir }}/topology -rootURL http://{{ stack_nodes.Controller.mgmt_ip }}:9600
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
