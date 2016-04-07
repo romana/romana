@@ -17,8 +17,8 @@
 
 usage() {
 	echo "romana-setup: executes the ansible playbooks for installing romana"
-	echo "Usage: romana-setup [-n stackname] [-p platform ] [ -d distro ] [-s stacktype] [action]"
-	echo "       romana-setup [-n stackname] [-p platform ] [ -d distro ] [-s stacktype] <action> [ansible-options]"
+	echo "Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [action]"
+	echo "       romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
 	echo "Stack Name:  user-defined stack name (default: $USER)"
