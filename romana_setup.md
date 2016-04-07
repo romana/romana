@@ -22,7 +22,7 @@ Actions:     install (default), uninstall
 ### Name
 
 A name for the installation environment can be specified using the `-n` or `--name` option.
-The name must contain only ASCII letters and digits, and start with letter.
+The name must contain only ASCII letters and digits, and start with a letter.
 
 If not specified, the value of `$USER` is used.
 You should specify this option if you:
@@ -32,7 +32,7 @@ You should specify this option if you:
 
 ### Platform
 
-The name of the platform that `romana-setup` will provision.
+A platform can be specified using the `-p` or `--platform` option. `romana-setup` will use this to create hosts or virtual machines prior to installing the stack and Romana components.
 
 Valid values are:
 - `aws` -- a set of EC2 instances created in Amazon Web Services (AWS) using CloudFormation
@@ -40,7 +40,8 @@ Valid values are:
 
 ### Distro
 
-The linux distribution that the stack and Romana will be installed on.
+The linux distribution can be specified using the `-d` or `--distro` option.
+This is used when the installation environment is created, and when stack and Romana components are being installed.
 
 Valid values are:
 - `ubuntu` -- [Ubuntu](http://www.ubuntu.com/) 14.04 LTS
@@ -48,7 +49,8 @@ Valid values are:
 
 ### Stack Types
 
-The type of stack that will be installed.
+The type of stack can be specified using the `-s` or `--stack` option.
+This is installed and configured by `romana-setup` to use Romana components. After the installation is completed, the stack is ready to use.
 
 Valid values are:
 - `devstack` -- [OpenStack](http://www.openstack.org/) stable/liberty installed using [devstack](https://github.com/openstack-dev/devstack)
