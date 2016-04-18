@@ -291,7 +291,7 @@ under the License.
     "nic0": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
-        "PrivateIpAddress": "{{ host_ips.Controller }}",
+        "PrivateIpAddress": "{{ host_cidr | ipaddr(10) | ipaddr('address') }}",
         "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "PrivateSubnet"
