@@ -1,0 +1,2 @@
+# Addresses used when provisioning AWS or Vagrant hosts
+host_cidr: 192.168.99.0/24

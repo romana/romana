@@ -6,6 +6,9 @@
       wait_for: path="/var/lib/cloud/instance/boot-finished" state=present
       when: platform == "aws"
 
+# Include platform-specific networking data
+- include: "network.{{ platform }}.yml"
+
 # Apply common settings to all nodes prior to installation
 - hosts: stack_nodes
   roles:

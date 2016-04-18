@@ -1,0 +1,8 @@
+---
+- hosts: stack_nodes
+  tasks:
+    - name: Normalize the network addresses used by the installer
+      set_fact:
+        lan_ip:    "{{ ansible_eth0.ipv4.address }}"
+        public_ip: "{{ ansible_ssh_host }}"
+        romana_gw: "{{ romana_cidr | ipsubnet(16, groups.stack_nodes.index(inventory_hostname)) | ipaddr(1) }}"

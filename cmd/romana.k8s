@@ -36,11 +36,11 @@ usage() {
 }
 
 # Variables used within the script
-tenant_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9602/
+tenant_url=http://{{ romana_master_ip }}:9602/
 tenant_path="tenants"
-topology_url=http://{{ stack_nodes.Controller.mgmt_ip }}:9603/
+topology_url=http://{{ romana_master_ip }}:9603/
 topology_path="hosts"
-kube_apiserver_url=http://{{ stack_nodes.Controller.mgmt_ip }}:8080/
+kube_apiserver_url=http://{{ romana_master_ip }}:8080/
 romana_policy_path="apis/romana.io/%s/namespaces/%s/networkpolicys"
 romana_policy_version="demo/v1"
 
