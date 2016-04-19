@@ -1,6 +1,8 @@
 # The `romana-setup` tool
 
-The `romana-setup` tool is used to provision and install Romana using the selected installation environment, linux distribution and stack type.
+The `romana-setup` tool is used to provision and install Romana using the selected installation environment, Linux distribution and stack type.
+
+This can be used to set up small clusters running Romana on AWS, Vagrant or predefined hosts for testing, evaluation and demonstration purposes.
 
 ## Usage Summary
 
