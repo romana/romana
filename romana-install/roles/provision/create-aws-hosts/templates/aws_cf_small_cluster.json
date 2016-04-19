@@ -348,7 +348,7 @@ under the License.
         }
       }
     },
-    "SUBRTE517KA": {
+    "RoutingTableForPrivateSubnet": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
