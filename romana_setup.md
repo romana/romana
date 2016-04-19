@@ -10,33 +10,34 @@ Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [action]
        romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] <action> [ansible-options]
        romana-setup <h|--help>
 
-Stack Name:  user-defined stack name (default: $USER)
-Platforms:   aws (default), vagrant
-Distro:      ubuntu (default), centos
-Stack Types: devstack (default), kubernetes
-Actions:     install (default), uninstall
+Cluster Name:  user-defined stack name (default: $USER)
+Platforms:     aws (default), vagrant, static
+Distro:        ubuntu (default), centos
+Stack Types:   devstack (default), kubernetes
+Actions:       install (default), uninstall
 ```
 
 ## Option Details
 
-### Name
+### Cluster Name
 
-A name for the installation environment can be specified using the `-n` or `--name` option.
+A name for the cluster can be specified using the `-n` or `--name` option.
 The name must contain only ASCII letters and digits, and start with a letter.
 
 If not specified, the value of `$USER` is used.
 You should specify this option if you:
-- create multiple installs using `romana-setup`
+- create multiple clusters using `romana-setup`
 - do not have `USER` set to a valid value
 - prefer a different name for items created by `romana-setup`
 
 ### Platform
 
-A platform can be specified using the `-p` or `--platform` option. `romana-setup` will use this to create hosts or virtual machines prior to installing the stack and Romana components.
+A platform can be specified using the `-p` or `--platform` option. This specifies whether `romana-setup` will create the cluster or use predefined hosts.
 
 Valid values are:
 - `aws` -- a set of EC2 instances created in Amazon Web Services (AWS) using CloudFormation
 - `vagrant` -- a group of VirtualBox VMs created using Vagrant
+- `static` -- predefined hosts created outside of this tool (refer to [this page](static_hosts.md) for additional details)
 
 **Note**: Vagrant installs automatically configure a Host-Only Network for the VMs, with a predefined subnet of `192.168.99.0/24`.
 If multiple installs are being performed on the same host, you will need to override this value.
@@ -44,7 +45,7 @@ See the [example](#examples) for this.
 
 ### Distro
 
-The linux distribution can be specified using the `-d` or `--distro` option.
+The Linux distribution can be specified using the `-d` or `--distro` option.
 This is used when the installation environment is created, and when stack and Romana components are being installed.
 
 Valid values are:
@@ -60,17 +61,17 @@ This is installed and configured by `romana-setup` to use Romana components. Aft
 
 Valid values are:
 - `devstack` -- [OpenStack](http://www.openstack.org/) stable/liberty installed using [devstack](https://github.com/openstack-dev/devstack)
-- `kubernetes` -- [Kubernetes](http://kubernetes.io/)
+- `kubernetes` -- [Kubernetes](http://kubernetes.io/) v1.2
 
 ## Action Details
 
 ### Install
 
-The `install` action performs a number of steps, creating the hosts with the selected linux distribution, installing the requested type of stack, and installing and configuring Romana for that stack. Once completed, a summary is provided with details you can copy-and-paste to connect to the hosts and begin using it.
+The `install` action performs a number of steps, creating the hosts with the selected Linux distribution (`aws` and `vagrant` only), installing the requested type of stack, and installing and configuring Romana for that stack. Once completed, a summary is provided with details you can copy-and-paste to connect to the hosts and begin using the stack.
 
 ### Uninstall
 
-The `uninstall` action is used to delete hosts created during install, and remove local files created by the installer. (It does not remove only Romana components from the hosts.)
+The `uninstall` action is used to delete hosts created during install (`aws` and `vagrant` only), and remove local files created by the installer. (It does not remove only Romana components from the hosts.)
 
 ## Ansible Options
 
@@ -81,6 +82,8 @@ You can do this by either:
 * Providing ansible options at the end of the `romana-setup` command
 
 All items on the command-line after the `install` or `uninstall` verb are passed to Ansible.
+
+An example [example](#examples) can be seen below.
 
 ## Examples
 
