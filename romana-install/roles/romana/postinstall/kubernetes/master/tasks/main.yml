@@ -14,10 +14,5 @@
   become: true
   become_user: root
 
-- name: Install romana tool
-  template: src="../cmd/romana.k8s" dest="{{ romana_bin_dir }}/romana" mode=0775
-  become: true
-  become_user: root
-
 - include: "script.yml"
 - include: "demo.yml"

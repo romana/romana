@@ -3,8 +3,13 @@
   file: path="{{ romana_bin_dir }}/{{ item }}" state=absent
   with_items:
     - agent
+    - romana
 
 - name: Download latest binaries
   get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_bin_dir }}/{{ item }}" mode=0755
   with_items:
     - agent
+    - romana
+
+- name: Install romana command line config file
+  template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644

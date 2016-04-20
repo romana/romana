@@ -13,6 +13,7 @@
     - root
     - tenant
     - topology
+    - romana
 
 - name: Download latest binaries
   get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_bin_dir }}/{{ item }}" mode=0755
@@ -21,6 +22,10 @@
     - root
     - tenant
     - topology
+    - romana
  
 - name: Install config file
   template: src="config/romana.conf.yml" dest="{{ romana_etc_dir }}/romana.conf.yml" mode=0644
+
+- name: Install romana command line config file
+  template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
