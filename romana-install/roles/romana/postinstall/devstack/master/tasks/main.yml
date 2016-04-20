@@ -1,7 +1,4 @@
 ---
-# Make sure the bin directory exists
-- file: path="/home/{{ ansible_ssh_user }}/bin/" mode=0775 state=directory
-
 # Ensure the jq tool is installed
 - include: "{{ item }}"
   with_first_found:
