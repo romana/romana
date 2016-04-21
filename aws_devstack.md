@@ -56,6 +56,8 @@ cd romana/romana-install
 ./romana-setup -p aws -s devstack install
 ```
 
+See the [`romana-setup` page](romana_setup.md) for details about the command-line options.
+
 The EC2 installation takes 20-25 mins to complete, and creates a Devstack cluster with two nodes. When installation is complete, information about the cluster should be provided.
 ```sh-session
 Devstack Summary
