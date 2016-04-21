@@ -15,8 +15,8 @@ Vagrant.configure(2) do |config|
 
   # Controller-specific VM configuration
   config.vm.define "{{ stack_name }}-controller" do |controller|
-    config.vm.hostname = "ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }}"
-    controller.vm.network "private_network", ip: "{{ stack_nodes.Controller.mgmt_ip }}"
+    config.vm.hostname = "{{ stack_name }}-controller"
+    controller.vm.network "private_network", ip: "{{ host_cidr | ipaddr(10) | ipaddr('address') }}"
     controller.vm.provider "virtualbox" do |vb|
       vb.name = "{{ stack_name }}-controller"
       vb.memory = "{{ ram_size.controller[stack_type] }}"
@@ -27,10 +27,10 @@ Vagrant.configure(2) do |config|
   # ---
 
   # Compute-specific VM configuration
-{% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
+{% for _ in range(compute_nodes) %}
   config.vm.define "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}" do |compute|
-    config.vm.hostname = "ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }}"
-    compute.vm.network "private_network", ip: "{{ stack_nodes[node].mgmt_ip }}"
+    config.vm.hostname = "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}"
+    compute.vm.network "private_network", ip: "{{ host_cidr | ipaddr(10 + loop.index) | ipaddr('address') }}"
     compute.vm.provider "virtualbox" do |vb|
       vb.name = "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}"
       vb.memory = "{{ ram_size.compute[stack_type] }}"

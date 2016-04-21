@@ -1,0 +1,5 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Create a link to the inventory
+      file: path="{{ stack_data_dir }}/inventory" state=link src="{{ static_inventory }}"

@@ -13,7 +13,7 @@
 datadir=/var/lib/mysql
 socket=/var/lib/mysql/mysql.sock
 symbolic-links=0
-#bind-address = {{ stack_nodes.Controller.mgmt_ip }}
+#bind-address = {{ romana_master_ip }}
 bind-address = 127.0.0.1
 default-storage-engine = innodb
 innodb_file_per_table

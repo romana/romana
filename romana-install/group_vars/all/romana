@@ -1,6 +1,12 @@
+# Version
+romana_core_branch: "v0.8.1"
+romana_kube_branch: "v0.8.1"
+romana_networking_branch: "v0.8.1-stable/liberty"
+
+# Paths
 romana_bin_dir: "/usr/local/bin"
 romana_lib_dir: "/usr/local/lib"
 romana_etc_dir: "/etc/romana"
-romana_core_branch: "v0.8.0"
-romana_kube_branch: "v0.8.0"
-romana_networking_branch: "v0.8.0-stable/liberty"
+
+# Network
+romana_cidr: 10.0.0.0/8

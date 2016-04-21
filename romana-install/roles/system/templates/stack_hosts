@@ -1,7 +1,6 @@
 127.0.0.1 localhost
-{{ stack_nodes.Controller.mgmt_ip }} ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }}
-{% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
-{{ stack_nodes[node].mgmt_ip }} ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }}
+{% for n in groups.stack_nodes %}
+{{ '%-15s' | format(hostvars[n].lan_ip) }} {{ hostvars[n].ansible_hostname }}
 {% endfor %}
 
 # The following lines are desirable for IPv6 capable hosts

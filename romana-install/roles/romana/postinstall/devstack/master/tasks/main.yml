@@ -14,7 +14,7 @@
   become_user: root
 
 - name: Update user profile
-  patch: src="{{ ansible_ssh_user }}_profile_add_openrc.patch" basedir="/home/{{ ansible_ssh_user }}"
+  patch: src="{{ ansible_distribution|lower }}_profile_add_openrc.patch" basedir="/home/{{ ansible_ssh_user }}"
 
 - name: Install romana tool
   template: src="../cmd/romana.ds" dest="/home/{{ ansible_ssh_user }}/bin/romana" mode=0775

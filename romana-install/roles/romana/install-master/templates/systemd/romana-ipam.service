@@ -7,7 +7,7 @@ Wants=romana-tenant.service
 [Service]
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/ipam
-ExecStart={{ romana_bin_dir }}/ipam -rootURL http://{{ stack_nodes.Controller.mgmt_ip }}:9600
+ExecStart={{ romana_bin_dir }}/ipam -rootURL http://{{ romana_master_ip }}:9600
 Restart=on-failure
 LimitNOFILE=65536
 
