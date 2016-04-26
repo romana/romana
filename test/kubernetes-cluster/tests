@@ -26,3 +26,8 @@ command: docker-pull
 args: nginx
 description: Pull the nginx docker container
 labels: kube-minion
+
+command: kubectl-run
+args: test-77 --image=--port=80 --replicas=3 --command /bin/false
+description: Check that kubernetes can launch some pods
+labels: kube-master, pods
