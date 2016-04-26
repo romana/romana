@@ -1,0 +1,28 @@
+command: services_running
+args: kube-apiserver kube-controller-manager kube-scheduler romana-kube-np
+description: Check that Kubernetes services are running on master
+labels: kube-master, services
+
+command: services_running
+args: romana-root romana-tenant romana-topology romana-ipam
+description: Check that Romana services are running on master
+labels: romana-master, services
+
+command: services_running
+args: kubelet kube-proxy romana-kube-agent
+description: Check that Kubernetes services are running on minion
+labels: kube-minion, services
+
+command: services_running
+args: romana-agent
+description: Check that Romana services are running on minion
+labels: romana-agent, services
+
+command: romana_hosts_match_k8s_nodes
+description: Ensure the list of hosts configured for Romana matches the list of Kubernetes nodes
+labels: romana-master, kube-master
+
+command: docker-pull
+args: nginx
+description: Pull the nginx docker container
+labels: kube-minion

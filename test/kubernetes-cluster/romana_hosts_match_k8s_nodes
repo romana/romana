@@ -1,0 +1,42 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+verbose=0
+if [[ "$1" = "-v" ]]; then
+	verbose=1
+fi
+
+# Ensure the results of these commands match up.
+errors=0
+set -o pipefail
+if ! k8s_nodes=$(kubectl get nodes -o json 2>/dev/null | jq -r '.items[].metadata.name' | sort); then
+	log_verbose "Error checking Kubernetes nodes."
+	((errors++))
+fi
+if ! romana_hosts=$(romana host list -f json 2>/dev/null | jq -r '.[].name' | sort); then
+	log_verbose "Error checking Romana hosts."
+	((errors++))
+fi
+
+if ((errors)); then
+	log_message "FAIL: error(s) occured running check commands"
+	exit 1
+fi
+
+log_verbose "Kubernetes Nodes: '$k8s_nodes'"
+log_verbose "Romana Hosts:     '$romana_hosts'"
+
+if [[ "$k8s_nodes" = "$romana_hosts" ]]; then
+	log_message "OK"
+else
+	log_message "FAIL: '$k8s_nodes' differs from '$romana_hosts'"
+	exit 1
+fi

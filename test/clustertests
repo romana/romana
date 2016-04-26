@@ -99,7 +99,6 @@ while (( $# > 0 )); do case "$1" in
 	done
 	# Add to array if not already defined
 	if (( ! label_found )); then
-		log_message "Adding label $2"
 		test_labels+=( "$2" )
 	fi
 	shift 2
@@ -277,18 +276,24 @@ num_passed=0
 num_failed=0
 num_skipped=0
 
+if [[ "$verbose" ]]; then
+	log_message "Labels:" "${test_labels[@]}"
+fi
+
 for ((i=0; i < ${#commands[@]}; i++)); do
 	(( num_tests++ ))
 	test_number=$((i+1))
+	if ! has_labels "$i"; then
+		(( num_skipped++ ))
+		if [[ "$verbose" ]]; then
+			log_message "Skipping Test #${test_number}"
+		fi
+		continue
+	fi
 	if [[ "${descriptions[i]}" ]]; then
 		log_start "Test #${test_number}: ${descriptions[i]}"
 	else
 		log_start "Test #${test_number}: ${commands[i]}"
-	fi
-	if ! has_labels "$i"; then
-		(( num_skipped++ ))
-		log_end ": SKIPPED"
-		continue
 	fi
 	header="Test #${test_number}"
 	summary+=( "$header" )
