@@ -256,15 +256,18 @@ if (( ${#test_labels[@]} == 0 )); then
 	fatal_error "No labels specified"
 fi
 
-has_label() {
+has_labels() {
+	found=0
 	for test_label in "${test_labels[@]}"; do
 		for cmd_label in "${labels_v[@]:${labels_i[$1]}:${labels_l[$1]}}"; do
 			if [[ "$test_label" = "$cmd_label" ]]; then
-				return 0
+				((found++))
 			fi
 		done
 	done
-	return 1
+	if (( found != ${#test_labels[@]} )); then
+		return 1
+	fi
 }
 
 # Now run allthethings
@@ -282,7 +285,7 @@ for ((i=0; i < ${#commands[@]}; i++)); do
 	else
 		log_start "Test #${test_number}: ${commands[i]}"
 	fi
-	if ! has_label "$i"; then
+	if ! has_labels "$i"; then
 		(( num_skipped++ ))
 		log_end ": SKIPPED"
 		continue
