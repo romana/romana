@@ -1,20 +1,18 @@
-{
-    #
-    # Default romana configuration file.
-    # please move it to ~/.romana.yaml
-    #
-    "RootURL": "http://{{ romana_master_ip }}",
-    "RootPort": "9600",
-    "LogFile": "/var/tmp/romana.log",
-    "Format": "table", # options are table/json 
-    {% if stack_type == "kubernetes" %}
-    "Platform": "kubernetes",
-    {% else %}
-    {% if stack_type in [ "devstack", "openstack" ] %}
-    "Platform": "openstack",
-    {% else %}
-    "Platform": "undefined",
-    {% endif %}
-    {% endif %}
-    "Verbose": false,
-}
+#
+# Default romana configuration file.
+# please move it to ~/.romana.yaml
+#
+RootURL: "http://{{ romana_master_ip }}"
+RootPort: 9600
+LogFile: "/var/tmp/romana.log"
+Format: "table" # options are table/json 
+{% if stack_type == "kubernetes" %}
+Platform: "kubernetes"
+{% else %}
+{% if stack_type in [ "devstack", "openstack" ] %}
+Platform: "openstack"
+{% else %}
+Platform: "undefined"
+{% endif %}
+{% endif %}
+Verbose: false
