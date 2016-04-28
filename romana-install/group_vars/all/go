@@ -1,0 +1,4 @@
+# Go version to download and install
+go_version: "1.6.2"
+go_sha1:    "b8318b09de06076d5397e6ec18ebef3b45cd315d"
+go_url:     "https://storage.googleapis.com/golang/go{{ go_version }}.linux-amd64.tar.gz"

@@ -7,3 +7,4 @@
   with_items:
     - git
     - vim
+    - gcc

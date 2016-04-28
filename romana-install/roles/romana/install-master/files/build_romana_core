@@ -1,0 +1,11 @@
+#!/bin/bash
+export GOPATH=/var/tmp/gopath
+export PATH=/usr/local/go/bin:$PATH
+
+go get -d github.com/romana/core/...
+
+while IFS= read -r p; do
+	pkgs+=("$p")
+done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/core/... | grep -v /vendor/)
+
+GOBIN=/usr/local/bin go install "${pkgs[@]}"

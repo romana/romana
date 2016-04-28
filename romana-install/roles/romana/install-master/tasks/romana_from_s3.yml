@@ -1,11 +1,4 @@
 ---
-- name: Ensure install path exists
-  file: path="{{ item }}" state=directory
-  with_items:
-    - "{{ romana_bin_dir }}"
-    - "{{ romana_lib_dir }}"
-    - "{{ romana_etc_dir }}"
-
 - name: Remove existing binaries
   file: path="{{ romana_bin_dir }}/{{ item }}" state=absent
   with_items:
@@ -21,6 +14,3 @@
     - root
     - tenant
     - topology
- 
-- name: Install config file
-  template: src="config/romana.conf.yml" dest="{{ romana_etc_dir }}/romana.conf.yml" mode=0644

@@ -1,0 +1,21 @@
+- name: Download Go
+  get_url: url="{{ go_url }}" checksum="sha1:{{ go_sha1 }}" dest="/var/tmp/go{{ go_version }}.tar.gz"
+  register: dl
+
+- name: Install Go
+  unarchive: copy=no src="/var/tmp/go{{ go_version }}.tar.gz" dest="/usr/local"
+  become: true
+  become_user: root
+  when: dl.changed
+
+- name: Create GOPATH directory
+  file: path="/var/tmp/gopath" mode=0775 state=directory
+
+- name: Clone romana core repo into GOPATH
+  git: repo="{{ romana_core_repo }}" version="{{ romana_core_branch }}" dest="/var/tmp/gopath/src/github.com/romana/core"
+
+- name: Copy a build script
+  copy: src="build_romana_core" dest="/var/tmp/build_romana_core" mode=0755
+
+- name: Run the build script
+  shell: /var/tmp/build_romana_core

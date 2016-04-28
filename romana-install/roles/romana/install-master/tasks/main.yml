@@ -1,8 +1,13 @@
 ---
+- name: Prep stage before installing Romana binaries
+  become: true
+  become_user: root
+  include: "romana_prep.yml"
+
 - name: Install core romana applications for master node
   become: true
   become_user: root
-  include: romana_files.yml
+  include: "romana_from_{{ romana_core_source }}.yml"
 
 - name: Install configurations for romana root service
   become: true
