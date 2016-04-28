@@ -3,6 +3,10 @@
   become: true
   become_user: root
 
+- include: "service_configs_{{ ansible_service_mgr }}.yml"
+  become: true
+  become_user: root
+
 - include: "{{ item }}"
   with_first_found:
     - files: 
@@ -18,10 +22,6 @@
   become_user: root
 
 - include: romana_cni.yml
-  become: true
-  become_user: root
-
-- include: "service_configs_{{ ansible_service_mgr }}.yml"
   become: true
   become_user: root
 

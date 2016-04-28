@@ -39,8 +39,8 @@ services:
         database: topology
       datacenter: 
         ip_version: 4
-        cidr: 10.0.0.0/8
-        host_bits: 8
+        cidr: {{ romana_cidr }}
+        host_bits: {{ 16 - romana_cidr | ipaddr('prefix') }}
         tenant_bits: 4
         segment_bits: 4
         endpoint_space_bits: 0

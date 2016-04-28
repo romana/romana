@@ -1,5 +1,5 @@
-{% for i in stackinfo %}
-{{ i.Name }} ansible_ssh_host="{{ i.IP }}" ansible_ssh_user="{{ distro_info[distro].user }}" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}"
+{% for i in stackinfo | sort(attribute='PrivateIP') %}
+{{ i.Name }} ansible_ssh_host="{{ i.PublicIP }}" ansible_ssh_user="{{ distro_info[distro].user }}" ansible_ssh_private_key_file="{{ romana_ssh_key | realpath }}"
 {% endfor %}
 
 [stack_nodes:children]
@@ -12,6 +12,6 @@ computes
 {% endif %}{% endfor %}
 
 [computes]
-{% for i in stackinfo %}{% if i.Role == "Compute" %}
+{% for i in stackinfo | sort(attribute='PrivateIP') %}{% if i.Role == "Compute" %}
 {{ i.Name }}
 {% endif %}{% endfor %}
