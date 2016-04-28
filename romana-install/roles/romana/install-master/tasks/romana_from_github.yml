@@ -3,9 +3,9 @@
   register: dl
 
 - name: Install Go
-  unarchive: copy=no src="/var/tmp/go{{ go_version }}.tar.gz" dest="/usr/local"
   become: true
   become_user: root
+  unarchive: copy=no src="/var/tmp/go{{ go_version }}.tar.gz" dest="/usr/local"
   when: dl.changed
 
 - name: Create GOPATH directory
@@ -19,3 +19,13 @@
 
 - name: Run the build script
   shell: /var/tmp/build_romana_core
+
+- name: Install files
+  become: true
+  become_user: root
+  command: install -o root -g root -m 0755 "/var/tmp/gopath/bin/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
+  with_items:
+    - ipam
+    - root
+    - tenant
+    - topology

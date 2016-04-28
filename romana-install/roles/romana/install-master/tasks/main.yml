@@ -5,8 +5,6 @@
   include: "romana_prep.yml"
 
 - name: Install core romana applications for master node
-  become: true
-  become_user: root
   include: "romana_from_{{ romana_core_source }}.yml"
 
 - name: Install configurations for romana root service
