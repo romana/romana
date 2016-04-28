@@ -86,9 +86,9 @@ You can do this by either:
 All items on the command-line after the `install` or `uninstall` verb are passed to Ansible. [Examples](#examples) can be seen below.
 
 Some noteworthy variables are:
-* `host_cidr`: The IP/Prefix for hosts created during installation. Default: `192.168.99.0/24`. (Applies to `aws` and `vagrant`.). For AWS, the prefix should be 16 or higher.
-* `romana_cidr`: The IP/Prefix for the Romana network across the hosts. Default: `10.0.0.0/8`. The prefix should be smaller than 16. You may wish to change this if it conflicst with your host's CIDR or an existing network on the hosts, or simply to have your endpoints use different addresses.
-* `docker_cidr`: The IP/Prefix for the `docker0` bridge. Default: `172.17.0.1/24`. (Applies to `kubernetes` stack.). You should change this if it conflicts with the `romana_cidr` or other networks on the hosts.
+* `host_cidr`: The IP/Prefix for hosts created during installation. Default: `192.168.99.0/24`. (Applies to `aws` and `vagrant`.). For AWS, the prefix size should be 16 or higher.
+* `romana_cidr`: The IP/Prefix for the Romana network across the hosts. Default: `10.0.0.0/8`. The prefix size should be smaller than 16. You may wish to change this if it conflicts with your host's CIDR or an existing network on the hosts, or simply to have your endpoints use different addresses.
+* `docker_cidr`: The IP/Prefix for the `docker0` bridge. Default: `172.17.0.1/24`. (Applies to `kubernetes` stack.). You should change this if it conflicts with the `romana_cidr` or other networks on the hosts. This is otherwise unused, but is present in Docker installations.
 
 ## Examples
 
