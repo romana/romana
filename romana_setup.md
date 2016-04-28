@@ -77,15 +77,18 @@ The `uninstall` action is used to delete hosts created during install (`aws` and
 
 ## Ansible Options
 
-In some cases, you may wish to pass additional options to Ansible for the installation.
+In some cases, you may wish to override the value of variables that Ansible uses during installation.
 
 You can do this by either:
 * Editing values in `romana-install/group_vars` files
 * Providing ansible options at the end of the `romana-setup` command
 
-All items on the command-line after the `install` or `uninstall` verb are passed to Ansible.
+All items on the command-line after the `install` or `uninstall` verb are passed to Ansible. [Examples](#examples) can be seen below.
 
-An example [example](#examples) can be seen below.
+Some noteworthy variables are:
+* `host_cidr`: The IP/Prefix for hosts created during installation. Default: `192.168.99.0/24`. (Applies to `aws` and `vagrant`.). For AWS, the prefix size should be 16 or higher.
+* `romana_cidr`: The IP/Prefix for the Romana network across the hosts. Default: `10.0.0.0/8`. The prefix size should be smaller than 16. You may wish to change this if it conflicts with your host's CIDR or an existing network on the hosts, or simply to have your endpoints use different addresses.
+* `docker_cidr`: The IP/Prefix for the `docker0` bridge. Default: `172.17.0.1/24`. (Applies to `kubernetes` stack.). You should change this if it conflicts with the `romana_cidr` or other networks on the hosts. This is otherwise unused, but is present in Docker installations.
 
 ## Examples
 
@@ -118,5 +121,13 @@ cd romana-install
 ```bash
 cd romana-install
 ./romana-setup -n example03 -p vagrant -d centos -s kubernetes install -e host_cidr="192.168.88.0/24"
-./romana-setup -n example03 -p vagrant -d centos -s kubernetes uninstall -e host_cidr="192.168.88.0/24"
+./romana-setup -n example03 -p vagrant -d centos -s kubernetes uninstall
+```
+
+### Static - Alternative Romana CIDR
+
+```bash
+cd romana-install
+./romana-setup -n example04 -p static -i ~/my_hosts/inventory -d ubuntu -s kubernetes install -e romana_cidr="172.16.0.0/12" -e docker_cidr=192.168.255.1/24
+./romana-setup -n example04 -p static -i ~/my_hosts/inventory -d ubuntu -s kubernetes uninstall
 ```
