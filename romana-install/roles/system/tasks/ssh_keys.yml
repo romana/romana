@@ -19,3 +19,11 @@
   authorized_key: user="{{ ansible_ssh_user }}" key="{{ item }}" state=present
   with_file:
     - "{{ romana_ssh_key }}.pub"
+
+- name: Check for known_hosts
+  stat: path="~/.ssh/known_hosts"
+  register: kh
+
+- name: Add known_hosts
+  template: src="known_hosts" dest="~/.ssh/known_hosts" mode=0644
+  when: not kh.stat.exists
