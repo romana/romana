@@ -23,4 +23,3 @@
   when: ansible_service_mgr == "upstart"
 
 - include: ssh_keys.yml
-  when: platform in [ "aws", "vagrant" ]
