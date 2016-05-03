@@ -25,7 +25,7 @@ labels: romana-master, kube-master
 command: docker-pull
 args: nginx
 description: Pull the nginx docker container
-labels: kube-minion
+labels: kube-minion, docker
 
 command: kubectl-run
 args: test-77 --image=--port=80 --replicas=3 --command /bin/false

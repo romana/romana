@@ -57,15 +57,15 @@ usage() {
 }
 
 fatal_error() {
-	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s) FATAL%s\n" "${0##*/}" "$(printf " %s" "$@")"
+	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s:%s) FATAL%s\n" "$(hostname)" "${0##*/}" "$(printf " %s" "$@")"
 	exit 1
 }
 
 log_message() {
-	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s:%s)%s\n" "$(hostname)" "${0##*/}" "$(printf " %s" "$@")"
 }
 log_start() {
-	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s" "${0##*/}" "$(printf " %s" "$@")"
+	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s:%s)%s" "$(hostname)" "${0##*/}" "$(printf " %s" "$@")"
 }
 log_append() {
 	printf " %s" "$@"
@@ -309,9 +309,11 @@ for ((i=0; i < ${#commands[@]}; i++)); do
 	summary+=( "" )
 done
 
-log_message "Summary of ${num_tests} tests:"
-log_message "Passed: ${num_passed}   Failed: ${num_failed}   Skipped: ${num_skipped}"
-printf "%s\n" "${summary[@]}"
+if [[ "$verbose" ]]; then
+	log_message "Summary of ${num_tests} tests:"
+	log_message "Passed: ${num_passed}   Failed: ${num_failed}   Skipped: ${num_skipped}"
+	printf "%s\n" "${summary[@]}"
+fi
 
 if (( num_failed > 0 )); then
 	fatal_error "${num_failed} tests failed"
