@@ -1,8 +1,13 @@
 ---
-- name: Start services
+- name: Start etcd
+  service: name="etcd" state="started"
+
+- name: Wait for etcd to be available
+  wait_for: host="{{ romana_master_ip }}" port=2379
+
+- name: Start kubernetes services
   service: name="{{ item }}" state="started"
   with_items:
-    - etcd
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
