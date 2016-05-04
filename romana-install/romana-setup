@@ -199,6 +199,7 @@ case "$platform" in
 				;;
 			test)
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml
+				[[ -f "${stack_data_dir}/clustertests.log" ]] && cat "${stack_data_dir}/clustertests.log"
 				;;
 			*)
 				echo "Unknown action '$action' for platform '$platform'"

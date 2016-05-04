@@ -1,4 +1,10 @@
 ---
+- hosts: localhost
+  tasks:
+    - debug: msg="{{ ansible_user_dir }}"
+    - name: Remove persistent connection sockets, force new connection
+      shell: rm -f {{ ansible_user_dir }}/.ansible/cp/ansible-ssh-* &>/dev/null
+
 # Copy clustertests script
 - hosts: stack_nodes
   tasks:
