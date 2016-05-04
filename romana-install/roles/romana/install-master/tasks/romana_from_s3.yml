@@ -8,6 +8,7 @@
     - root
     - tenant
     - topology
+    - romana
 
 - name: Download latest binaries
   become: true
@@ -18,3 +19,10 @@
     - root
     - tenant
     - topology
+    - romana
+ 
+- name: Install config file
+  template: src="config/romana.conf.yml" dest="{{ romana_etc_dir }}/romana.conf.yml" mode=0644
+
+- name: Install romana command line config file
+  template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644

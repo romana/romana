@@ -27,13 +27,13 @@ exec > /dev/null
 
 # Create hosts
 {% for n in groups.stack_nodes %}
-romana add-host {{ hostvars[n].ansible_hostname }} {{ hostvars[n].lan_ip }} {{ hostvars[n].romana_gw }} 9604
+romana host add {{ hostvars[n].ansible_hostname }} {{ hostvars[n].lan_ip }} {{ hostvars[n].romana_gw }} 9604
 {% endfor %}
 
 # Create owners and tiers
-romana create-tenant default
-romana add-segment default default
-romana create-tenant tenant-a
-romana add-segment tenant-a default
-romana add-segment tenant-a backend
-romana add-segment tenant-a frontend
+romana tenant create default
+romana segment add default default
+romana tenant create tenant-a
+romana segment add tenant-a default
+romana segment add tenant-a backend
+romana segment add tenant-a frontend
