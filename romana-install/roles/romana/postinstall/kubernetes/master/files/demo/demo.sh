@@ -94,10 +94,10 @@ desc "let's try to have the frontend load data from the backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "now let's add a policy that permits frontend to connect to the backend"
-run "romana add-policy tenant-a romana-np-frontend-to-backend.json; sleep 5"
+run "romana policy add tenant-a romana-np-frontend-to-backend.json; sleep 5"
 
 desc "this permits us to connect from frontend to backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "Demo completed (cleaning up)"
-run "romana remove-policy tenant-a pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
+run "romana policy remove tenant-a pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
