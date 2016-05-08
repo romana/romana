@@ -3,7 +3,7 @@
 When installation completes, some SSH commands are provided for logging into your new hosts, eg:
 ```bash
 ssh -i /.../romana-install/romana_id_rsa ubuntu@52.xx.yy.zz
-ssh -i /.../romana/romana-install/romana_id_rsa ubuntu@54.zz.yy.xx
+ssh -i /.../romana-install/romana_id_rsa ubuntu@54.zz.yy.xx
 ```
 
 These can be used to log into the host using the generated SSH key. Use the SSH command for the controller to log in.
@@ -12,28 +12,39 @@ These can be used to log into the host using the generated SSH key. Use the SSH 
 
 A `romana` command-line tool has been provided that lets you see details about the setup, and make changes.
 ```sh-session
-ubuntu@ip-192-168-99-10:~$ romana show-hosts
-Listing 2 host(s)
-ip-192-168-99-10
-ip-192-168-99-11
-ubuntu@ip-192-168-99-10:~$ romana show-host ip-192-168-99-10
-ip-192-168-99-10       192.168.99.10        10.0.0.1/16     0
-ubuntu@ip-192-168-99-10:~$ romana show-host ip-192-168-99-11
-ip-192-168-99-11       192.168.99.11        10.1.0.1/16     0
+ubuntu@ip-192-168-99-10:~$ romana host list
+Host List
+Id	 Host Name		 Host IP	 Romana CIDR	 Agent Port	
+1 	 ip-192-168-99-10 	 192.168.99.10 	 10.0.0.1/16 	 0 		
+2 	 ip-192-168-99-11 	 192.168.99.11 	 10.1.0.1/16 	 0 		
+ubuntu@ip-192-168-99-10:~$ romana host show ip-192-168-99-10
+Host List
+Id	 Host Name		 Host IP	 Romana CIDR	 Agent Port	
+1 	 ip-192-168-99-10 	 192.168.99.10 	 10.0.0.1/16 	 0 		
+ubuntu@ip-192-168-99-10:~$ romana host show ip-192-168-99-11
+Host List
+Id	 Host Name		 Host IP	 Romana CIDR	 Agent Port	
+2 	 ip-192-168-99-11 	 192.168.99.11 	 10.1.0.1/16 	 0 		
+ubuntu@ip-192-168-99-10:~$ 
 ```
-By default, we have two hosts (`192.168.99.10` and `192.168.99.11`). Each host has its own CIDR (`10.0.0.1/16`, `10.1.0.1/16`) that Romana will use when allocating IP addresses to OpenStack guests on that host.
+A default install will have two hosts (`192.168.99.10` and `192.168.99.11`). Each host has its own CIDR (`10.0.0.1/16`, `10.1.0.1/16`) that Romana will use when allocating IP addresses to OpenStack instances on that host.
 
 ```sh-session
-ubuntu@ip-192-168-99-10:~$ romana show-tenants
-Listing 2 tenant(s)
-c858ac6ab9534f8f86f2fe9a731277e1 (admin)
-7b593643644243e48915acd98df7b0d0 (demo)
-ubuntu@ip-192-168-99-10:~$ romana show-tenant admin
-Tenant:c858ac6ab9534f8f86f2fe9a731277e1 (admin)
-Segments: default, frontend, backend
+ubuntu@ip-192-168-99-10:~$ romana tenant list
+Tenant List
+Id	 Tenant Name	 External ID				
+1 	 admin 		 310a8620208744049f6c860fd5cb5bb2 	
+2 	 demo 		 6aa810e7cb414387afd332cbedb52f57 	
+ubuntu@ip-192-168-99-10:~$ romana tenant show admin
+ID	 Tenant Name	 External ID				 Segments 	
+1 	 admin 		 310a8620208744049f6c860fd5cb5bb2 	default, frontend, backend, 
+ubuntu@ip-192-168-99-10:~$ romana tenant show demo
+ID	 Tenant Name	 External ID				 Segments 	
+2 	 demo 		 6aa810e7cb414387afd332cbedb52f57 	default, frontend, backend, 
+ubuntu@ip-192-168-99-10:~$ 
 ```
 
-We've also created `admin` and `demo` tenants, with segments. If a new instance is created for a tenant, a segment name needs to be provided.
+We've also created `admin` and `demo` tenants, with three segments: `default`, `frontend`, and `backend`. If a new instance is created for a tenant, a segment name needs to be provided.
 This will create an IP address within that segment and configure `iptables` rules to restrict communication to hosts within that segment.
 
 ## Create a new instance
@@ -65,7 +76,7 @@ ubuntu@ip-192-168-99-10:~$ nova list
 ```
 
 A new instance was created, and the IP address `10.0.17.3` was assigned to it. You can SSH into this from the host it was created on.
-We can also see from the IP address's network prefix (`10.0/16`) that this instance was created on host `ip-192-168-99-10`. (See the `romana show-host` details above.)
+We can also see from the IP address's network prefix (`10.0/16`) that this instance was created on host `ip-192-168-99-10`. (See the `romana host list` details above.)
 
 ```
 ubuntu@ip-192-168-99-10:~$ ssh cirros@10.0.17.3
@@ -85,8 +96,8 @@ $
 ## Experiment
 
 Make changes to the setup using the `romana` CLI tool.
-- Add new tenants: `romana create-tenant <name>` (name should exist in Openstack)
-- Add new segments: `romana add-segment <tenant-name> <segment-name>
+- Add new tenants: `romana tenant create <name>` (name should exist in Openstack)
+- Add new segments: `romana segment add <tenant-name> <segment-name>
 
 After adding new segments, they can be used when booting new instances via nova.
 
