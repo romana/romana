@@ -9,3 +9,9 @@
   command: install -o root -g root -m 0755 "/var/tmp/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
   with_items:
     - agent
+
+- name: Install hook 1
+  template: src="config/agent_proxy_add_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
+
+- name: Install hook 2
+  template: src="config/agent_proxy_delete_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
