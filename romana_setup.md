@@ -66,11 +66,11 @@ Valid values are:
 - `devstack` -- [OpenStack](http://www.openstack.org/) stable/liberty installed using [devstack](https://github.com/openstack-dev/devstack)
 - `kubernetes` -- [Kubernetes](http://kubernetes.io/) v1.2
 
-### Number of compute nodes
+### Number of cluster nodes
 
-The number of compute nodes to provision. This is used when creating the installation environment (`aws` and `vagrant` only), to override the quantity of compute nodes created.
+The number of cluster nodes to provision. This is used when creating the installation environment (`aws` and `vagrant` only), to override the quantity of cluster nodes created.
 
-Valid values are: a number between 0 and 199.
+Valid values are: a number between 1 and 200.
 
 ## Action Details
 
