@@ -17,14 +17,15 @@
 
 usage() {
 	echo "romana-setup: executes the ansible playbooks for installing romana"
-	echo "Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [action]"
-	echo "       romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] <action> [ansible-options]"
+	echo "Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c number] [action]"
+	echo "       romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c number] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
 	echo "Cluster Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
 	echo "Stack Types:   devstack (default), kubernetes"
+	echo "Number:        number of compute nodes"
 	echo "Actions:       install (default), uninstall"
 	echo ""
 	echo "Example 1: Romana with Kubernetes on AWS"
@@ -51,6 +52,7 @@ distro="ubuntu"
 platform="aws"
 inventory=""
 stack_type="devstack"
+compute_nodes=""
 required=( ansible ansible-playbook )
 
 # Process command-line options
@@ -125,6 +127,10 @@ if (( $# > 0 )); then
 						;;
 				esac
 				;;
+			-c|--compute-nodes)
+				compute_nodes="$2"
+				shift 2
+				;;
 			*)
 				echo "Unrecognized option '$1'"
 				usage
@@ -186,6 +192,16 @@ if [[ $platform != "static" ]]; then
 		exit 1
 	fi
 fi
+# number of compute nodes. make sure it's a number, and within some limits
+if [[ "$compute_nodes" ]]; then case "$compute_nodes" in
+	# Between 0 and 199
+	0|[1-9]|[1-9][0-9]|1[0-9][0-9])
+		;;
+	*)
+		echo "Invalid number of compute nodes 'compute_nodes'. Value should be a number between 0 and 199."
+		exit 1
+		;;
+esac; fi
 
 stack_data_dir="stacks/${stack_name}_${platform}_${distro}_${stack_type}"
 mkdir -p "${stack_data_dir}"
@@ -202,6 +218,11 @@ fi
 # Add static inventory setting if platform is static
 if [[ "$platform" == "static" ]]; then
 	ansible_args+=( -e static_inventory="$inventory" )
+fi
+
+# Add number of compute nodes. Needs JSON format so Ansible treats it as an integer
+if [[ "$compute_nodes" ]]; then
+	ansible_args+=( -e '{ "compute_nodes": '"$compute_nodes"'}')
 fi
 
 case "$platform" in

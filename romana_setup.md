@@ -8,14 +8,15 @@ This can be used to set up small clusters running Romana on AWS, Vagrant or pred
 
 ```
 romana-setup: executes the ansible playbooks for installing romana
-Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [action]
-       romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] <action> [ansible-options]
+Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c number] [action]
+       romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c number] <action> [ansible-options]
        romana-setup <h|--help>
 
 Cluster Name:  user-defined stack name (default: $USER)
 Platforms:     aws (default), vagrant, static
 Distro:        ubuntu (default), centos
 Stack Types:   devstack (default), kubernetes
+Number:        number of compute nodes
 Actions:       install (default), uninstall
 ```
 
@@ -64,6 +65,12 @@ This is installed and configured by `romana-setup` to use Romana components. Aft
 Valid values are:
 - `devstack` -- [OpenStack](http://www.openstack.org/) stable/liberty installed using [devstack](https://github.com/openstack-dev/devstack)
 - `kubernetes` -- [Kubernetes](http://kubernetes.io/) v1.2
+
+### Number of compute nodes
+
+The number of compute nodes to provision. This is used when creating the installation environment (`aws` and `vagrant` only), to override the quantity of compute nodes created.
+
+Valid values are: a number between 0 and 199.
 
 ## Action Details
 
