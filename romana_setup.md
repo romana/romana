@@ -16,7 +16,7 @@ Cluster Name:  user-defined stack name (default: $USER)
 Platforms:     aws (default), vagrant, static
 Distro:        ubuntu (default), centos
 Stack Types:   devstack (default), kubernetes
-Number:        number of compute nodes
+Number:        number of cluster nodes
 Actions:       install (default), uninstall
 ```
 

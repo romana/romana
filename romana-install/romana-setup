@@ -25,7 +25,7 @@ usage() {
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
 	echo "Stack Types:   devstack (default), kubernetes"
-	echo "Number:        number of compute nodes"
+	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall"
 	echo ""
 	echo "Example 1: Romana with Kubernetes on AWS"
