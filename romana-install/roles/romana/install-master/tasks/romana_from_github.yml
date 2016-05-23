@@ -30,6 +30,7 @@
     - tenant
     - topology
     - romana
+    - policy
  
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644

@@ -5,3 +5,4 @@
     - romana-topology.service
     - romana-tenant.service
     - romana-ipam.service
+    - romana-policy.service

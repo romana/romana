@@ -54,7 +54,7 @@ services:
       wait_for_iface_try: 6
   - service: policy
     api:
-      host: localhost
+      host: {{ romana_master_ip }}
       port: 9605
     config:
       store: 
@@ -84,4 +84,3 @@ services:
       policy_notification_path_prefix : "/apis/romana.io/demo/v1/namespaces/"
       policy_notification_path_postfix : "/networkpolicys/?wath=true"
       segment_label_name: "tier"
-     
