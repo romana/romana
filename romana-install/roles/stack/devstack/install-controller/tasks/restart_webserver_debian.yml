@@ -6,10 +6,8 @@
 
 - name: Make sure webserver stopped completely
   wait_for: port=80 state=stopped
-  when: p.changed
 
 - name: Start Web Server
   become: true
   become_user: root
   service: name="apache2" state="started"
-  when: p.changed

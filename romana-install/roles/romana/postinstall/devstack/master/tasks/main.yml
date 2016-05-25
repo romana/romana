@@ -1,15 +1,4 @@
 ---
-# Ensure the jq tool is installed
-- include: "{{ item }}"
-  with_first_found:
-    - files:
-      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
-      - "packages_{{ ansible_distribution|lower }}.yml"
-      - "packages_{{ ansible_os_family|lower }}.yml"
-      skip: true
-  become: true
-  become_user: root
-
 - name: Update user profile
   patch: src="{{ ansible_distribution|lower }}_profile_add_openrc.patch" basedir="/home/{{ ansible_ssh_user }}"
 

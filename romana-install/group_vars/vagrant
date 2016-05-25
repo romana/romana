@@ -1,9 +1,11 @@
 ram_size:
   controller:
     devstack: 4096
+    openstack: 4096
     kubernetes: 2048
   compute:
     devstack: 1024
+    openstack: 1024
     kubernetes: 2048
 
 distro_info:

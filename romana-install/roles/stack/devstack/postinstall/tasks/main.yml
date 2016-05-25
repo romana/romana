@@ -1,0 +1,7 @@
+---
+- name: Install devstack post-install script
+  template: src="devstack-post-install.sh" dest="/var/tmp/devstack-post-install.sh" mode=0755
+
+- name: Execute devstack post-install script
+  shell: /var/tmp/devstack-post-install.sh
+

@@ -15,15 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if [[ -f $HOME/.profile ]]; then
-	source "$HOME/.profile"
-fi
-
 # Suppress output
 exec > /dev/null
-
-# This script currently directly uses the REST API of the Romana Topology and Tenant services
-# to configure the hosts/owners/tiers used in a simple setup.
 
 # Create hosts
 {% for n in groups.stack_nodes %}

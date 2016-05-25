@@ -15,7 +15,7 @@ Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c numbe
 Cluster Name:  user-defined stack name (default: $USER)
 Platforms:     aws (default), vagrant, static
 Distro:        ubuntu (default), centos
-Stack Types:   devstack (default), kubernetes
+Stack Types:   devstack (default), openstack, kubernetes
 Number:        number of cluster nodes
 Actions:       install (default), uninstall
 ```
