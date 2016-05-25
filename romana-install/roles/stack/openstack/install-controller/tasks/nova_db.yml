@@ -1,0 +1,13 @@
+---
+- name: Create Nova DB
+  mysql_db: name=nova state=present
+  register: ndb
+
+- name: Create Nova DB user
+  mysql_user: name=nova password="{{ stack_password }}" priv="nova.*:ALL" state=present
+
+- name: Sync Nova DB
+  command: nova-manage db sync
+  when: ndb.changed
+  become: true
+  become_user: nova

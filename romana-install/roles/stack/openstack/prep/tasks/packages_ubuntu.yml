@@ -1,0 +1,17 @@
+---
+# This is done as a command, because it's considered an "invalid repository string"
+# for an apt_repository task.
+- name: Enable cloud-archive repository
+  command: add-apt-repository -y cloud-archive:liberty
+  args:
+    creates: /etc/apt/sources.list.d/cloudarchive-liberty.list
+  register: ca
+
+- name: Update apt cache
+  apt: update_cache=yes
+  when: ca.changed
+
+- name: Install common packages
+  apt: pkg="{{ item }}"
+  with_items:
+    - python-pip

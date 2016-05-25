@@ -1,0 +1,11 @@
+---
+- name: Install nova service and dependencies
+  apt: pkg="{{ item }}"
+  with_items:
+    - nova-api
+    - nova-cert
+    - nova-conductor
+    - nova-consoleauth
+    - nova-novncproxy
+    - nova-scheduler
+    - python-novaclient

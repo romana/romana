@@ -1,0 +1,9 @@
+---
+- name: Update user profile
+  patch: src="{{ ansible_distribution|lower }}_profile_add_openrc.patch" basedir="/home/{{ ansible_ssh_user }}"
+
+- name: Install romana post-install script
+  template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755
+
+- name: Execute romana post-install script
+  shell: /var/tmp/romana-post-install.sh

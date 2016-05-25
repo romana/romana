@@ -1,0 +1,9 @@
+--- .profile.orig	2015-12-11 02:41:26.516217735 +0000
++++ .profile	2015-12-11 02:42:07.056217735 +0000
+@@ -20,3 +20,6 @@
+ if [ -d "$HOME/bin" ] ; then
+     PATH="$HOME/bin:$PATH"
+ fi
++
++# Source openstack environment using user=admin and tenant=admin
++. "$HOME/openrc/admin"

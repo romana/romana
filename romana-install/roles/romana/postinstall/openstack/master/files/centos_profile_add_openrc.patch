@@ -1,0 +1,9 @@
+--- .bash_profile.orig	2016-04-02 23:57:04.154098383 +0000
++++ .bash_profile	2016-04-02 23:57:18.972015361 +0000
+@@ -10,3 +10,6 @@
+ PATH=$PATH:$HOME/.local/bin:$HOME/bin
+ 
+ export PATH
++
++# Source openstack environment using user=admin and tenant=admin
++. "$HOME/openrc/admin"

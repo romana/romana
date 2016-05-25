@@ -1,0 +1,6 @@
+---
+- name: Install glance service and dependencies
+  apt: pkg="{{ item }}"
+  with_items:
+    - glance
+    - python-glanceclient

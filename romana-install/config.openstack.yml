@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  tasks:
+    - add_host: name="{{ item }}" groups="openstack_nodes,openstack_controller,openstack_computes"
+      with_items: "{{ groups.controller }}"
+    - add_host: name="{{ item }}" groups="openstack_nodes,openstack_computes"
+      with_items: "{{ groups.computes }}"
+
+- hosts: openstack_nodes
+  roles:
+    - stack/openstack/prep
+
+- hosts: openstack_controller
+  roles:
+    - stack/openstack/install-controller
+
+- hosts: openstack_computes
+  roles:
+    - stack/openstack/install-compute
+
+- hosts: openstack_controller
+  roles:
+    - stack/openstack/postinstall

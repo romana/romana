@@ -1,0 +1,11 @@
+---
+- name: Install policy to block services starting automatically
+  copy: src="policy-rc.d" dest="/usr/sbin/policy-rc.d" mode=0755  
+
+- name: Install general packages required on controller node
+  apt: pkg="{{ item }}"
+  with_items:
+    - mariadb-server
+    - python-mysqldb
+    - rabbitmq-server
+    - memcached

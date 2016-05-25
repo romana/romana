@@ -1,0 +1,13 @@
+---
+- name: Create Neutron DB
+  mysql_db: name=neutron state=present
+  register: gdb
+
+- name: Create Neutron DB user
+  mysql_user: name=neutron password="{{ stack_password }}" priv="neutron.*:ALL" state=present
+
+- name: Sync Neutron DB
+  command: neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+  when: gdb.changed
+  become: true
+  become_user: neutron

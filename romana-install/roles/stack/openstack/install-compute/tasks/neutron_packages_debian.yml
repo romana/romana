@@ -1,0 +1,6 @@
+---
+- name: Install neutron service and dependencies
+  apt: pkg="{{ item }}"
+  with_items:
+    - neutron-dhcp-agent
+    - conntrack

@@ -1,0 +1,30 @@
+---
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "nova_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "nova_packages_{{ ansible_distribution|lower }}.yml"
+      - "nova_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+
+- name: Install nova configuration
+  template: src="nova.conf" dest="/etc/nova/nova.conf"
+
+- include: nova_db.yml
+
+- name: Install nova post-install script
+  template: src="nova-post-install.sh" dest="/var/tmp/nova-post-install.sh" mode=0755
+
+- name: Execute nova post-install script
+  shell: /var/tmp/nova-post-install.sh
+
+- name: Start nova services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - nova-api
+    - nova-api
+    - nova-cert
+    - nova-consoleauth
+    - nova-scheduler
+    - nova-conductor
+    - nova-novncproxy

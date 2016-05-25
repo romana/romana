@@ -1,0 +1,9 @@
+---
+- name: Install keystone service and dependencies
+  apt: pkg="{{ item }}"
+  with_items:
+    - python-openstackclient
+    - python-pymysql
+    - keystone
+    - apache2
+    - libapache2-mod-wsgi

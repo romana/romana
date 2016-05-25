@@ -1,0 +1,20 @@
+---
+- include: initial.yml
+  become: true
+  become_user: root
+
+- include: keystone.yml
+  become: true
+  become_user: root
+
+- include: glance.yml
+  become: true
+  become_user: root
+
+- include: nova.yml
+  become: true
+  become_user: root
+
+- include: neutron.yml
+  become: true
+  become_user: root

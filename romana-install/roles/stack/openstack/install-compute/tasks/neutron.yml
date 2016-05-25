@@ -1,0 +1,14 @@
+---
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "neutron_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "neutron_packages_{{ ansible_distribution|lower }}.yml"
+      - "neutron_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+
+- name: Install neutron configuration
+  template: src="neutron.conf" dest="/etc/neutron/neutron.conf"
+
+#- name: Install networking-romana module
+#  pip: name="git+https://github.com/romana/networking-romana@realign-requirements" editable=false

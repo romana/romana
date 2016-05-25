@@ -1,0 +1,9 @@
+---
+- name: Set mysql password
+  command: mysqladmin password "{{ stack_password }}"
+
+- name: Install my.cnf
+  template: src="my.cnf" dest="~/.my.cnf" mode=0600
+
+- name: Add openstack user to rabbitmq
+  rabbitmq_user: user=openstack password="{{ stack_password }}" configure_priv=".*" read_priv=".*" write_priv=".*" state="present"

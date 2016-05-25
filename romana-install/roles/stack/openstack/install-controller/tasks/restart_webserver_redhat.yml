@@ -1,0 +1,17 @@
+---
+- name: Stop Web Server
+  become: true
+  become_user: root
+  service: name="httpd" state="stopped"
+
+- name: Make sure webserver stopped completely
+  wait_for: port="{{ item }}" state=stopped
+  with_items:
+    - 80
+    - 5000
+    - 35357
+
+- name: Start Web Server
+  become: true
+  become_user: root
+  service: name="httpd" state="started"

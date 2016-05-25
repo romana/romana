@@ -1,0 +1,14 @@
+---
+- name: Install policy to block services starting automatically
+  copy: src="policy-rc.d" dest="/usr/sbin/policy-rc.d" mode=0755
+  when: ansible_os_family|lower == "debian" and inventory_hostname not in groups.openstack_controller
+  become: true
+  become_user: root
+
+- include: nova.yml
+  become: true
+  become_user: root
+
+- include: neutron.yml
+  become: true
+  become_user: root

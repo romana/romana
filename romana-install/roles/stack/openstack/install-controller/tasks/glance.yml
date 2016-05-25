@@ -1,0 +1,28 @@
+---
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "glance_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "glance_packages_{{ ansible_distribution|lower }}.yml"
+      - "glance_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+
+- name: Install glance-api configuration
+  template: src="glance-api.conf" dest="/etc/glance/glance-api.conf"
+
+- name: Install glance-registry configuration
+  template: src="glance-registry.conf" dest="/etc/glance/glance-registry.conf"
+
+- include: glance_db.yml
+
+- name: Install glance post-install script
+  template: src="glance-post-install.sh" dest="/var/tmp/glance-post-install.sh" mode=0755
+
+- name: Execute glance post-install script
+  shell: /var/tmp/glance-post-install.sh
+
+- name: Start glance services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - glance-api
+    - glance-registry

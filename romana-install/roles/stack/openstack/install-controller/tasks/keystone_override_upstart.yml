@@ -1,0 +1,3 @@
+---
+- name: Disable keystone eventlet service
+  shell: printf "manual\n" > /etc/init/keystone.override

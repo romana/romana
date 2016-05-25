@@ -1,0 +1,34 @@
+---
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "neutron_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "neutron_packages_{{ ansible_distribution|lower }}.yml"
+      - "neutron_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+
+- name: Install neutron configuration
+  template: src="neutron.conf" dest="/etc/neutron/neutron.conf"
+
+- name: Install neutron plugin configuration
+  template: src="neutron_ml2_conf.ini" dest="/etc/neutron/plugins/ml2/ml2_conf.ini"
+
+- name: Install neutron metadata agent configuration
+  template: src="metadata_agent.ini" dest="/etc/neutron/metadata_agent.ini"
+
+- include: neutron_db.yml
+
+- name: Install neutron post-install script
+  template: src="neutron-post-install.sh" dest="/var/tmp/neutron-post-install.sh" mode=0755
+
+- name: Execute neutron post-install script
+  shell: /var/tmp/neutron-post-install.sh
+
+- name: Install networking-romana module
+  pip: name="git+https://github.com/romana/networking-romana@realign-requirements" editable=false
+
+- name: Start neutron services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - neutron-server
+    - neutron-metadata-agent
