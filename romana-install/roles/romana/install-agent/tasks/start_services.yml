@@ -4,3 +4,4 @@
   with_items:
     - dnsmasq-calico
     - romana-agent
+    - romana-policy-agent

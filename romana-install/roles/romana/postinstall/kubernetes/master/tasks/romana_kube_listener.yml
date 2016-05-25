@@ -1,0 +1,5 @@
+---
+- name: Romana-Kubernetes Network Policy service
+  command: install -o root -g root -m 0755 /var/tmp/gopath/bin/listener /usr/local/bin/listener
+  args:
+    creates: /usr/local/bin/listener

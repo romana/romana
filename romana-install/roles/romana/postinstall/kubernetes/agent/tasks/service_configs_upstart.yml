@@ -1,5 +1,0 @@
----
-- name: Install service configurations
-  copy: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
-  with_items:
-    - romana-kube-agent.conf

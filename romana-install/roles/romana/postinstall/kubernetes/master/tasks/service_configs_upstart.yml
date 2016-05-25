@@ -1,5 +1,5 @@
 ---
 - name: Install service configurations
-  copy: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
+  template: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
   with_items:
-    - romana-kube-np.conf
+    - romana-kube-listener.conf
