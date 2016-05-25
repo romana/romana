@@ -4,8 +4,8 @@ Documentation=https://github.com/romana/core
 
 [Service]
 #User=...
-EnvironmentFile=-{{ romana_etc_dir }}/agent.py
-ExecStart={{ romana_bin_dir }}/agent
+EnvironmentFile=-{{ romana_etc_dir }}/agent
+ExecStart={{ romana_bin_dir }}/agent.py
 Restart=on-failure
 LimitNOFILE=65536
 

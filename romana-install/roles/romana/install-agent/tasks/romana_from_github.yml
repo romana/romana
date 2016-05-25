@@ -15,7 +15,11 @@
     - agent.py
 
 - name: Install hook 1
+  become: true
+  become_user: root
   template: src="config/agent_proxy_add_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
 
 - name: Install hook 2
+  become: true
+  become_user: root
   template: src="config/agent_proxy_delete_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
