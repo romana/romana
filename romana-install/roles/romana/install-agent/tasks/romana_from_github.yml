@@ -10,8 +10,16 @@
   with_items:
     - agent
 
-- name: Install hook 1
+- name: Install Agent Proxy Add Policy
+  become: true
+  become_user: root
   template: src="config/agent_proxy_add_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
+  with_items:
+    - agent
 
-- name: Install hook 2
+- name: Install Agent Proxy Delete Policy
+  become: true
+  become_user: root
   template: src="config/agent_proxy_delete_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
+  with_items:
+    - agent
