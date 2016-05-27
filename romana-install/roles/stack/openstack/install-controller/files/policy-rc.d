@@ -13,10 +13,11 @@ blocked_services=(
 	nova-scheduler
 	nova-conductor
 	nova-novncproxy
-	nova-compute
 	neutron-server
-	neutron-dhcp-agent
 	neutron-metadata-agent
+	libvirtd
+	nova-compute
+	neutron-dhcp-agent
 )
 
 # Ignore options (eg: --quiet)

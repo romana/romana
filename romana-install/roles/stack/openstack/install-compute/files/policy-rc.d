@@ -1,6 +1,7 @@
 #!/bin/bash
 
 blocked_services=(
+	libvirtd
 	nova-compute
 	neutron-dhcp-agent
 )

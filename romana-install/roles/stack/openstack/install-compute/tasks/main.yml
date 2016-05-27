@@ -12,3 +12,7 @@
 - include: neutron.yml
   become: true
   become_user: root
+
+- include: disable_virbr0.yml
+  become: true
+  become_user: root

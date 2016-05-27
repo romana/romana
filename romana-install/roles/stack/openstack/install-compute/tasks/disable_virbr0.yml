@@ -1,0 +1,6 @@
+---
+- name: Remove default networks
+  file: path="{{ item }}" state=absent
+  with_items:
+    - "/etc/libvirt/qemu/networks/default.xml"
+    - "/etc/libvirt/qemu/networks/autostart/default.xml"

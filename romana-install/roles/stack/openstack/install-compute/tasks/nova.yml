@@ -7,6 +7,10 @@
       - "nova_packages_{{ ansible_os_family|lower }}.yml"
       skip: true
 
+- include: disable_virbr0.yml
+  become: true
+  become_user: root
+
 - name: Install nova configuration
   template: src="nova.conf" dest="/etc/nova/nova.conf"
   when: inventory_hostname not in groups.openstack_controller
@@ -17,4 +21,5 @@
 - name: Start nova services
   service: name="{{ item }}" state="started"
   with_items:
+    - libvirt-bin
     - nova-compute
