@@ -4,7 +4,7 @@
   register: gdb
 
 - name: Create Neutron DB user
-  mysql_user: name=neutron password="{{ stack_password }}" priv="neutron.*:ALL" state=present
+  mysql_user: name=neutron password="{{ stack_password }}" priv="neutron.*:ALL/nova.*:SELECT" state=present
 
 - name: Sync Neutron DB
   command: neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head

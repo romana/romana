@@ -22,7 +22,6 @@
   service: name="{{ item }}" state="started"
   with_items:
     - nova-api
-    - nova-api
     - nova-cert
     - nova-consoleauth
     - nova-scheduler

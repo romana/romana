@@ -15,6 +15,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+if [[ -f $HOME/.profile ]]; then
+       source "$HOME/.profile"
+elif [[ -f $HOME/.bash_profile ]]; then
+       source "$HOME/.bash_profile"
+fi
+
 # Suppress output
 exec > /dev/null
 

@@ -15,6 +15,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+if [[ -f "$HOME/openrc/admin" ]]; then
+       source "$HOME/openrc/admin"
+fi
+
 # Suppress output
 exec > /dev/null
 

@@ -1,0 +1,17 @@
+Openstack Summary
+=================
+
+Controller
+----------
+{% for i in groups.controller %}{% set n = hostvars[i] %}
+IP: {{ n.ansible_ssh_host }}
+http://{{ n.ansible_ssh_host}}
+(username: admin, password: {{ stack_password }})
+ssh -i {{ n.ansible_ssh_private_key_file | realpath }}{% if n.ansible_ssh_port | default(22) != 22 %} -p {{ n.ansible_ssh_port }}{% endif %} {{ n.ansible_ssh_user }}@{{ n.ansible_ssh_host }}
+{% endfor %}
+
+Other Nodes
+-----------
+{% for i in groups.computes %}{% set n = hostvars[i] %}
+ssh -i {{ n.ansible_ssh_private_key_file | realpath }}{% if n.ansible_ssh_port | default(22) != 22 %} -p {{ n.ansible_ssh_port }}{% endif %} {{ n.ansible_ssh_user }}@{{ n.ansible_ssh_host }}
+{% endfor %}
