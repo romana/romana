@@ -15,7 +15,7 @@ blocked_services=(
 	nova-novncproxy
 	neutron-server
 	neutron-metadata-agent
-	libvirtd
+	libvirt-bin
 	nova-compute
 	neutron-dhcp-agent
 )

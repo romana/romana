@@ -21,10 +21,12 @@
   with_items:
     - POSTROUTING -t mangle -p udp --dport 68 -j CHECKSUM --checksum-fill
 
+# Ensure IP forwarding is enabled.
 # Ensure ARP requests/replies can be handled across interfaces.
 # This is so that endpoints behind TAP interfaces can reach the host/gateway.
-- name: Enable kernel proxy_arp setting
+- name: Enable kernel ip forwarding and proxy_arp settings
   shell: if [ $(sysctl -n "{{ item }}") != "1" ]; then sysctl "{{ item }}"=1; fi
   with_items:
+    - net.ipv4.ip_forward
     - net.ipv4.conf.default.proxy_arp
     - net.ipv4.conf.all.proxy_arp
