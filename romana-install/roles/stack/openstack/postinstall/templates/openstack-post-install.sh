@@ -44,18 +44,12 @@ if ! nova flavor-show m1.micro &>/dev/null; then
 fi
 
 # Add Cirros image if it is not present
-# The glance CLI tool is a bit unhelpful in querying if an image already exists.
-# No option but to parse the table output.
-exists=0
-while read -r _ id _ name _; do
-	if [[ "$name" = "cirros" ]]; then
-		exists=1
-		break
-	fi
-done < <(glance image-list --property-filter name=cirros 2>/dev/null)
-
-if (( ! exists )); then
-	cirros_url="http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
-	curl "$cirros_url" | glance image-create --name "cirros" --disk-format qcow2 --container-format bare --visibility public
+if ! [[ "$(openstack image list --property name=cirros -f value -c ID)" ]]; then
+	mkdir -p /var/tmp/cirros-0.3.4
+	curl -s http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-uec.tar.gz | tar -C /var/tmp/cirros-0.3.4 -zxvf -
+	openstack image create cirros-0.3.4-x86_64-uec-kernel --public --container-format aki --disk-format aki < /var/tmp/cirros-0.3.4/cirros-0.3.4-x86_64-vmlinuz
+	kernel_id=$(openstack image list --property name=cirros-0.3.4-x86_64-uec-kernel -f value -c ID)
+	openstack image create cirros-0.3.4-x86_64-uec-ramdisk --public --container-format ari --disk-format ari < /var/tmp/cirros-0.3.4/cirros-0.3.4-x86_64-initrd
+	ramdisk_id=$(openstack image list --property name=cirros-0.3.4-x86_64-uec-ramdisk -f value -c ID)
+	openstack image create cirros-0.3.4-x86_64-uec --public --container-format ami --disk-format ami --property kernel_id="$kernel_id" --property ramdisk_id="$ramdisk_id" < /var/tmp/cirros-0.3.4/cirros-0.3.4-x86_64-blank.img
 fi
-
