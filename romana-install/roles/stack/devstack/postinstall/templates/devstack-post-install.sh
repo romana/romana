@@ -16,7 +16,7 @@
 # under the License.
 
 if [[ -f $HOME/devstack/openrc ]]; then
-	source "$HOME/devstack/openrc"
+	source "$HOME/devstack/openrc" admin admin
 fi
 
 # Suppress output
