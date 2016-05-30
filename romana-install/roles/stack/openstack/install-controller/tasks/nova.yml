@@ -18,12 +18,10 @@
 - name: Execute nova post-install script
   shell: /var/tmp/nova-post-install.sh
 
-- name: Start nova services
-  service: name="{{ item }}" state="started"
-  with_items:
-    - nova-api
-    - nova-cert
-    - nova-consoleauth
-    - nova-scheduler
-    - nova-conductor
-    - nova-novncproxy
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "nova_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "nova_services_{{ ansible_distribution|lower }}.yml"
+      - "nova_services_{{ ansible_os_family|lower }}.yml"
+      skip: true

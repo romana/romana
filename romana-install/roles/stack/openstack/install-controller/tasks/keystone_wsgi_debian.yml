@@ -1,6 +1,6 @@
 ---
 - name: Install Keystone WSGI configuration
-  copy: src="wsgi-keystone.conf" dest="/etc/apache2/sites-available/wsgi-keystone.conf"
+  copy: src="debian/wsgi-keystone.conf" dest="/etc/apache2/sites-available/wsgi-keystone.conf"
   register: wsgi
 
 - name: Activate Keystone WSGI configuration

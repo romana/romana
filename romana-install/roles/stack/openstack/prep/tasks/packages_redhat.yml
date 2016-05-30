@@ -1,0 +1,9 @@
+---
+- name: Install common packages
+  yum: pkg="{{ item }}"
+  with_items:
+    - python-pip
+    - patch
+
+- name: Install centos-openstack-release packages
+  yum: pkg="centos-release-openstack-liberty" update_cache=yes

@@ -1,0 +1,12 @@
+
+module httpd-keystone 1.0;
+
+require {
+	type httpd_t;
+	type keystone_log_t;
+	class file open;
+}
+
+#============= httpd_t ==============
+
+allow httpd_t keystone_log_t:file open;

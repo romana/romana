@@ -27,8 +27,10 @@
 - name: Install networking-romana module
   pip: name="git+https://github.com/romana/networking-romana@realign-requirements" editable=false
 
-- name: Start neutron services
-  service: name="{{ item }}" state="started"
-  with_items:
-    - neutron-server
-    - neutron-metadata-agent
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "neutron_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "neutron_services_{{ ansible_distribution|lower }}.yml"
+      - "neutron_services_{{ ansible_os_family|lower }}.yml"
+      skip: true

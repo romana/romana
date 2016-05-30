@@ -1,0 +1,11 @@
+---
+- name: Install nova service and dependencies
+  yum: pkg="{{ item }}"
+  with_items:
+    - openstack-nova-api
+    - openstack-nova-cert
+    - openstack-nova-conductor
+    - openstack-nova-console
+    - openstack-nova-novncproxy
+    - openstack-nova-scheduler
+    - python-novaclient

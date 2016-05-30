@@ -1,0 +1,11 @@
+
+module nova-novncproxy 1.0;
+
+require {
+	type nova_t;
+	type httpd_config_t;
+	class dir search;
+}
+
+#============= nova_t ==============
+allow nova_t httpd_config_t:dir search;

@@ -1,0 +1,8 @@
+---
+- name: Install general packages required on controller node
+  yum: pkg="{{ item }}"
+  with_items:
+    - mariadb-server
+    - mysql-connector-python
+    - rabbitmq-server
+    - memcached

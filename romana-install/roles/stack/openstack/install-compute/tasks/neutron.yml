@@ -10,7 +10,3 @@
 - name: Install neutron configuration
   template: src="neutron.conf" dest="/etc/neutron/neutron.conf"
   when: inventory_hostname not in groups.openstack_controller
-
-# - name: Install networking-romana module
-#  pip: name="git+https://github.com/romana/networking-romana@realign-requirements" editable=false
-#  when: inventory_hostname not in groups.openstack_controller

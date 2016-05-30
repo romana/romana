@@ -1,0 +1,6 @@
+---
+- name: Install neutron service and dependencies
+  yum: pkg="{{ item }}"
+  with_items:
+    - openstack-neutron-common
+    - conntrack

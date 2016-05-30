@@ -1,0 +1,18 @@
+---
+- name: Copy policy package for Nova VNC Proxy
+  copy: src="redhat/nova-novncproxy.pp" dest="/var/tmp/nova-novncproxy.pp"
+  register: vncpp
+
+- name: Install policy package for Nova VNC Proxy
+  command: semodule -i /var/tmp/nova-novncproxy.pp
+  when: vncpp.changed
+
+- name: Start nova services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - openstack-nova-api
+    - openstack-nova-cert
+    - openstack-nova-console
+    - openstack-nova-scheduler
+    - openstack-nova-conductor
+    - openstack-nova-novncproxy

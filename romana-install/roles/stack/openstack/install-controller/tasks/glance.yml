@@ -21,8 +21,10 @@
 - name: Execute glance post-install script
   shell: /var/tmp/glance-post-install.sh
 
-- name: Start glance services
-  service: name="{{ item }}" state="started"
-  with_items:
-    - glance-api
-    - glance-registry
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "glance_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "glance_services_{{ ansible_distribution|lower }}.yml"
+      - "glance_services_{{ ansible_os_family|lower }}.yml"
+      skip: true

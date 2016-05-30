@@ -1,0 +1,6 @@
+---
+- name: Install glance service and dependencies
+  yum: pkg="{{ item }}"
+  with_items:
+    - openstack-glance
+    - python-glanceclient
