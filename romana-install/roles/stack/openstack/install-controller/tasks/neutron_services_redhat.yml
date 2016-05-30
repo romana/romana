@@ -1,11 +1,11 @@
 ---
-# - name: Copy policy package for Neutron Server
-#   copy: src="redhat/neutron-server.pp" dest="/var/tmp/neutron-server.pp"
-#   register: nspp
-# 
-# - name: Install policy package for Neutron Server
-#   command: semodule -i /var/tmp/neutron-server.pp
-#   when: nspp.changed
+- name: Copy policy package for Neutron Server
+  copy: src="redhat/neutron-server.pp" dest="/var/tmp/neutron-server.pp"
+  register: nspp
+
+- name: Install policy package for Neutron Server
+  command: semodule -i /var/tmp/neutron-server.pp
+  when: nspp.changed
 
 - name: Activate ML2 plugin for neutron-server
   file: src="/etc/neutron/plugins/ml2/ml2_conf.ini" dest="/etc/neutron/plugin.ini" state="link"

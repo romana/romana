@@ -1,0 +1,15 @@
+
+module libvirt-qemu-kvm 1.0;
+
+require {
+	type ifconfig_t;
+	type tun_tap_device_t;
+	type svirt_tcg_t;
+	class tun_socket { relabelfrom relabelto };
+	class chr_file open;
+}
+
+#============= svirt_tcg_t ==============
+allow svirt_tcg_t ifconfig_t:tun_socket relabelfrom;
+allow svirt_tcg_t self:tun_socket relabelto;
+allow svirt_tcg_t tun_tap_device_t:chr_file open;

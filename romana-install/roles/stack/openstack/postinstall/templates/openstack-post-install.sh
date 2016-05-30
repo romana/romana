@@ -44,7 +44,7 @@ if ! nova flavor-show m1.micro &>/dev/null; then
 fi
 
 # Add Cirros image if it is not present
-if ! [[ "$(openstack image list --property name=cirros -f value -c ID)" ]]; then
+if ! [[ "$(openstack image list --property name=cirros-0.3.4-x86_64-uec -f value -c ID)" ]]; then
 	mkdir -p /var/tmp/cirros-0.3.4
 	curl -s http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-uec.tar.gz | tar -C /var/tmp/cirros-0.3.4 -zxvf -
 	openstack image create cirros-0.3.4-x86_64-uec-kernel --public --container-format aki --disk-format aki < /var/tmp/cirros-0.3.4/cirros-0.3.4-x86_64-vmlinuz

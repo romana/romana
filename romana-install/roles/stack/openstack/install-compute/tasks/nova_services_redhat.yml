@@ -1,4 +1,15 @@
 ---
+- name: Install qemu.conf enabling access to required devices
+  copy: src="redhat/qemu.conf" dest="/etc/libvirt/qemu.conf"
+
+- name: Copy policy package for libvirt service
+  copy: src="redhat/libvirt-qemu-kvm.pp" dest="/var/tmp/libvirt-qemu-kvm.pp"
+  register: lvpp
+
+- name: Install policy package for libvirt service
+  command: semodule -i /var/tmp/libvirt-qemu-kvm.pp
+  when: lvpp.changed
+
 - name: Start nova services
   service: name="{{ item }}" state="started"
   with_items:
