@@ -1,0 +1,9 @@
+command: services_running
+args: romana-root romana-tenant romana-topology romana-ipam
+description: Check that Romana services are running on master
+labels: romana-master, services
+
+command: services_running
+args: romana-agent
+description: Check that Romana services are running on minion
+labels: romana-agent, services

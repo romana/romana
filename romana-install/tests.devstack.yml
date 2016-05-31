@@ -1,2 +1,22 @@
 # Tests not developed yet
-- hosts: localhost
+- hosts: localhos
+  tasks:
+    - add_host: name="{{ item }}" groups="devstack_nodes,devstack_controller,devstack_computes"
+      with_items: "{{ groups.controller }}"
+    - add_host: name="{{ item }}" groups="devstack_nodes,devstack_computes"
+      with_items: "{{ groups.computes }}"
+
+- hosts: devstack_nodes
+  tasks:
+    - name: Copy test scripts to all devstack nodes
+      synchronize: src="../test/openstack-cluster/" dest="{{ test_dir }}/"
+    - name: Delete log file if present
+      file: path="{{ test_logfile }}" state=absent
+
+- hosts: devstack_controller
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
+
+- hosts: devstack_computes
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-agent -l services >> {{ test_logfile }}
