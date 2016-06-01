@@ -83,4 +83,4 @@ services:
       namespace_notification_path: "/api/v1/namespaces/?watch=true"
       policy_notification_path_prefix : "/apis/romana.io/demo/v1/namespaces/"
       policy_notification_path_postfix : "/networkpolicys/?watch=true"
-      segment_label_name: "tier"
+      segment_label_name: "segment"
