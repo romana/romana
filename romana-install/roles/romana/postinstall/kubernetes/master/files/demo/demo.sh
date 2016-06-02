@@ -76,7 +76,7 @@ desc "let’s find out where the pods are"
 run "get_pods; get_pods 'tenant-a'"
 
 desc "we should only see our 'internal' local interface"
-run "kubectl --namespace=tenant-a exec nginx-frontend -- ip addr"
+run "kubectl --namespace=tenant-a exec nginx-backend -- ip addr"
 
 desc "let's have our frontend load data from the backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
@@ -100,4 +100,4 @@ desc "this permits us to connect from frontend to backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "Demo completed (cleaning up)"
-run "romana policy remove tenant-a pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
+run "romana policy remove pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
