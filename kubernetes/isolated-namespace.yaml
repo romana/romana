@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: "tenant-a"
-  labels:
-    name: "tenant-a"
-  annotations:
-    net.alpha.kubernetes.io/network-isolation: "on"
