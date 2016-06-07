@@ -2,7 +2,7 @@
   "name": "romana-k8s-network",
   "type": "romana",
   "kube_master_ip": "{{ romana_master_ip }}",
-  "romana_cli_config": "/home/ubuntu/.romana.yaml",
+  "romana_cli_config": "/home/{{ ansible_ssh_user }}/.romana.yaml",
   "ipam": {
       "type": "romana-ipam"
   }
