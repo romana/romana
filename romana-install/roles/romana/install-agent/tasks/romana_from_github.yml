@@ -12,6 +12,7 @@
   command: install -o root -g root -m 0755 "/var/tmp/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
   with_items:
     - agent
+    - romana
     - agent.py
 
 - name: Install Agent Proxy Add Policy
