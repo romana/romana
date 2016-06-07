@@ -29,12 +29,3 @@ exec > /dev/null
 {% for n in groups.stack_nodes %}
 romana host add {{ hostvars[n].ansible_hostname }} {{ hostvars[n].lan_ip }} {{ hostvars[n].romana_gw }} 9604
 {% endfor %}
-
-# # Deprecated since kube-listener now creates tenants dynamically
-# Create owners and tiers
-# romana tenant create default
-# romana segment add default default
-# romana tenant create tenant-a
-# romana segment add tenant-a default
-# romana segment add tenant-a backend
-# romana segment add tenant-a frontend

@@ -16,12 +16,11 @@
 - name: Copy examples and demo script to demo directory
   copy: src="demo/{{ item }}" dest="/home/{{ ansible_ssh_user }}/demo/{{ item }}"
   with_items:
-    - demo.sh
     - example-controller.yaml
     - namespace-tenant-a.yaml
     - pod-backend.yaml
     - pod-frontend.yaml
     - romana-np-frontend-to-backend.json
 
-- name: Make demo script executable
-  file: path="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755
+- name: Install and make demo script executable
+  template: src="demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755

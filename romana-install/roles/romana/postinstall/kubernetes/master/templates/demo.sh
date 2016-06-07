@@ -21,7 +21,7 @@ function maybe_first_prompt() {
 }
 function run() {
     maybe_first_prompt
-    rate=$((25 * (1 + ${#1} / 30)))
+    rate=30
     if [ -n "$DEMO_RUN_FAST" ]; then
       rate=1000
     fi
@@ -94,10 +94,10 @@ desc "let's try to have the frontend load data from the backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "now let's add a policy that permits frontend to connect to the backend"
-run "curl -X POST -H "Content-ype: application/yaml" -d @romana-np-frontend-to-backend.json http://192.168.99.10:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys; sleep 5"
+run "curl -X POST -H 'Content-Type: application/yaml' -d @romana-np-frontend-to-backend.json http://{{ romana_master_ip }}:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys; sleep 5"
 
 desc "this permits us to connect from frontend to backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "Demo completed (cleaning up)"
-run "curl -X DELETE http://192.168.99.10:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys/pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
+run "curl -X DELETE http://{{ romana_master_ip }}:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys/pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
