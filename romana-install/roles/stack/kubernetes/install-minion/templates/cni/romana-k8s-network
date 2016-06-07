@@ -1,7 +1,7 @@
 {
   "name": "romana-k8s-network",
   "type": "romana",
-  "kube_master_ip": "192.168.99.10",
+  "kube_master_ip": "{{ romana_master_ip }}",
   "romana_cli_config": "/home/ubuntu/.romana.yaml",
   "ipam": {
       "type": "romana-ipam"
