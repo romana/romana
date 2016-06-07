@@ -2,6 +2,7 @@
   command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/bin/{{ item }}" "/var/tmp/{{ item }}"
   with_items:
     - agent
+    - romana
 
 - name: Copy policy-agent from master
   command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/src/github.com/romana/core/pkg/util/policy/agent/agent.py" "/var/tmp/agent.py"
