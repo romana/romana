@@ -27,3 +27,6 @@
   template: src="config/agent_proxy_delete_policy.sh" dest="{{ romana_bin_dir }}/" mode=0777
   with_items:
     - agent
+
+- name: Install romana command line config file
+  template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
