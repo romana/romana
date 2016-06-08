@@ -5,7 +5,7 @@
     - romana
 
 - name: Copy policy-agent from master
-  command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/src/github.com/romana/core/pkg/util/policy/agent/agent.py" "/var/tmp/agent.py"
+  get_url: url=https://raw.githubusercontent.com/romana/core/{{ romana_core_branch }}/pkg/util/policy/agent/agent.py dest=/var/tmp/agent.py mode=0755
 
 - name: Install files
   become: true
