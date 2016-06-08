@@ -4,6 +4,7 @@
   become_user: root
 
 - include: "romana_from_{{ romana_core_source }}.yml"
+- include: "policy_agent.yml"
 
 - include: "{{ item }}"
   with_first_found:
