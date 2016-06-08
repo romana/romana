@@ -1,0 +1,15 @@
+[Unit]
+Description=Romana Cloud Native Networking Policy Service
+Documentation=https://github.com/romana/core
+After=romana-tenant.service
+Wants=romana-tenant.service
+
+[Service]
+#User=...
+EnvironmentFile=-{{ romana_etc_dir }}/policy
+ExecStart={{ romana_bin_dir }}/policy -rootURL http://{{ romana_master_ip }}:9600
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

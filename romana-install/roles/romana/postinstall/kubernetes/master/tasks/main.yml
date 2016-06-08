@@ -1,5 +1,5 @@
 ---
-- include: "romana_kube_np.yml"
+- include: "romana_kube_listener.yml"
   become: true
   become_user: root
 
@@ -10,7 +10,7 @@
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
-    - romana-kube-np
+    - romana-kube-listener
   become: true
   become_user: root
 
