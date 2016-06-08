@@ -1,8 +1,8 @@
 [Unit]
 Description=Romana Kubernetes Policy Listener
 Documentation=https://github.com/romana/core
-After=romana-ipam.service
-Wants=romana-ipam.service
+After=romana-tenant.service
+Wants=romana-tenant.service
 
 [Service]
 #User=...
