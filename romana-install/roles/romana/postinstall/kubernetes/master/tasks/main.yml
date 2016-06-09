@@ -1,5 +1,5 @@
 ---
-- include: "romana_kube_listener.yml"
+- include: "kube_listener_from_{{ romana_core_source }}.yml"
   become: true
   become_user: root
 
