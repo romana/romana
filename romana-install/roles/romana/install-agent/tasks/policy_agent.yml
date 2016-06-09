@@ -20,7 +20,6 @@
   become: true
   become_user: root
   copy: src="agent_proxy_delete_policy.sh" dest="{{ romana_bin_dir }}/" mode=0755
-
   with_items:
     - agent
 
