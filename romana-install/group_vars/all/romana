@@ -1,7 +1,7 @@
 # Version
-romana_core_branch: "v0.8.2"
-romana_kube_branch: "v0.8.2"
-romana_networking_branch: "v0.8.2-stable/liberty"
+romana_core_branch: "v0.9.0"
+romana_kube_branch: "v0.9.0"
+romana_networking_branch: "v0.9.0-stable/liberty"
 
 # Install from Github or S3 bucket
 romana_core_source: "s3"
