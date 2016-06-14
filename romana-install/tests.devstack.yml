@@ -1,5 +1,4 @@
-# Tests not developed yet
-- hosts: localhos
+- hosts: localhost
   tasks:
     - add_host: name="{{ item }}" groups="devstack_nodes,devstack_controller,devstack_computes"
       with_items: "{{ groups.controller }}"
