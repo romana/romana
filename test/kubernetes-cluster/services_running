@@ -1,0 +1,105 @@
+#!/bin/bash
+
+usage() {
+	echo "${0##*/}: Check if a list of named services are running"
+	echo "  ${0##*/} [-v|--verbose] [--status-command cmd] <service-name> [service-name...]"
+	echo "  ${0##*/} [-h|--help]"
+	echo "Options:"
+	echo "  -v (or --verbose): Enable verbose output."
+	echo "  --status-command:  Specify the command used to check service statuses."
+	echo "                     By default it will attempt to find the appropriate"
+	echo "                     systemctl or initctl command."
+	echo "  -h (or --help):    Display this usage message."
+	echo ""
+}
+
+log_message() {
+	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+	if ((verbose)); then
+		log_message "$@"
+	fi
+}
+
+# Parse command-line arguments
+verbose=0
+status_command=()
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+--status-command)
+	read -ra cmd <<< "$2"
+	if ! type -p "${cmd[0]}" &> /dev/null; then
+		log_message "Status command '$2' invalid"
+		exit 1
+	fi
+	status_command=( "${cmd[@]}" )
+	shift 2
+	;;
+-h|--help)
+	usage
+	exit 0
+	;;
+-*)
+	log_message "Uknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+# Check if we have at least one service name
+if (( $# == 0 )); then
+	log_message "No services to check."
+	exit 1
+fi
+
+# Try to determine the correct status command if it wasn't provided
+if (( ${#status_command[@]} )); then
+	log_verbose "Status command is $(type -p "$status_command")"
+else
+	log_verbose "Checking for systemctl"
+	found=0
+	if ! ((found)) && type -p systemctl &> /dev/null; then
+		found=1
+		status_command=( "$(type -p systemctl)" status)
+		log_verbose "Found systemctl, using status command '${status_command[@]}'"
+	fi
+	if ! ((found)) && type -p initctl &> /dev/null; then
+		found=1
+		status_command=( "$(type -p initctl)" status)
+		log_verbose "Found initctl, using status command '${status_command[@]}'"
+	fi
+	if ! ((found)); then
+		log_message "No appropriate status command found."
+		exit 1
+	fi
+fi
+
+num_checked=0
+num_ok=0
+num_error=0
+for svc in "$@"; do
+	((num_checked++))
+	log_verbose "Checking status of '$svc'"
+	if result=$("${status_command[@]}" "$svc" 2>&1); then
+		((num_ok++))
+		log_verbose "Check passed."
+	else
+		((num_error++))
+		log_verbose "Check failed: $result"
+	fi
+done
+
+if (( num_error )); then
+	if (( num_checked == num_error )); then
+		log_message "Checked $num_checked services. All FAILED."
+	else
+		log_message "$num_ok/$num_checked services OK, $num_error FAILED."
+	fi
+	exit 1
+fi
+
+log_message "Checked $num_checked services. All OK."

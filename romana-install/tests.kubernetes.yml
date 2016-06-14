@@ -1,0 +1,25 @@
+---
+- hosts: localhost
+  tasks:
+    - add_host: name="{{ item }}" groups="kube_nodes,kube_master,kube_minions"
+      with_items: "{{ groups.controller }}"
+    - add_host: name="{{ item }}" groups="kube_nodes,kube_minions"
+      with_items: "{{ groups.computes }}"
+
+- hosts: kube_nodes
+  tasks:
+    - name: Copy test scripts to all kube nodes
+      synchronize: src="../test/kubernetes-cluster/" dest="{{ test_dir }}/"
+    - name: Delete log file if present
+      file: path="{{ test_logfile }}" state=absent
+
+- hosts: kube_master
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l services >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
+
+- hosts: kube_minions
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-minion -l services >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-agent -l services >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-minion -l docker >> {{ test_logfile }}

@@ -1,0 +1,42 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Uknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+if (( $# == 0 )); then
+	log_message "No images to pull."
+	exit 1
+fi
+
+errors=0
+for img in "$@"; do
+	log_verbose "Pulling image '$img'"
+	if ! result=$(docker pull "$img" 2>&1); then
+		((errors++))
+		log_verbose "Error occured pulling image '$img': $result"
+	fi
+done
+
+if (( errors > 0 )); then
+	log_message "Errors occured pulling the requested images"
+	exit 1
+fi
+log_message "All OK."

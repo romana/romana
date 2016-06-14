@@ -6,3 +6,7 @@
       known_hosts: host="{{ hostvars[item].ansible_ssh_host }}" state=absent
       with_items: "{{ groups.stack_nodes | default([]) }}"
       failed_when: false
+    - name: Remove clustertests log files
+      file: path="./{{ stack_data_dir }}/{{ item }}_clustertests.log" state=absent
+      with_items: "{{ groups.stack_nodes | default([]) }}"
+    - file: path="./{{ stack_data_dir }}/clustertests.log" state="absent"

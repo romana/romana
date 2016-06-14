@@ -26,13 +26,15 @@ usage() {
 	echo "Distro:        ubuntu (default), centos"
 	echo "Stack Types:   devstack (default), kubernetes"
 	echo "Number:        number of cluster nodes"
-	echo "Actions:       install (default), uninstall"
+	echo "Actions:       install (default), uninstall, test"
 	echo ""
 	echo "Example 1: Romana with Kubernetes on AWS"
 	echo "./romana-setup -p aws -s kubernetes install"
+	echo "./romana-setup -p aws -s kubernetes test"
 	echo "./romana-setup -p aws -s kubernetes uninstall"
 	echo "Example 2: Additional AWS cluster, using a different name"
 	echo "./romana-setup -n xyz -p aws -s kubernetes install"
+	echo "./romana-setup -n xyz -p aws -s kubernetes test"
 	echo "./romana-setup -n xyz -p aws -s kubernetes uninstall"
 	echo "Example 3: Romana with Devstack on Vagrant"
 	echo "./romana-setup -p vagrant -s devstack install"
@@ -144,7 +146,7 @@ fi
 action=install
 if (( $# > 0 )); then
 	case "$1" in
-		install|uninstall)
+		install|uninstall|test)
 			action="$1"
 			shift
 			;;
@@ -253,6 +255,10 @@ case "$platform" in
 			uninstall)
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
 				ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
+				;;
+			test)
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml
+				[[ -f "${stack_data_dir}/clustertests.log" ]] && cat "${stack_data_dir}/clustertests.log"
 				;;
 			*)
 				echo "Unknown action '$action' for platform '$platform'"
