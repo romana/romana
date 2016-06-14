@@ -1,5 +1,5 @@
 ---
-- include: "romana_kube_np.yml"
+- include: "kube_listener_from_{{ romana_core_source }}.yml"
   become: true
   become_user: root
 
@@ -10,12 +10,7 @@
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
-    - romana-kube-np
-  become: true
-  become_user: root
-
-- name: Install romana tool
-  template: src="../cmd/romana.k8s" dest="{{ romana_bin_dir }}/romana" mode=0775
+    - romana-kube-listener
   become: true
   become_user: root
 

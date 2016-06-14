@@ -2,5 +2,4 @@ stack_password: "secrete"
 romana_ssh_key: "romana_id_rsa"
 compute_nodes: 1
 
-host_cidr: 192.168.99.0/24
-romana_cidr: 10.0.0.0/8
+romana_master_ip: "{{ hostvars[groups.controller[0]].lan_ip }}"

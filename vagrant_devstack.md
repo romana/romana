@@ -32,6 +32,8 @@ cd romana/romana-install
 ./romana-setup -p vagrant -s devstack install
 ```
 
+See the [`romana-setup` page](romana_setup.md) for details about the command-line options.
+
 The Vagrant installation can take a long time to complete, because of some large downloads that are performed. Please be patient. When installation is complete, information about the cluster should be provided.
 ```sh-session
 Devstack Summary

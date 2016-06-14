@@ -1,11 +1,29 @@
 ---
+- name: Check for private key
+  stat: path="~/.ssh/id_rsa"
+  register: privkey
+
+- name: Check for public key
+  stat: path="~/.ssh/id_rsa"
+  register: pubkey
+
 - name: Install private key for user
   copy: src="{{ romana_ssh_key }}" dest="~/.ssh/id_rsa" mode=0600
+  when: not privkey.stat.exists and not pubkey.stat.exists
 
 - name: Install public key for user
   copy: src="{{ romana_ssh_key}}.pub" dest="~/.ssh/id_rsa.pub" mode=0644
+  when: not privkey.stat.exists and not pubkey.stat.exists
 
 - name: Add public key to authorised keys
   authorized_key: user="{{ ansible_ssh_user }}" key="{{ item }}" state=present
   with_file:
     - "{{ romana_ssh_key }}.pub"
+
+- name: Check for known_hosts
+  stat: path="~/.ssh/known_hosts"
+  register: kh
+
+- name: Add known_hosts
+  template: src="known_hosts" dest="~/.ssh/known_hosts" mode=0644
+  when: not kh.stat.exists

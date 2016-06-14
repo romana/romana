@@ -1,11 +1,11 @@
 services:
   - service: root
     api:
-      host: {{ stack_nodes.Controller.mgmt_ip }}
+      host: {{ romana_master_ip }}
       port: 9600
   - service: ipam
     api:
-      host: {{ stack_nodes.Controller.mgmt_ip }}
+      host: {{ romana_master_ip }}
       port: 9601
     config:
       store: 
@@ -17,7 +17,7 @@ services:
         database: ipam
   - service: tenant
     api:
-      host: {{ stack_nodes.Controller.mgmt_ip }}
+      host: {{ romana_master_ip }}
       port: 9602
     config:
       store: 
@@ -28,7 +28,7 @@ services:
         database: tenant
   - service: topology
     api:
-      host: {{ stack_nodes.Controller.mgmt_ip }}
+      host: {{ romana_master_ip }}
       port: 9603
     config:
       store: 
@@ -39,8 +39,8 @@ services:
         database: topology
       datacenter: 
         ip_version: 4
-        cidr: 10.0.0.0/8
-        host_bits: 8
+        cidr: {{ romana_cidr }}
+        host_bits: {{ 16 - romana_cidr | ipaddr('prefix') }}
         tenant_bits: 4
         segment_bits: 4
         endpoint_space_bits: 0
@@ -49,6 +49,38 @@ services:
     api:
       host: 0.0.0.0
       port: 9604
+      hooks:
+          - executable: {{ romana_bin_dir }}/agent_proxy_add_policy.sh
+            pattern: /policies
+            method: POST
+            when: before
+            output: /var/log/policies-hook.log
+          - executable: {{ romana_bin_dir }}/agent_proxy_delete_policy.sh
+            pattern: /policies
+            method: DELETE
+            when: before
+            output: /var/log/policies-hook.log
     config:
       lease_file : "/etc/ethers"
       wait_for_iface_try: 6
+  - service: policy
+    api:
+      host: {{ romana_master_ip }}
+      port: 9605
+    config:
+      store: 
+        type: mysql
+        host: 127.0.0.1
+        username: root
+        password: {{ stack_password }}
+        database: policy
+  - service: kubernetesListener 
+    api:
+      host: 0.0.0.0
+      port: 9606
+    config:
+      kubernetes_url : "http://{{ romana_master_ip }}:8080"
+      namespace_notification_path: "/api/v1/namespaces/?watch=true"
+      policy_notification_path_prefix : "/apis/romana.io/demo/v1/namespaces/"
+      policy_notification_path_postfix : "/networkpolicys/?watch=true"
+      segment_label_name: "segment"

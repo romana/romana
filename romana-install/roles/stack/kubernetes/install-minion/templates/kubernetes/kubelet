@@ -1,13 +1,13 @@
 # Kubernetes kubelet (node) config
 
 # The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
-KUBELET_ADDRESS="--address={{ stack_nodes[stack_host].mgmt_ip }}"
+KUBELET_ADDRESS="--address={{ lan_ip }}"
 
 # You may leave this blank to use the actual hostname
-# KUBELET_HOSTNAME="--hostname-override=ip-{{ stack_nodes[stack_host].mgmt_ip | replace('.', '-') }}"
+# KUBELET_HOSTNAME="--hostname-override={{ ansible_hostname }}"
 
 # location of the api-server
-KUBELET_API_SERVER="--api-servers=http://{{ stack_nodes.Controller.mgmt_ip }}:8080"
+KUBELET_API_SERVER="--api-servers=http://{{ romana_master_ip }}:8080"
 
 # Add your own!
 KUBELET_ARGS="--network-plugin=cni --network-plugin-dir=/etc/cni/net.d"

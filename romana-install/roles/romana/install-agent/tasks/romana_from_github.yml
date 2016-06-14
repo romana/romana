@@ -1,0 +1,13 @@
+- name: Copy files built on master
+  command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/bin/{{ item }}" "/var/tmp/{{ item }}"
+  with_items:
+    - agent
+    - romana
+
+- name: Install files
+  become: true
+  become_user: root
+  command: install -o root -g root -m 0755 "/var/tmp/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
+  with_items:
+    - agent
+    - romana

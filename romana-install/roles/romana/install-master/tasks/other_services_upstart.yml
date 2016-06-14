@@ -5,3 +5,4 @@
     - romana-topology.conf
     - romana-tenant.conf
     - romana-ipam.conf
+    - romana-policy.conf

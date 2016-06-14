@@ -28,20 +28,19 @@ exec > /dev/null
 # to configure the hosts/tenants/segments used in a simple setup.
 
 # Create hosts
-romana add-host ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }} {{ stack_nodes.Controller.mgmt_ip }} {{ stack_nodes.Controller.gateway }} 9604
-{% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
-romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_nodes[node].mgmt_ip }} {{ stack_nodes[node].gateway }} 9604
+{% for n in groups.stack_nodes %}
+romana host add {{ hostvars[n].ansible_hostname }} {{ hostvars[n].lan_ip }} {{ hostvars[n].romana_gw }} 9604
 {% endfor %}
 
 # Create tenants and segments
-romana create-tenant admin
-romana add-segment admin default
-romana add-segment admin frontend
-romana add-segment admin backend
-romana create-tenant demo
-romana add-segment demo default
-romana add-segment demo frontend
-romana add-segment demo backend
+romana tenant create admin
+romana segment add admin default
+romana segment add admin frontend
+romana segment add admin backend
+romana tenant create demo
+romana segment add demo default
+romana segment add demo frontend
+romana segment add demo backend
 
 # Create romana network and subnet
 if ! neutron net-show romana 2>/dev/null; then

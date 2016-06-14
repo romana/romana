@@ -17,15 +17,16 @@
 
 usage() {
 	echo "romana-setup: executes the ansible playbooks for installing romana"
-	echo "Usage: romana-setup [-n stackname] [-p platform ] [ -d distro ] [-s stacktype] [action]"
-	echo "       romana-setup [-n stackname] [-p platform ] [ -d distro ] [-s stacktype] <action> [ansible-options]"
+	echo "Usage: romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c number] [action]"
+	echo "       romana-setup [-n name] [-p platform] [-d distro] [-s stacktype] [-c number] <action> [ansible-options]"
 	echo "       romana-setup <h|--help>"
 	echo ""
-	echo "Stack Name:  user-defined stack name (default: $USER)"
-	echo "Platforms:   aws (default), vagrant"
-	echo "Distro:      ubuntu (default), centos"
-	echo "Stack Types: devstack (default), kubernetes"
-	echo "Actions:     install (default), uninstall, test"
+	echo "Cluster Name:  user-defined stack name (default: $USER)"
+	echo "Platforms:     aws (default), vagrant, static"
+	echo "Distro:        ubuntu (default), centos"
+	echo "Stack Types:   devstack (default), kubernetes"
+	echo "Number:        number of cluster nodes"
+	echo "Actions:       install (default), uninstall, test"
 	echo ""
 	echo "Example 1: Romana with Kubernetes on AWS"
 	echo "./romana-setup -p aws -s kubernetes install"
@@ -51,8 +52,10 @@ fi
 stack_name="$USER"
 distro="ubuntu"
 platform="aws"
+inventory=""
 stack_type="devstack"
-required=( ansible-playbook )
+cluster_nodes=""
+required=( ansible ansible-playbook )
 
 # Process command-line options
 if (( $# > 0 )); then 
@@ -63,16 +66,8 @@ if (( $# > 0 )); then
 				exit 0
 				;;
 			-n|--name)
-				case "$2" in
-					[a-zA-Z][a-zA-Z0-9]*)
-						stack_name="$2"
-						shift 2
-						;;
-					*)
-						echo "Invalid stack name: '$2' (must start with a letter, and contain only letters and digits)"
-						exit 1
-						;;
-				esac
+				stack_name="$2"
+				shift 2
 				;;
 			-d|--distro)
 				case "$2" in
@@ -86,6 +81,10 @@ if (( $# > 0 )); then
 						;;
 				esac
 				;;
+			-i|--inventory)
+				inventory="$2"
+				shift 2
+				;;
 			-p|--platform)
 				case "$2" in
 					aws)
@@ -96,6 +95,10 @@ if (( $# > 0 )); then
 					vagrant)
 						platform="vagrant"
 						required+=( "vagrant" )
+						shift 2
+						;;
+					static)
+						platform="static"
 						shift 2
 						;;
 					*)
@@ -125,6 +128,10 @@ if (( $# > 0 )); then
 						exit 1
 						;;
 				esac
+				;;
+			-c|--cluster-nodes)
+				cluster_nodes="$2"
+				shift 2
 				;;
 			*)
 				echo "Unrecognized option '$1'"
@@ -158,6 +165,46 @@ for i in "${required[@]}"; do
 	fi
 done
 
+# Validate the options / combinations
+# stack name is valid:
+case "$stack_name" in
+	[a-zA-Z][a-zA-Z0-9]*)
+		# OK
+		;;
+	*)
+		echo "Invalid stack name: '$stack_name' (must start with a letter, and contain only letters and digits)"
+		exit 1
+		;;
+esac
+# static hosts, inventory must be set
+if [[ $platform = "static" ]]; then
+	if ! [[ "$inventory" ]]; then
+		echo "Inventory must be provided when using static infrastructure."
+		exit 1
+	fi
+	if ! [[ -e "$inventory" ]]; then
+		echo "Inventory '$inventory' not found."
+		exit 1
+	fi
+fi
+# inventory must not be set if using other platforms
+if [[ $platform != "static" ]]; then
+	if [[ "$inventory" ]]; then
+		echo "Inventory must not be provided when using non-static infrastructure."
+		exit 1
+	fi
+fi
+# number of cluster nodes. make sure it's a number, and within some limits
+if [[ "$cluster_nodes" ]]; then case "$cluster_nodes" in
+	# Between 0 and 200
+	[1-9]|[1-9][0-9]|1[0-9][0-9]|200)
+		;;
+	*)
+		echo "Invalid number of cluster nodes '$cluster_nodes'. Value should be a number between 1 and 200."
+		exit 1
+		;;
+esac; fi
+
 stack_data_dir="stacks/${stack_name}_${platform}_${distro}_${stack_type}"
 mkdir -p "${stack_data_dir}"
 
@@ -170,13 +217,23 @@ if [[ "$platform" == "aws" ]] && [[ -r ~/.aws/ec2_keypair ]]; then
 		ansible_args+=( -e ec2_keypair="$ec2_keypair" )
 	fi
 fi
+# Add static inventory setting if platform is static
+if [[ "$platform" == "static" ]]; then
+	ansible_args+=( -e static_inventory="$inventory" )
+fi
+
+# Add number of compute nodes. One fewer than number of cluster nodes.
+# Needs JSON format so Ansible treats it as an integer
+if [[ "$cluster_nodes" ]]; then
+	ansible_args+=( -e '{ "compute_nodes": '"$((cluster_nodes - 1))"'}')
+fi
 
 case "$platform" in
-	aws|vagrant)
+	aws|vagrant|static)
 		case "$action" in
 			install)
 				ansible-playbook "$@" "${ansible_args[@]}" -i localhost create_hosts.yml  || exit 1
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-create.yml &&
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-create.yml
 				hosts_ready=0
 				for ((i=0; i < 5; i++)); do
 					echo "Attempting to connect to hosts"

@@ -1,6 +1,16 @@
+# Version
+romana_core_branch: "v0.9.0"
+romana_kube_branch: "v0.9.0"
+romana_networking_branch: "v0.9.0-stable/liberty"
+
+# Install from Github or S3 bucket
+romana_core_source: "s3"
+romana_core_repo:   "https://github.com/romana/core"
+
+# Paths
 romana_bin_dir: "/usr/local/bin"
 romana_lib_dir: "/usr/local/lib"
 romana_etc_dir: "/etc/romana"
-romana_core_branch: "v0.8.1"
-romana_kube_branch: "v0.8.1"
-romana_networking_branch: "v0.8.1-stable/liberty"
+
+# Network
+romana_cidr: 10.0.0.0/8

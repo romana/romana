@@ -1,13 +1,5 @@
 ---
-- name: romana-kube-agent executable
-  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kube/NetworkPolicy/k8s-listener.py /usr/local/lib/romana-kube-agent
-  args:
-    creates: /usr/local/lib/romana-kube-agent
-  
-- name: Configure IP address for agent
-  replace: dest="/usr/local/lib/romana-kube-agent" regexp="192\.168\.0\.10" replace="{{ stack_nodes.Controller.mgmt_ip }}"
-
-- name: Install nsenter
+- name: Install nsenter for CNI plugin
   get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/nsenter" dest="/usr/local/bin/" mode=0755
   when: ansible_os_family|lower == "debian"
 

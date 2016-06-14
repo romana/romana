@@ -26,15 +26,6 @@ exec > /dev/null
 # to configure the hosts/owners/tiers used in a simple setup.
 
 # Create hosts
-romana add-host ip-{{ stack_nodes.Controller.mgmt_ip | replace('.', '-') }} {{ stack_nodes.Controller.mgmt_ip }} {{ stack_nodes.Controller.gateway }} 9604
-{% for node in stack_nodes.ComputeNodes[:compute_nodes] %}
-romana add-host ip-{{ stack_nodes[node].mgmt_ip | replace('.', '-') }} {{ stack_nodes[node].mgmt_ip }} {{ stack_nodes[node].gateway }} 9604
+{% for n in groups.stack_nodes %}
+romana host add {{ hostvars[n].ansible_hostname }} {{ hostvars[n].lan_ip }} {{ hostvars[n].romana_gw }} 9604
 {% endfor %}
-
-# Create owners and tiers
-romana create-tenant default
-romana add-segment default default
-romana create-tenant tenant-a
-romana add-segment tenant-a default
-romana add-segment tenant-a backend
-romana add-segment tenant-a frontend
