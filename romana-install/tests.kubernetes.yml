@@ -10,8 +10,6 @@
   tasks:
     - name: Copy test scripts to all kube nodes
       synchronize: src="../test/kubernetes-cluster/" dest="{{ test_dir }}/"
-    - name: Delete log file if present
-      file: path="{{ test_logfile }}" state=absent
 
 - hosts: kube_master
   tasks:
