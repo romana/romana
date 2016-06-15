@@ -17,6 +17,10 @@
       file: path="{{ test_dir }}" state=directory
     - name: Copy test script
       synchronize: src="../test/clustertests" dest="{{ test_script }}"
+    - name: Delete log file if present
+      file: path="{{ test_logfile }}" state=absent
+    - name: Create empty log file
+      file: path="{{ test_logfile }}" state=touch
        
 # Include stack-specific tests, copied then executed
 - include: "tests.{{ stack_type }}.yml"
