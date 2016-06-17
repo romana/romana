@@ -28,6 +28,6 @@ description: Pull the nginx docker container
 labels: kube-minion, docker
 
 command: kubectl-run
-args: test-77 --image=--port=80 --replicas=3 --command /bin/false
+args: test-77 --image=alpine --replicas=3 --command -- sleep 18446744073709551615
 description: Check that kubernetes can launch some pods
 labels: kube-master, pods
