@@ -1,0 +1,77 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Uknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+if (( $# != 1 )); then
+	log_message "Expected 1 parameter, got $#"
+	exit 1
+fi
+
+if result=$(kubectl get namespace "$1" &>/dev/null); then
+	log_message "kubectl get namespace succeed. '$1' already exists"
+	exit 1
+fi
+# No check if romana tenant already exists.
+# Reconsider after tenant/segment deletion is available.
+
+if ! result=$(kubectl create namespace "$1" 2>&1); then
+	log_message "kubectl create namespace failed"
+	log_verbose "$result"
+	exit 1
+fi
+log_verbose "kubectl create namespace: $result"
+# Now a resource exists. It must be deleted before exiting.
+delete_namespace() {
+	log_verbose "deleting namespace '$1'"
+	kubectl delete namespace "$1" &>/dev/null
+	# Deletion can take a short time. Don't re-run the tests too quickly.
+}
+
+# Query list of tenants instead of named tenant.
+# We have to loop in case there's a delay in creating the tenant.
+intervals=(1 1 2 5 8)
+tenant_found=0
+for i in "${intervals[@]}"; do
+
+	if ! result=$(romana tenant list -f json 2>&1); then
+		log_message "romana tenant list failed"
+		log_verbose "$result"
+		delete_namespace "$1"
+		exit 1
+	fi
+
+	if [[ "$(jq --arg tenantName "$1" '.[] | select(.Name==$tenantName)' <<< "$result")" ]]; then
+		tenant_found=1
+		break
+	fi
+
+	sleep "$i"
+done
+
+delete_namespace "$1"
+if (( tenant_found )); then
+	log_message "Romana tenant created for namespace '$1'"
+	exit 0
+else
+	log_message "Romana tenant not found for namespace '$1'"
+	exit 1
+fi

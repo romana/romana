@@ -31,3 +31,8 @@ command: kubectl-run
 args: test-77 --image=alpine --replicas=3 --command -- sleep 18446744073709551615
 description: Check that kubernetes can launch some pods
 labels: kube-master, pods
+
+command: romana-kube-namespace-integration
+args: test-88
+description: Check namespace creation triggers romana tenant creation
+labels: kube-master, namespaces
