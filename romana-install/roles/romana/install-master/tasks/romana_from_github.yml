@@ -12,7 +12,7 @@
   file: path="/var/tmp/gopath" mode=0775 state=directory
 
 - name: Clone romana core repo into GOPATH
-  git: repo="{{ romana_core_repo }}" version="{{ romana_core_branch }}" dest="/var/tmp/gopath/src/github.com/romana/core"
+  git: repo="{{ romana_core_repo }}" version="{{ romana_core_branch }}" dest="/var/tmp/gopath/src/github.com/romana/core" key_file={{ github_key|default(omit) }} ssh_opts={{ git_ssh_options }}
 
 - name: Copy a build script
   copy: src="build_romana_core" dest="/var/tmp/build_romana_core" mode=0755

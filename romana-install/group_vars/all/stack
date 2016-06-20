@@ -1,5 +1,6 @@
 stack_password: "secrete"
 romana_ssh_key: "romana_id_rsa"
+git_ssh_options: "-o StrictHostKeyChecking=no"
 compute_nodes: 1
 
 romana_master_ip: "{{ hostvars[groups.controller[0]].lan_ip }}"
