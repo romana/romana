@@ -9,11 +9,10 @@
   tasks:
     - name: Copy test scripts to all devstack nodes
       synchronize: src="../test/openstack-cluster/" dest="{{ test_dir }}/"
-    - name: Delete log file if present
-      file: path="{{ test_logfile }}" state=absent
 
 - hosts: devstack_controller
   tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l openstack -l services >> {{ test_logfile }}
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
 
 - hosts: devstack_computes

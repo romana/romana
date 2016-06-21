@@ -1,0 +1,48 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Uknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+if (( $# == 0 )); then
+	log_message "No services to check."
+	exit 1
+fi
+
+if [[ -f $HOME/.profile ]]; then
+	source "$HOME/.profile"
+elif [[ -f $HOME/.bash_profile ]]; then
+	source "$HOME/.bash_profile"
+fi
+
+errors=0
+for service in "$@"; do
+	if result=$(openstack service show "$service" -f value -c id 2>&1); then
+		log_verbose "Service $service is running. id(s)=$result"
+	else
+		log_verbose "Service $service not running. Error was '$result'"
+		(( errors++ ))
+	fi
+done
+if (( errors )); then
+	log_message "Failure checking for services. ($errors/${#@}) not OK."
+	exit 1
+fi
+log_message "All ${#@} services OK."

@@ -7,3 +7,8 @@ command: services_running
 args: romana-agent
 description: Check that Romana services are running on minion
 labels: romana-agent, services
+
+command: openstack-services
+args: keystone glance neutron nova
+description: Check that openstack services are present
+labels: openstack, services
