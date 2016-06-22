@@ -1,0 +1,146 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+defer_i=()
+defer_l=()
+defer_v=()
+defer() {
+	defer_i+=( "${#defer_v[@]}" )
+	defer_l+=( "${#@}" )
+	defer_v+=( "$@" )
+}
+run_defers() {
+	exit_code=$?
+	for ((i=${#defer_i[@]}-1;i>=0;i--)); do
+		"${defer_v[@]:${defer_i[i]}:${defer_l[i]}}"
+	done
+	exit "$exit_code"
+}
+
+trap 'run_defers' EXIT
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Unknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+tenant_name="e2e-test-1"
+
+kube_apiserver=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "romana-cni-cluster")].cluster.server}')
+if ! [[ "$kube_apiserver" ]]; then
+	log_message "kubectl configuration missing expected items"
+	exit 1
+fi
+
+if ! kubectl create namespace "$tenant_name"; then
+	log_message "Namespace creation problem."
+	exit 1
+fi
+defer kubectl delete namespace "$tenant_name"
+
+intervals=( 1 1 2 5 )
+found=0
+for i in "${intervals[@]}"; do
+	if [[ "$(romana tenant list -f json | jq --arg tenantName "$tenant_name" '.[] | select(.name==$tenantName)')" ]]; then
+		found=1
+		break
+	fi
+	sleep "$i"
+done
+if ! (( found )); then
+	log_message "Tenant not automagically created"
+	exit 1
+fi
+
+if ! kubectl run --namespace="$tenant_name" --image=nginx --labels="segment=backend" backend; then
+	log_message "Deployment creation problem (backend)"
+	exit 1
+fi
+defer kubectl --namespace="$tenant_name" delete deployment backend
+
+intervals=(1 1 2 5 8)
+backend_ready=0
+for i in "${intervals[@]}"; do
+	{ read -r replicas; read -r available; } < <(kubectl --namespace="$tenant_name" get deployment backend -o json | jq '.spec.replicas, .status.availableReplicas')
+	if [[ "$replicas" ]] && ! [[ "$replicas" = "null" ]] && [[ "$available" ]] && ! [[ "$available" = "null" ]]; then
+		if (( replicas == available )); then
+			backend_ready=1
+			break
+		fi
+	fi
+	sleep "$i"
+done
+if ! (( backend_ready )); then
+	log_message "Deployment spinup problem (backend)"
+	exit 1
+fi
+
+if ! kubectl run --namespace="$tenant_name" --image=cirros --labels="segment=frontend" frontend -- /bin/sleep 18446744073709551615; then
+	log_message "Deployment creation problem (frontend)"
+	exit 1
+fi
+defer kubectl --namespace="$tenant_name" delete deployment frontend
+
+intervals=(1 1 2 5 8)
+frontend_ready=0
+for i in "${intervals[@]}"; do
+	{ read -r replicas; read -r available; } < <(kubectl --namespace="$tenant_name" get deployment frontend -o json | jq '.spec.replicas, .status.availableReplicas')
+	if [[ "$replicas" ]] && ! [[ "$replicas" = "null" ]] && [[ "$available" ]] && ! [[ "$available" = "null" ]]; then
+		if (( replicas == available )); then
+			frontend_ready=1
+			break
+		fi
+	fi
+	sleep "$i"
+done
+if ! (( frontend_ready )); then
+	log_message "Deployment spinup problem (frontend)"
+	exit 1
+fi
+
+# Get the backend pod IP
+backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="segment=backend" -o json | jq -r '.items[0].status.podIP')
+if ! [[ "$backend_ip" ]] || [[ "$backend_ip" = "null" ]]; then
+	log_message "Failed to get backend IP"
+	exit 1
+fi
+
+# Get the frontend pod name
+frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="segment=frontend" -o json | jq -r '.items[0].metadata.name')
+if ! [[ "$frontend_podname" ]] || [[ "$frontend_podname" = "null" ]]; then
+	log_message "Failed to get frontend podname"
+	exit 1
+fi
+
+if kubectl --namespace="$tenant_name" exec "$frontend_podname" -- curl -s "$backend_ip" --connect-timeout 3 2>/dev/null; then
+	log_message "Connected from frontend to backend (not expected)"
+	exit 1
+fi
+
+# Add policy permitting frontend -> backend
+if ! curl -X POST -H 'Content-Type: application/json' -d @frontend-to-backend.json "$kube_apiserver/apis/romana.io/demo/v1/namespaces/$tenant_name/networkpolicys"; then
+	log_message "Error POST-ing policy for frontend-to-backend"
+	exit 1
+fi
+defer curl -X DELETE "$kube_apiserver/apis/romana.io/demo/v1/namespaces/$tenant_name/networkpolicys/pol1"
+
+# Expect the kube-exec-curl command to succeed this time
+if ! kubectl --namespace="$tenant_name" exec "$frontend_podname" -- curl -s "$backend_ip" --connect-timeout 3 2>/dev/null; then
+	log_message "Unable to connect from frontend to backend"
+	exit 1
+fi
