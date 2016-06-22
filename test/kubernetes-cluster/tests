@@ -23,8 +23,8 @@ description: Ensure the list of hosts configured for Romana matches the list of 
 labels: romana-master, kube-master
 
 command: docker-pull
-args: nginx
-description: Pull the nginx docker container
+args: alpine nginx
+description: Pull docker containers used in later tests
 labels: kube-minion, docker
 
 command: kubectl-run

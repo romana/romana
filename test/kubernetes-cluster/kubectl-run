@@ -58,7 +58,7 @@ for i in "${intervals[@]}"; do
 done
 
 log_verbose "Deleting 'deployments/$1'"
-kubectl delete "deployments/$1" &>/dev/null
+kubectl delete deployment "$1" &>/dev/null
 
 if [[ "$status" == "ok" ]]; then
 	log_message "All OK."
