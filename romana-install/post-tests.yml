@@ -60,14 +60,14 @@
   - name: Restart services
     become: true
     become_user: root
-    service: name="{{ item }}" state="started"
+    service: name="{{ item }}" state="restarted"
     with_items:
       - dnsmasq-calico
     when: stack_type in [ "devstack", "openstack" ]
   - name: Restart services
     become: true
     become_user: root
-    service: name="{{ item }}" state="started"
+    service: name="{{ item }}" state="restarted"
     with_items:
       - romana-agent
       - romana-policy-agent
