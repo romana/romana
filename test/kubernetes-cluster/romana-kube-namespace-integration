@@ -59,7 +59,7 @@ for i in "${intervals[@]}"; do
 		exit 1
 	fi
 
-	if [[ "$(jq --arg tenantName "$1" '.[] | select(.name==$tenantName)' <<< "$result")" ]]; then
+	if [[ "$(jq --arg tenantName "$1" '.[] | select(.Name==$tenantName)' <<< "$result")" ]]; then
 		tenant_found=1
 		break
 	fi
