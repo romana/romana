@@ -45,7 +45,7 @@ while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
 	exit 0
 	;;
 -*)
-	log_message "Uknown option '$1'"
+	log_message "Unknown option '$1'"
 	exit 1
 	;;
 esac; done
