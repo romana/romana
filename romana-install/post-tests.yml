@@ -50,7 +50,7 @@
   - name: Re-run post-install script
     command: /var/tmp/romana-post-install.sh
 
-- hosts: computes
+- hosts: stack_nodes
   tasks:
   - name: Truncate /etc/ethers
     become: true
