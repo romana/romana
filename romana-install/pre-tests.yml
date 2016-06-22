@@ -1,0 +1,7 @@
+---
+- hosts: stack_nodes
+  tasks:
+    - name: Capture iptables state (for later restore)
+      become: true
+      become_user: root
+      shell: iptables-save > /var/tmp/iptables-rules

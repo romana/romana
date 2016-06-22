@@ -257,7 +257,9 @@ case "$platform" in
 				ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
 				;;
 			test)
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-tests.yml
 				[[ -f "${stack_data_dir}/clustertests.log" ]] && cat "${stack_data_dir}/clustertests.log"
 				;;
 			*)
