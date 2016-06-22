@@ -26,3 +26,4 @@
   tasks:
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l namespaces >> {{ test_logfile }}
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l pods >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l e2e >> {{ test_logfile }}

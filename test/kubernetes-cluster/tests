@@ -36,3 +36,7 @@ command: romana-kube-namespace-integration
 args: test-88
 description: Check namespace creation triggers romana tenant creation
 labels: kube-master, namespaces
+
+command: tenant-frontend-backend
+description: End-to-End test checking default-allow, isolation and policy-allow
+labels: kube-master, e2e
