@@ -40,6 +40,13 @@
       - tenant
       - ipam
       - policy
+  - name: Restart services
+    become: true
+    become_user: root
+    service: name="romana-{{ item }}" state="restarted"
+    with_items:
+       - kube-listener
+    when: stack_type == "kubernetes"
   - name: Re-run post-install script
     command: /var/tmp/romana-post-install.sh
 
@@ -49,12 +56,19 @@
     become: true
     become_user: root
     copy: content='' dest="/etc/ethers" force=yes
+    when: stack_type in [ "devstack", "openstack" ]
   - name: Restart services
     become: true
     become_user: root
     service: name="{{ item }}" state="started"
     with_items:
       - dnsmasq-calico
+    when: stack_type in [ "devstack", "openstack" ]
+  - name: Restart services
+    become: true
+    become_user: root
+    service: name="{{ item }}" state="started"
+    with_items:
       - romana-agent
       - romana-policy-agent
 
