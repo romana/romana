@@ -18,3 +18,7 @@
 - hosts: devstack_computes
   tasks:
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-agent -l services >> {{ test_logfile }}
+
+- hosts: devstack_controller
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l openstack -l endpoints >> {{ test_logfile }}
