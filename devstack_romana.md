@@ -126,16 +126,8 @@ ubuntu@ip-192-168-99-10:~$ nova list
 +--------------------------------------+------------------+--------+------------+-------------+------------------+
 ```
 
-Connect to an instance in `frontend`, eg: `fe-1`
-```sh-session
-ubuntu@ip-192-168-99-10:~$ ssh cirros@10.0.18.3
-The authenticity of host '10.0.18.3 (10.0.18.3)' can't be established.
-RSA key fingerprint is d9:4c:80:c4:cc:46:1b:0d:26:14:d1:b3:9c:b3:b1:1d.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '10.0.18.3' (RSA) to the list of known hosts.
-$ 
-```
-Check that we can reach other hosts within the segment
+Now connect to an instance from horizon [no-vnc console](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/6/html/Administration_Guide/chap-virtual-machines.html#section-connect-console)
+and check that we can reach other VMs within the segment
 ```sh-session
 $ ping 10.0.18.4
 PING 10.0.18.4 (10.0.18.4): 56 data bytes
