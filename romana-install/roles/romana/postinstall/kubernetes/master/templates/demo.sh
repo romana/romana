@@ -49,6 +49,13 @@ function get_pods() {
 function get_pod_ip() {
     kubectl ${2:+--namespace "$2"} get pod "$1" -o json | jq -r '.status.podIP'
 }
+function delete_tenant() {
+    TENANT_ID=$(mysql -s --disable-column-names -u root --password={{ stack_password }} tenant --execute='select id from tenants where name="'"$1"'"')
+    if [[ $TENANT_ID ]]; then
+        mysql -u root --password={{ stack_password }} tenant --execute='delete from tenants where id='$TENANT_ID
+        mysql -u root --password={{ stack_password }} tenant --execute='delete from segments where tenant_id='$TENANT_ID
+    fi
+}
 
 SSH_NODE=$(kubectl get nodes | tail -1 | cut -f1 -d' ')
 trap "echo" EXIT
@@ -100,4 +107,4 @@ desc "this permits us to connect from frontend to backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "Demo completed (cleaning up)"
-run "curl -X DELETE http://{{ romana_master_ip }}:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys/pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default"
+run "curl -X DELETE http://{{ romana_master_ip }}:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicys/pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default; delete_tenant 'tenant-a'"
