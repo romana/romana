@@ -57,6 +57,14 @@ stack_type="devstack"
 cluster_nodes=""
 required=( ansible ansible-playbook )
 
+core_source=
+core_branch=
+networking_branch=
+kube_branch=
+github_key=
+github_user=
+github_repo=
+
 # Process command-line options
 if (( $# > 0 )); then 
 	while [[ $1 == -* ]]; do
@@ -131,6 +139,35 @@ if (( $# > 0 )); then
 				;;
 			-c|--cluster-nodes)
 				cluster_nodes="$2"
+				shift 2
+				;;
+# Options for core developers. Not for general users, so excluded from usage/documentation
+			--source)
+				core_source="github"
+				shift
+				;;
+			--core-branch)
+				core_branch="$2"
+				shift 2
+				;;
+			--networking-branch)
+				networking_branch="$2"
+				shift 2
+				;;
+			--kube-branch)
+				kube_branch="$2"
+				shift 2
+				;;
+			--github-key)
+				github_key="$2"
+				shift 2
+				;;
+			--github-user)
+				github_user="$2"
+				shift 2
+				;;
+			--github-repo)
+				github_repo="$2"
 				shift 2
 				;;
 			*)
@@ -226,6 +263,31 @@ fi
 # Needs JSON format so Ansible treats it as an integer
 if [[ "$cluster_nodes" ]]; then
 	ansible_args+=( -e '{ "compute_nodes": '"$((cluster_nodes - 1))"'}')
+fi
+
+# Change install source
+if [[ "$core_source" ]]; then
+	ansible_args+=( -e romana_core_source="$core_source" )
+fi
+# Change source repo url
+if [[ "$github_repo" ]]; then
+	ansible_args+=( -e romana_repo_path="$core_source" )
+elif [[ "$github_user" ]]; then
+	ansible_args+=( -e romana_repo_path="git@github.com:$github_user" )
+fi
+# Change branches to pull
+if [[ "$core_branch" ]]; then
+	ansible_args+=( -e romana_core_branch="$core_branch" )
+fi
+if [[ "$networking_branch" ]]; then
+	ansible_args+=( -e romana_networking_branch="$networking_branch" )
+fi
+if [[ "$kube_branch" ]]; then
+	ansible_args+=( -e romana_kube_branch="$kube_branch" )
+fi
+# Change github key
+if [[ "$github_key" ]]; then
+	ansible_args+=( -e github_key="$github_key" )
 fi
 
 case "$platform" in

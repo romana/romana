@@ -3,6 +3,9 @@
   become: true
   become_user: root
 
+- name: Clone networking-romana repo
+  git: repo="{{ romana_networking_repo }}" version="{{ romana_networking_branch }}" dest="/var/tmp/networking-romana" key_file={{ github_key|default(omit) }} ssh_opts={{ git_ssh_options }} ssh_opts={{ git_ssh_options }}
+
 - name: Install controller local.conf
   template: src="local.conf" dest="~/devstack/local.conf"
 

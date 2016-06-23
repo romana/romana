@@ -1,3 +1,3 @@
 ---
 - name: Get the romana/kube repository
-  git: repo="https://github.com/romana/kube" version="{{ romana_kube_branch }}" dest="{{ kubernetes_x_dir}}/kube"
+  git: repo="{{ romana_kube_repo }}" version="{{ romana_kube_branch }}" dest="{{ kubernetes_x_dir}}/kube" key_file={{ github_key|default(omit) }} ssh_opts={{ git_ssh_options }}

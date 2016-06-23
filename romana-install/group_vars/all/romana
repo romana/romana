@@ -5,7 +5,10 @@ romana_networking_branch: "v0.9.1-stable/liberty"
 
 # Install from Github or S3 bucket
 romana_core_source: "s3"
-romana_core_repo:   "https://github.com/romana/core"
+romana_repo_path:   "https://github.com/romana"
+romana_core_repo:   "{{ romana_repo_path }}/core"
+romana_kube_repo:   "{{ romana_repo_path }}/kube"
+romana_networking_repo:    "{{ romana_repo_path }}/networking-romana"
 
 # Paths
 romana_bin_dir: "/usr/local/bin"
