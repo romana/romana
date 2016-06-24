@@ -29,5 +29,5 @@
   when: not kh.stat.exists
 
 - name: Copy github key
-  copy: src="{{ github_key }}" dest="~/.ssh/" mode=0600
+  copy: src="{{ github_key }}" dest="~/.ssh/github_id_rsa" mode=0600
   when: github_key is defined
