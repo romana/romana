@@ -75,17 +75,13 @@ ubuntu@ip-192-168-99-10:~$ nova list
 
 ```
 
-A new instance was created, and the IP address `10.0.17.3` was assigned to it. You can SSH into this from the host it was created on.
+A new instance was created, and the IP address `10.0.17.3` was assigned to it.
+You can log into this instance from horizon [no-vnc console](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/6/html/Administration_Guide/chap-virtual-machines.html#section-connect-console).
+If you need to login into this instance from another host then you need to apply
+[romana policy](https://github.com/romana/core/blob/master/policy/examples/tcp-policy.json)
+using the steps provided [here](https://github.com/romana/core/blob/master/policy/README.md).
 We can also see from the IP address's network prefix (`10.0/16`) that this instance was created on host `ip-192-168-99-10`. (See the `romana host list` details above.)
 
-```
-ubuntu@ip-192-168-99-10:~$ ssh cirros@10.0.17.3
-The authenticity of host '10.0.17.3 (10.0.17.3)' can't be established.
-RSA key fingerprint is f6:2a:53:3c:e6:62:62:52:6b:17:ba:53:23:1f:c8:3d.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '10.0.17.3' (RSA) to the list of known hosts.
-$ 
-```
 
 ## Details
 
@@ -127,7 +123,10 @@ ubuntu@ip-192-168-99-10:~$ nova list
 ```
 
 Now connect to an instance from horizon [no-vnc console](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/6/html/Administration_Guide/chap-virtual-machines.html#section-connect-console)
-and check that we can reach other VMs within the segment
+and check that we can reach other instances within the segment
+if [romana icmp policy](https://github.com/romana/core/blob/master/policy/examples/icmp-policy.json)
+is applied, else re-apply the policy as shown [here](https://github.com/romana/core/blob/master/policy/README.md)
+and retry connecting.
 ```sh-session
 $ ping 10.0.18.4
 PING 10.0.18.4 (10.0.18.4): 56 data bytes
