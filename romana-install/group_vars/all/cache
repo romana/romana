@@ -1,4 +1,5 @@
 cache_enabled: True
+cache_update:  True
 
-cache_dir: "/var/tmp/romana-setup/cache"
+cache_dir: "stacks/cache"
 cache_url: "https://s3-us-west-1.amazonaws.com/romana-binaries/romana-setup/cache"

@@ -11,6 +11,7 @@ romana_kube_repo:   "{{ romana_repo_path }}/kube"
 romana_networking_repo:    "{{ romana_repo_path }}/networking-romana"
 
 # Paths
+romana_dl_dir: "/var/tmp/romana"
 romana_bin_dir: "/usr/local/bin"
 romana_lib_dir: "/usr/local/lib"
 romana_etc_dir: "/etc/romana"
