@@ -1,0 +1,7 @@
+---
+- name: Create cache directory
+  file: path="{{ cache_dir }}/romana/{{ romana_core_branch }}" state="directory"
+
+- name: Copy romana files
+  synchronize: mode="pull" src="{{ romana_dl_dir }}/" dest="{{ cache_dir }}/romana/{{ romana_core_branch }}/"
+  failed_when: false

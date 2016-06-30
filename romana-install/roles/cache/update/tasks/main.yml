@@ -14,3 +14,6 @@
       - "{{ stack_type }}_files.yml"
       skip: true
   when: cache_update and platform in [ "vagrant", "static" ]
+
+- include: "romana.yml"
+  when: cache_update and platform in [ "vagrant", "static" ]
