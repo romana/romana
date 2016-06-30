@@ -1,4 +1,7 @@
 ---
+- name: Create download path
+  file: path="{{ romana_dl_dir }}" state="directory"
+
 - name: Download binaries
   get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_dl_dir }}/{{ item }}" mode=0755
   with_items:
