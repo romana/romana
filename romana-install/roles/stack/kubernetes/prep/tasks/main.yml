@@ -1,6 +1,10 @@
 ---
-- include: kube_download.yml
-- include: romana_kube.yml
-- include: kube_files.yml
+- name: kubernetes config directory
   become: true
   become_user: root
+  file: path="/etc/kubernetes" state="directory" owner=root group=root
+
+- name: kubernetes config file
+  become: true
+  become_user: root
+  template: src="config" dest="/etc/kubernetes/config"
