@@ -1,14 +1,34 @@
 ---
 - name: kubernetes minion config files
+  become: true
+  become_user: root
   template: src="kubernetes/{{ item }}" dest="/etc/kubernetes/{{ item }}"
   with_items:
     - kubelet
     - proxy
 
+- name: Create kubernetes tmp directory
+  file: path="{{ kubernetes_x_dir }}/kubernetes/server/bin" state="directory"
+
+- name: Sync kubernetes binaries from master
+  command: rsync -az "{{ romana_master_ip }}:{{ kubernetes_x_dir}}/kubernetes/server/bin/{{ item }}" "{{ kubernetes_x_dir}}/kubernetes/server/bin/{{ item }}"
+  with_items:
+    - kubectl
+    - kubelet
+    - kube-proxy
+  when: inventory_hostname not in groups.kube_master
+
 - name: kubernetes binaries
+  become: true
+  become_user: root
   command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kubernetes/server/bin/{{ item }} /usr/local/bin/{{ item }}
   args:
     creates: /usr/local/bin/{{ item }}
   with_items:
+    - kubectl
     - kubelet
     - kube-proxy
+
+- name: Get the romana/kube repository
+  git: repo="{{ romana_kube_repo }}" version="{{ romana_kube_branch }}" dest="/var/tmp/kube" key_file={{ github_key|default(omit) }} ssh_opts={{ git_ssh_options }}
+
