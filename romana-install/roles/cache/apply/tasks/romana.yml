@@ -1,0 +1,4 @@
+---
+- name: Copy romana files
+  synchronize: src="{{ cache_dir }}/romana/{{ romana_core_branch }}/" dest="/var/tmp/romana/"
+  failed_when: false
