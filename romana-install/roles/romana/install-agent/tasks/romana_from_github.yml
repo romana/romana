@@ -3,9 +3,11 @@
   with_items:
     - agent
     - romana
+  when: inventory_hostname not in groups.controller
 
 - name: Copy policy agent from master
   command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/src/github.com/romana/core/pkg/util/policy/agent/agent.py" "/var/tmp/agent.py"
+  when: inventory_hostname not in groups.controller
 
 - name: Install files
   become: true
