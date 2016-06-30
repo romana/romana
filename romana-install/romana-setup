@@ -245,6 +245,10 @@ esac; fi
 stack_data_dir="stacks/${stack_name}_${platform}_${distro}_${stack_type}"
 mkdir -p "${stack_data_dir}"
 
+mkdir -p "stacks/cache"
+mkdir -p "stacks/cache/$stack_type"
+mkdir -p "stacks/cache/romana"
+
 ansible_args=( -e stack_name="$stack_name" -e platform="$platform" -e distro="$distro" -e stack_type="$stack_type" -e stack_data_dir="$stack_data_dir" )
 
 # Add an EC2 keypair to the instance if there's one defined.
