@@ -6,9 +6,11 @@
   apt_key: keyserver="hkp://p80.pool.sks-keyservers.net:80" id="58118E89F3A912897C070ADBF76221572C52609D"
   retries: 3
   delay: 5
+  register: docker_key
 
 - name: Update apt cache
   apt: update_cache=yes
+  when: docker_key.changed
 
 - name: Install additional packages
   apt: pkg="{{ item }}"
