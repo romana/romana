@@ -275,7 +275,7 @@ if [[ "$core_source" ]]; then
 fi
 # Change source repo url
 if [[ "$github_repo" ]]; then
-	ansible_args+=( -e romana_repo_path="$core_source" )
+	ansible_args+=( -e romana_repo_path="$github_repo" )
 elif [[ "$github_user" ]]; then
 	ansible_args+=( -e romana_repo_path="git@github.com:$github_user" )
 fi

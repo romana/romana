@@ -15,6 +15,7 @@ romana_dl_dir: "/var/tmp/romana"
 romana_bin_dir: "/usr/local/bin"
 romana_lib_dir: "/usr/local/lib"
 romana_etc_dir: "/etc/romana"
+romana_db_dir: "/var/lib/romana"
 
 # Network
 romana_cidr: 10.0.0.0/8

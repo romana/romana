@@ -4,3 +4,5 @@
         
 - name: Execute romana post-install script
   shell: /var/tmp/romana-post-install.sh
+  notify:
+  - restart kubernetes listener

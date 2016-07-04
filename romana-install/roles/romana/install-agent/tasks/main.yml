@@ -1,4 +1,9 @@
 ---
+- name: Prep stage before installing Romana binaries
+  become: true
+  become_user: root
+  include: "romana_prep.yml"
+
 - include: network.yml
   become: true
   become_user: root

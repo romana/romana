@@ -63,6 +63,9 @@ services:
     config:
       lease_file : "/etc/ethers"
       wait_for_iface_try: 6
+      store:
+        type: sqlite3
+        database: {{ romana_db_dir }}/agent.db
   - service: policy
     api:
       host: {{ romana_master_ip }}
