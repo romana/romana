@@ -1,0 +1,8 @@
+---
+- name: Ensure install paths exist
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "{{ romana_bin_dir }}"
+    - "{{ romana_lib_dir }}"
+    - "{{ romana_etc_dir }}"
+    - "{{ romana_db_dir }}"
