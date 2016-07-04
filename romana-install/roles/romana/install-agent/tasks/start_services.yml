@@ -1,4 +1,9 @@
 ---
+- name: Execute first-run for agent service
+  shell: "{{ romana_bin_dir }}/{{ item }} -overwriteSchema -rootURL http://{{ romana_master_ip }}:9600"
+  with_items:
+    - agent
+
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
