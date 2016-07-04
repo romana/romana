@@ -1,0 +1,4 @@
+---
+- name: Synchronize apt cache to hosts
+  synchronize: src="{{ cache_dir }}/{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}_apt/" dest="/var/cache/apt/archives/"
+  failed_when: false

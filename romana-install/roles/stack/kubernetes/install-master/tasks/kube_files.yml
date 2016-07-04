@@ -28,6 +28,7 @@
   args:
     creates: /usr/local/bin/{{ item }}
   with_items:
+    - kubectl
     - kube-apiserver
     - kube-scheduler
     - kube-controller-manager

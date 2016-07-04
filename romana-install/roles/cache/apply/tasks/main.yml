@@ -1,0 +1,21 @@
+---
+# OS Files
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "repo_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      skip: true
+  become: true
+  become_user: root
+  when: cache_enabled and platform in [ "vagrant", "static" ]
+ 
+# Stack Files
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ stack_type }}_files.yml"
+      skip: true
+  when: cache_enabled and platform in [ "vagrant", "static" ]
+
+- include: "romana.yml"
+  when: cache_enabled and platform in [ "vagrant", "static" ]

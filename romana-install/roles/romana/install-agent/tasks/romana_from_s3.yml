@@ -1,24 +1,35 @@
 ---
-- name: Remove if binaries exist
-  become: true
-  become_user: root
-  file: path="{{ romana_bin_dir }}/{{ item }}" state=absent
+- name: Download binaries
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_dl_dir }}/{{ item }}" mode=0755
   with_items:
     - agent
-    - romana
-
-- name: Download latest binaries
-  become: true
-  become_user: root
-  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_bin_dir }}/{{ item }}" mode=0755
-  with_items:
-    - agent
-    - romana
+  when: inventory_hostname in groups.controller
 
 - name: Copy policy-agent from github
+  get_url: url=https://raw.githubusercontent.com/romana/core/{{ romana_core_branch }}/pkg/util/policy/agent/agent.py dest={{ romana_dl_dir }}/agent.py mode=0755
+  when: inventory_hostname in groups.controller
+
+- name: Create download path
+  file: path="{{ romana_dl_dir }}" state="directory"
+  when: inventory_hostname not in groups.controller
+
+- name: Copy binaries from master
+  command: rsync -az "{{ romana_master_ip }}:{{ romana_dl_dir }}/{{ item }}" "{{ romana_dl_dir }}/{{ item }}"
+  with_items:
+    - agent
+    - romana
+    - agent.py
+  when: inventory_hostname not in groups.controller
+
+- name: Install files
   become: true
   become_user: root
-  get_url: url=https://raw.githubusercontent.com/romana/core/{{ romana_core_branch }}/pkg/util/policy/agent/agent.py dest=/var/tmp/agent.py mode=0755
+  command: install -o root -g root -m 0755 "{{ romana_dl_dir }}/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
+  with_items:
+    - agent
+    - romana
+    - agent.py
 
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
+  when: inventory_hostname not in groups.controller

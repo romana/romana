@@ -9,4 +9,4 @@
   file: path="/opt/cni/bin" state="directory"
 
 - name: CNI plugin executable
-  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kube/CNI/romana /opt/cni/bin/romana
+  command: install -o root -g root -m 0755 /var/tmp/kube/CNI/romana /opt/cni/bin/romana

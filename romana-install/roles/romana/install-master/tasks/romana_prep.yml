@@ -1,5 +1,5 @@
 ---
-- name: Ensure install path exists
+- name: Ensure install paths exist
   file: path="{{ item }}" state=directory
   with_items:
     - "{{ romana_bin_dir }}"
@@ -8,4 +8,3 @@
 
 - name: Install config file
   template: src="config/romana.conf.yml" dest="{{ romana_etc_dir }}/romana.conf.yml" mode=0644
-

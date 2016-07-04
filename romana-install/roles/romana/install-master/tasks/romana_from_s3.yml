@@ -1,8 +1,9 @@
 ---
-- name: Remove existing binaries
-  become: true
-  become_user: root
-  file: path="{{ romana_bin_dir }}/{{ item }}" state=absent
+- name: Create download path
+  file: path="{{ romana_dl_dir }}" state="directory"
+
+- name: Download binaries
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_dl_dir }}/{{ item }}" mode=0755
   with_items:
     - ipam
     - root
@@ -11,10 +12,10 @@
     - romana
     - policy
 
-- name: Download latest binaries
+- name: Install binaries
   become: true
   become_user: root
-  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_bin_dir }}/{{ item }}" mode=0755
+  command: install -o root -g root -m 0755 "{{ romana_dl_dir }}/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
   with_items:
     - ipam
     - root

@@ -9,6 +9,14 @@
 # Include platform-specific networking data
 - include: "network.{{ platform }}.yml"
 
+# Include stack-specific groupings
+- include: "groups.{{ stack_type }}.yml"
+
+# Push files from local cache
+- hosts: controller
+  roles:
+    - cache/apply
+
 # Apply common settings to all nodes prior to installation
 - hosts: stack_nodes
   roles:
@@ -31,6 +39,10 @@
 
 # Stack-specific postinstall after installing agent
 - include: "post-agent.{{ stack_type }}.yml"
+
+- hosts: controller
+  roles:
+    - cache/update
 
 # Generate a summary
 - hosts: localhost

@@ -1,8 +1,30 @@
 ---
 - name: Perform a "safe" upgrade
+  become: true
+  become_user: root
   apt: update_cache=yes upgrade=safe
+  when: inventory_hostname in groups.controller or platform not in [ "vagrant", "static" ]
+
+- name: Sync apt cache from controller node
+  command: rsync -az '--include=*.deb' '--exclude=*' "{{ romana_master_ip }}:/var/cache/apt/archives/" "/var/tmp/apt_cache/"
+  when: inventory_hostname not in groups.controller and platform in [ "vagrant", "static" ]
+
+- name: Move to apt archive directory
+  become: true
+  become_user: root
+  synchronize: src="/var/tmp/apt_cache/" dest="/var/cache/apt/archives/" delete=yes
+  delegate_to: inventory_hostname
+  when: inventory_hostname not in groups.controller and platform in [ "vagrant", "static" ]
+
+- name: Perform a "safe" upgrade
+  become: true
+  become_user: root
+  apt: update_cache=yes upgrade=safe
+  when: inventory_hostname not in groups.controller and platform in [ "vagrant", "static" ]
 
 - name: Install additional packages
+  become: true
+  become_user: root
   apt: pkg={{ item }} state=latest
   with_items:
     - git
