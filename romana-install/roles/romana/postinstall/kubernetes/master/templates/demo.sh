@@ -92,7 +92,7 @@ desc "we can add isolation too. Let's see that. Quick cleanup first"
 run "kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; sleep 5"
 
 desc "enable isolation for 'tenant-a' namespace."
-run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.alpha.kubernetes.io/network-isolation=on'"
+run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.beta.kubernetes.io/networkpolicy={\"ingress\": {\"isolation\": \"DefaultDeny\"}}'"
 
 desc "create the frontend and backend pods"
 run "kubectl create -f pod-frontend.yaml; kubectl create -f pod-backend.yaml; sleep 5"
@@ -101,10 +101,10 @@ desc "let's try to have the frontend load data from the backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "now let's add a policy that permits frontend to connect to the backend"
-run "curl -X POST -H 'Content-Type: application/yaml' -d @romana-np-frontend-to-backend.yml http://{{ romana_master_ip }}:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicies; sleep 5"
+run "curl -X POST -H 'Content-Type: application/yaml' -d @romana-np-frontend-to-backend.yml http://{{ romana_master_ip }}:8080/apis/extensions/v1beta1/namespaces/tenant-a/networkpolicies; sleep 5"
 
 desc "this permits us to connect from frontend to backend"
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
 
 desc "Demo completed (cleaning up)"
-run "curl -X DELETE http://{{ romana_master_ip }}:8080/apis/romana.io/demo/v1/namespaces/tenant-a/networkpolicies/pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default; delete_tenant 'tenant-a'"
+run "curl -X DELETE http://{{ romana_master_ip }}:8080/apis/extensions/v1beta1/namespaces/tenant-a/networkpolicies/pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default; delete_tenant 'tenant-a'"
