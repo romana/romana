@@ -21,3 +21,9 @@
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-minion -l services >> {{ test_logfile }}
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-agent -l services >> {{ test_logfile }}
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-minion -l docker >> {{ test_logfile }}
+
+- hosts: kube_master
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l namespaces >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l pods >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l e2e >> {{ test_logfile }}

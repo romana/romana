@@ -16,7 +16,7 @@ while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
 	shift 1
 	;;
 -*)
-	log_message "Uknown option '$1'"
+	log_message "Unknown option '$1'"
 	exit 1
 	;;
 esac; done
@@ -31,15 +31,23 @@ if ! result=$(kubectl run "$@" 2>&1); then
 	log_verbose "$result"
 	exit 1
 fi
+log_verbose "kubectl run: $result"
+
+if ! result=$(kubectl get deployment "$1" -o name 2>&1); then
+	log_message "kubectl get deployment failed"
+	log_verbose "$result"
+	exit 1
+fi
+log_verbose "kubectl get deployment: $result"
 
 intervals=(1 1 2 5 8 15 15 15 15 15)
 status=unknown
 for i in "${intervals[@]}"; do
-	{ read -r replicas; read -r available; } < <(kubectl get "deployments/$1" -o json | jq '.status.replicas, .status.availableReplicas')
-	if [[ "$replicas" ]] && [[ "$available" ]]; then
+	{ read -r replicas; read -r available; } < <(kubectl get deployment "$1" -o json | jq '.spec.replicas, .status.availableReplicas')
+	if [[ "$replicas" ]] && ! [[ "$replicas" = "null" ]] && [[ "$available" ]] && ! [[ "$available" = "null" ]]; then
 		if (( replicas == available )); then
 			status="ok"
-			log_verbose "Deployment created successfully."
+			log_verbose "Deployment created successfully. $available / $replicas running."
 			break
 		fi
 		log_verbose "$available/$replicas ready"
@@ -50,7 +58,7 @@ for i in "${intervals[@]}"; do
 done
 
 log_verbose "Deleting 'deployments/$1'"
-kubectl delete "deployments/$1" &>/dev/null
+kubectl delete deployment "$1" &>/dev/null
 
 if [[ "$status" == "ok" ]]; then
 	log_message "All OK."

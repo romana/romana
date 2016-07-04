@@ -1,0 +1,3 @@
+test_dir:     "/var/tmp/cluster-tests"
+test_script:  "{{ test_dir }}/clustertests"
+test_logfile: "{{ test_dir }}/clustertests.log"

@@ -1,38 +1,18 @@
 ---
 - hosts: localhost
   tasks:
-    - debug: msg="{{ ansible_user_dir }}"
     - name: Remove persistent connection sockets, force new connection
       shell: rm -f {{ ansible_user_dir }}/.ansible/cp/ansible-ssh-* &>/dev/null
 
 # Copy clustertests script
 - hosts: stack_nodes
   tasks:
-    - set_fact:
-        test_dir:     "/var/tmp/cluster-tests"
-    - set_fact:
-        test_script:  "{{ test_dir }}/clustertests"
-        test_logfile: "{{ test_dir }}/clustertests.log"
     - name: Create cluster-tests directory
       file: path="{{ test_dir }}" state=directory
     - name: Copy test script
       synchronize: src="../test/clustertests" dest="{{ test_script }}"
-    - name: Delete log file if present
-      file: path="{{ test_logfile }}" state=absent
     - name: Create empty log file
-      file: path="{{ test_logfile }}" state=touch
+      copy: content='' dest="{{ test_logfile }}" force=yes
        
 # Include stack-specific tests, copied then executed
 - include: "tests.{{ stack_type }}.yml"
-
-# Pull the log files
-- hosts: stack_nodes
-  tasks:
-    - synchronize: mode=pull src="{{ test_logfile }}" dest="./{{ stack_data_dir }}/{{ inventory_hostname }}_clustertests.log"
-
-# Merge the files together (in inventory order)
-- hosts: localhost
-  tasks:
-    - file: path="./{{ stack_data_dir }}/clustertests.log" state=absent
-    - shell: cat "./{{ stack_data_dir }}/{{ item }}_clustertests.log" >> "./{{ stack_data_dir }}/clustertests.log"
-      with_items: "{{ groups.stack_nodes | default([]) }}"

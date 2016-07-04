@@ -1,0 +1,179 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+defer_i=()
+defer_l=()
+defer_v=()
+defer() {
+	defer_i+=( "${#defer_v[@]}" )
+	defer_l+=( "${#@}" )
+	defer_v+=( "$@" )
+}
+run_defers() {
+	exit_code=$?
+	for ((i=${#defer_i[@]}-1;i>=0;i--)); do
+		"${defer_v[@]:${defer_i[i]}:${defer_l[i]}}"
+	done
+	exit "$exit_code"
+}
+
+trap 'run_defers' EXIT
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Unknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+tenant_name="e2e-test-1"
+
+kube_apiserver=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "romana-cni-cluster")].cluster.server}')
+if ! [[ "$kube_apiserver" ]]; then
+	log_message "kubectl configuration missing expected items"
+	exit 1
+fi
+
+if ! kubectl create namespace "$tenant_name"; then
+	log_message "Namespace creation problem."
+	exit 1
+fi
+defer kubectl delete namespace "$tenant_name"
+
+intervals=( 1 1 2 5 )
+found=0
+for i in "${intervals[@]}"; do
+	if [[ "$(romana tenant list -f json | jq --arg tenantName "$tenant_name" '.[] | select(.name==$tenantName)')" ]]; then
+		found=1
+		break
+	fi
+	sleep "$i"
+done
+if ! (( found )); then
+	log_message "Tenant not automagically created"
+	exit 1
+fi
+
+create_deployment() {
+	if (( $# != 3 )); then
+		log_message "create_deployment usage error ($# != 3)"
+		return 1
+	fi
+	local name="$1"
+	local image="$2"
+	local segment="$3"
+
+	if ! kubectl run --namespace="$tenant_name" --image="$image" --labels="segment=$segment" "$name"; then
+		log_message "Deployment creation problem ($name)"
+		return 1
+	fi
+
+	local intervals=(1 1 2 5 8)
+	local ready=0
+	for i in "${intervals[@]}"; do
+		{ read -r replicas; read -r available; } < <(kubectl --namespace="$tenant_name" get deployment "$name" -o json | jq '.spec.replicas, .status.availableReplicas')
+			if [[ "$replicas" ]] && ! [[ "$replicas" = "null" ]] && [[ "$available" ]] && ! [[ "$available" = "null" ]]; then
+				if (( replicas == available )); then
+					ready=1
+					break
+				fi
+			fi
+			sleep "$i"
+		done
+		if ! (( ready )); then
+			log_message "Deployment spinup problem ($name)"
+			exit 1
+		fi
+}
+
+delete_deployment() {
+	if (( $# != 1 )); then
+		log_message "delete_deployment usage error ($# != 1)"
+		return 1
+	fi
+	local name="$1"
+	if ! kubectl --namespace="$tenant_name" delete deployment "$name"; then
+		return 1
+	fi
+}
+
+test_frontend_backend() {
+	if (( $# != 1 )); then
+		log_message "test_frontend_backend usage error ($# != 1)"
+		return 1
+	fi
+	local expected_result="$1"
+
+	# Create frontend and backend
+	if ! (create_deployment backend nginx backend && create_deployment frontend cirros frontend); then
+		return 1
+	fi
+
+	# Get the backend pod IP
+	backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="segment=backend" -o json | jq -r '.items[0].status.podIP')
+	if ! [[ "$backend_ip" ]] || [[ "$backend_ip" = "null" ]]; then
+		log_message "Failed to get backend IP"
+		return 1
+	fi
+
+	# Get the frontend pod name
+	frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="segment=frontend" -o json | jq -r '.items[0].metadata.name')
+	if ! [[ "$frontend_podname" ]] || [[ "$frontend_podname" = "null" ]]; then
+		log_message "Failed to get frontend podname"
+		return 1
+	fi
+
+	if kubectl --namespace="$tenant_name" exec "$frontend_podname" -- curl -s "$backend_ip" --connect-timeout 3 2>/dev/null; then
+		result="connected"
+	else
+		result="failed"
+	fi
+
+	if ! (delete_deployment backend && delete_deployment frontend); then
+		return 1
+	fi
+	if [[ "$result" != "$expected_result" ]]; then
+		log_message "Result was $result, expected $expected_result"
+		return 1
+	fi
+}
+
+# Default allow policy, should be able to connect
+if ! test_frontend_backend "connected"; then
+	exit 1
+fi
+
+# Enable isolation
+if ! kubectl annotate --overwrite namespaces "$tenant_name" 'net.alpha.kubernetes.io/network-isolation=on'; then
+	log_message "Failed to annotate namespace"
+	exit 1
+fi
+
+# Isolation enabled, connection should fail
+if ! test_frontend_backend "failed"; then
+	exit 1
+fi
+
+# Add policy permitting frontend -> backend
+if ! curl -X POST -H 'Content-Type: application/json' -d @frontend-to-backend.json "$kube_apiserver/apis/romana.io/demo/v1/namespaces/$tenant_name/networkpolicys"; then
+	log_message "Error POST-ing policy for frontend-to-backend"
+	exit 1
+fi
+defer curl -X DELETE "$kube_apiserver/apis/romana.io/demo/v1/namespaces/$tenant_name/networkpolicys/pol1"
+
+if ! test_frontend_backend "connected"; then
+	exit 1
+fi

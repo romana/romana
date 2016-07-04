@@ -1,0 +1,129 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+defer_i=()
+defer_l=()
+defer_v=()
+defer() {
+	defer_i+=( "${#defer_v[@]}" )
+	defer_l+=( "${#@}" )
+	defer_v+=( "$@" )
+}
+run_defers() {
+	exit_code=$?
+	for ((i=${#defer_i[@]}-1;i>=0;i--)); do
+		"${defer_v[@]:${defer_i[i]}:${defer_l[i]}}"
+	done
+	exit "$exit_code"
+}
+
+trap 'run_defers' EXIT
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Unknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+if [[ -f $HOME/.profile ]]; then
+	source "$HOME/.profile"
+elif [[ -f $HOME/.bash_profile ]]; then
+	source "$HOME/.bash_profile"
+fi
+
+set -o pipefail
+
+# Retrieve romana network id
+if ! romana_net_id=$(openstack network show romana -f value -c id); then
+	log_message "Unable to retrieve romana network id from openstack"
+	exit 1
+fi
+if ! [[ "$romana_net_id" ]]; then
+	log_message "Empty romana network id from openstack"
+	exit 1
+fi
+
+# Retrieve names for availablity zones
+if ! data=$(openstack host list -f json | jq -r '.[] | select(.Zone=="nova") | select(.Service=="compute") | "\( .Zone):\(.["Host Name"])"'); then
+	log_message "Error querying openstack host list"
+	exit 1
+fi
+if ! [[ "$data" ]]; then
+	log_message "Empty result after querying openstack host list"
+	exit 1
+fi
+zones=()
+while read -r zone; do
+	zones+=( "$zone" )
+done <<< "$data"
+
+create_server() {
+	if (( $# != 3 )); then
+		log_message "create_server: usage error ($# != 3)"
+		return 1
+	fi
+	local name=$1
+	local segment=$2
+	local zone=$3
+
+	if ! id=$(openstack server create --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id="$romana_net_id" --property romanaSegment="$segment" --availability-zone "$zone" "$name" -f value -c id); then
+		log_message "Error creating server $name/$segment/$zone"
+		return 1
+	fi
+	defer delete_server "$id"
+
+	intervals=(1 2 5 8 13)
+	active=0
+	state=""
+	for i in "${intervals[@]}"; do
+		state=$(openstack server show "$id" -f value -c status)
+		case "$state" in
+			ACTIVE)
+				active=1
+				break
+				;;
+			ERROR)
+				log_message "Server $id has ERROR state"
+				break
+				;;
+		esac
+		sleep "$i"
+	done
+	if ! (( active )); then
+		log_message "Server not booted. Last state was $state"
+		return 1
+	fi
+}
+
+delete_server() {
+	if (( $# != 1 )); then
+		log_message "create_server: usage error ($# != 1)"
+		return 1
+	fi
+	local id="$1"
+	if ! openstack server delete "$id"; then
+		log_message "Error deleting server $id"
+		return 1
+	fi
+}
+
+for zone in "${zones[@]}"; do
+	if ! create_server "basic-test" "default" "$zone"; then
+		exit 1
+	fi
+done
+log_message "Successfully created ${#zones[@]} servers"

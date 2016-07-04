@@ -1,9 +1,18 @@
+command: openstack-services
+args: keystone glance neutron nova
+description: Check that openstack services are present
+labels: openstack, services
+
 command: services_running
 args: romana-root romana-tenant romana-topology romana-ipam
-description: Check that Romana services are running on master
+description: Check that Romana services are running on controller node
 labels: romana-master, services
 
 command: services_running
 args: romana-agent
-description: Check that Romana services are running on minion
+description: Check that Romana services are running on compute nodes
 labels: romana-agent, services
+
+command: run-vms-each-host
+description: Check that VMs can be created on each compute node
+labels: openstack, endpoints

@@ -1,0 +1,74 @@
+---
+# Pull the log files
+- hosts: stack_nodes
+  tasks:
+    - synchronize: mode=pull src="{{ test_logfile }}" dest="./{{ stack_data_dir }}/{{ inventory_hostname }}_clustertests.log"
+
+# Merge the files together (in inventory order)
+- hosts: localhost
+  tasks:
+    - file: path="./{{ stack_data_dir }}/clustertests.log" state=absent
+    - shell: cat "./{{ stack_data_dir }}/{{ item }}_clustertests.log" >> "./{{ stack_data_dir }}/clustertests.log"
+      with_items: "{{ groups.stack_nodes | default([]) }}"
+
+# Cleanup
+- hosts: stack_nodes
+  tasks:
+    - name: Restore iptables state
+      become: true
+      become_user: root
+      shell: iptables-restore < /var/tmp/iptables-rules
+
+# Include platform-specific networking data (only for romana_master_ip used below)
+- include: "network.{{ platform }}.yml"
+
+- hosts: controller
+  tasks:
+  - name: Re-create databases
+    shell: "{{ romana_bin_dir }}/{{ item }} -overwriteSchema -rootURL http://{{ romana_master_ip }}:9600"
+    with_items:
+      - topology
+      - tenant
+      - ipam
+      - policy
+  - name: Restart services
+    become: true
+    become_user: root
+    service: name="romana-{{ item }}" state="restarted"
+    with_items:
+      - topology
+      - tenant
+      - ipam
+      - policy
+  - name: Restart services
+    become: true
+    become_user: root
+    service: name="romana-{{ item }}" state="restarted"
+    with_items:
+       - kube-listener
+    when: stack_type == "kubernetes"
+  - name: Re-run post-install script
+    command: /var/tmp/romana-post-install.sh
+
+- hosts: stack_nodes
+  tasks:
+  - name: Truncate /etc/ethers
+    become: true
+    become_user: root
+    copy: content='' dest="/etc/ethers" force=yes
+    when: stack_type in [ "devstack", "openstack" ]
+  - name: Restart services
+    become: true
+    become_user: root
+    service: name="{{ item }}" state="restarted"
+    with_items:
+      - dnsmasq-calico
+    when: stack_type in [ "devstack", "openstack" ]
+  - name: Restart services
+    become: true
+    become_user: root
+    service: name="{{ item }}" state="restarted"
+    with_items:
+      - romana-agent
+      - romana-policy-agent
+

@@ -23,11 +23,20 @@ description: Ensure the list of hosts configured for Romana matches the list of 
 labels: romana-master, kube-master
 
 command: docker-pull
-args: nginx
-description: Pull the nginx docker container
+args: alpine nginx cirros
+description: Pull docker containers used in later tests
 labels: kube-minion, docker
 
 command: kubectl-run
-args: test-77 --image=--port=80 --replicas=3 --command /bin/false
+args: test-77 --image=alpine --replicas=3 --command -- sleep 18446744073709551615
 description: Check that kubernetes can launch some pods
 labels: kube-master, pods
+
+command: romana-kube-namespace-integration
+args: test-88
+description: Check namespace creation triggers romana tenant creation
+labels: kube-master, namespaces
+
+command: tenant-frontend-backend
+description: End-to-End test checking default-allow, isolation and policy-allow
+labels: kube-master, e2e
