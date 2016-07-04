@@ -10,3 +10,7 @@
 
 - name: CNI plugin executable
   command: install -o root -g root -m 0755 /var/tmp/kube/CNI/romana /opt/cni/bin/romana
+
+- name: Install nsenter for CNI plugin
+  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/nsenter" dest="/usr/local/bin/" mode=0755
+  when: ansible_os_family|lower == "debian"

@@ -37,9 +37,6 @@
   roles:
     - romana/install-agent
 
-# Stack-specific postinstall after installing agent
-- include: "post-agent.{{ stack_type }}.yml"
-
 - hosts: controller
   roles:
     - cache/update
