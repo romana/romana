@@ -1,9 +1,8 @@
-kubernetes_version: "1.2.0"
-kubernetes_sha1: "52dd998e1191f464f581a9b87017d70ce0b058d9"
-kubernetes_url: "https://github.com/kubernetes/kubernetes/releases/download/v{{ kubernetes_version }}/kubernetes.tar.gz"
+kubernetes_version: "1.3.0"
+kubernetes_sha1: "9cf350e55d363f882bf35bd07ffe934991890ed9"
+kubernetes_url: "https://s3-us-west-1.amazonaws.com/romana-binaries/external/kubernetes/v{{ kubernetes_version }}/kubernetes_binaries.tar.bz2"
 
 kubernetes_dl_dir: "/var/tmp"
-kubernetes_x_dir: "/var/tmp"
-install_dir: "/usr/local"
+kubernetes_x_dir: "/var/tmp/kubernetes"
 
 docker_cidr: "172.17.0.1/16"

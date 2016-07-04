@@ -8,10 +8,10 @@
     - proxy
 
 - name: Create kubernetes tmp directory
-  file: path="{{ kubernetes_x_dir }}/kubernetes/server/bin" state="directory"
+  file: path="{{ kubernetes_x_dir }}" state="directory"
 
 - name: Sync kubernetes binaries from master
-  command: rsync -az "{{ romana_master_ip }}:{{ kubernetes_x_dir}}/kubernetes/server/bin/{{ item }}" "{{ kubernetes_x_dir}}/kubernetes/server/bin/{{ item }}"
+  command: rsync -az "{{ romana_master_ip }}:{{ kubernetes_x_dir}}/{{ item }}" "{{ kubernetes_x_dir}}/{{ item }}"
   with_items:
     - kubectl
     - kubelet
@@ -21,7 +21,7 @@
 - name: kubernetes binaries
   become: true
   become_user: root
-  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/kubernetes/server/bin/{{ item }} /usr/local/bin/{{ item }}
+  command: install -o root -g root -m 0755 {{ kubernetes_x_dir }}/{{ item }} /usr/local/bin/{{ item }}
   args:
     creates: /usr/local/bin/{{ item }}
   with_items:

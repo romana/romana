@@ -1,6 +1,6 @@
 ---
 - name: Copy kubernetes release tarball
-  synchronize: src="{{ cache_dir }}/kubernetes/kubernetes_v{{ kubernetes_version }}.tar.gz" dest="{{ kubernetes_dl_dir }}/kubernetes.tar.gz"
+  synchronize: src="{{ cache_dir }}/kubernetes/kubernetes_v{{ kubernetes_version }}.tar.gz" dest="{{ kubernetes_dl_dir }}/kubernetes_binaries.tar.bz2"
   when: inventory_hostname in groups.kube_master
   failed_when: false
 
