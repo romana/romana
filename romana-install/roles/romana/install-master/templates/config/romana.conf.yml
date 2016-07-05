@@ -86,4 +86,4 @@ services:
       namespace_notification_path: "/api/v1/namespaces/?watch=true"
       policy_notification_path_prefix : "/apis/extensions/v1beta1/namespaces/"
       policy_notification_path_postfix : "/networkpolicies/?watch=true"
-      segment_label_name: "segment"
+      segment_label_name: "role"
