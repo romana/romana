@@ -84,8 +84,8 @@ create_deployment() {
 	local intervals=(1 1 2 5 8)
 	local ready=0
 	for i in "${intervals[@]}"; do
-		{ read -r replicas; read -r available; } < <(kubectl --namespace="$tenant_name" get deployment "$name" -o json | jq '.spec.replicas, .status.availableReplicas')
-			if [[ "$replicas" ]] && ! [[ "$replicas" = "null" ]] && [[ "$available" ]] && ! [[ "$available" = "null" ]]; then
+		{ read -r replicas; read -r available; } < <(kubectl --namespace="$tenant_name" get deployment "$name" -o json | jq '.spec.replicas // empty, .status.availableReplicas // empty')
+			if [[ "$replicas" ]] && [[ "$available" ]]; then
 				if (( replicas == available )); then
 					ready=1
 					break
@@ -123,15 +123,15 @@ test_frontend_backend() {
 	fi
 
 	# Get the backend pod IP
-	backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="segment=backend" -o json | jq -r '.items[0].status.podIP')
-	if ! [[ "$backend_ip" ]] || [[ "$backend_ip" = "null" ]]; then
+	backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="segment=backend" -o json | jq -r '.items[0].status.podIP // empty')
+	if ! [[ "$backend_ip" ]]; then
 		log_message "Failed to get backend IP"
 		return 1
 	fi
 
 	# Get the frontend pod name
-	frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="segment=frontend" -o json | jq -r '.items[0].metadata.name')
-	if ! [[ "$frontend_podname" ]] || [[ "$frontend_podname" = "null" ]]; then
+	frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="segment=frontend" -o json | jq -r '.items[0].metadata.name // empty')
+	if ! [[ "$frontend_podname" ]]; then
 		log_message "Failed to get frontend podname"
 		return 1
 	fi
@@ -157,7 +157,7 @@ if ! test_frontend_backend "connected"; then
 fi
 
 # Enable isolation
-if ! kubectl annotate --overwrite namespaces "$tenant_name" 'net.alpha.kubernetes.io/network-isolation=on'; then
+if ! kubectl annotate --overwrite namespaces "$tenant_name" 'net.beta.kubernetes.io/networkpolicy={"ingress": {"isolation": "DefaultDeny"}}'; then
 	log_message "Failed to annotate namespace"
 	exit 1
 fi
@@ -168,11 +168,11 @@ if ! test_frontend_backend "failed"; then
 fi
 
 # Add policy permitting frontend -> backend
-if ! curl -X POST -H 'Content-Type: application/json' -d @frontend-to-backend.json "$kube_apiserver/apis/romana.io/demo/v1/namespaces/$tenant_name/networkpolicys"; then
-	log_message "Error POST-ing policy for frontend-to-backend"
+if ! kubectl --namespace="$tenant_name" create -f frontend-to-backend.yml; then
+	log_message "Error creating network policy"
 	exit 1
 fi
-defer curl -X DELETE "$kube_apiserver/apis/romana.io/demo/v1/namespaces/$tenant_name/networkpolicys/pol1"
+defer kubectl --namespace="$tenant_name" delete networkpolicy pol1
 
 if ! test_frontend_backend "connected"; then
 	exit 1
