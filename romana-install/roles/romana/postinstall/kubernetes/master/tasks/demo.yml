@@ -20,7 +20,7 @@
     - namespace-tenant-a.yaml
     - pod-backend.yaml
     - pod-frontend.yaml
-    - romana-np-frontend-to-backend.json
+    - romana-np-frontend-to-backend.yml
 
 - name: Install and make demo script executable
   template: src="demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755

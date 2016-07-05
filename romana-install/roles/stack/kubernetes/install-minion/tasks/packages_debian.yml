@@ -17,4 +17,5 @@
   with_items:
     - docker-engine
     - python-simplejson
+    - python-requests
     - jq

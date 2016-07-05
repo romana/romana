@@ -15,5 +15,5 @@ KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"
 KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ResourceQuota"
 
 # Add your own!
-KUBE_API_ARGS="--runtime-config=extensions/v1beta1=true,extensions/v1beta1/thirdpartyresources=true"
+KUBE_API_ARGS="--runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true"
 

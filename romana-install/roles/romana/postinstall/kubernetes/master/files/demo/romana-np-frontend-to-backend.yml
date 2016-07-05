@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+ name: pol1
+spec:
+ podSelector:
+  matchLabels:
+   role: backend
+ ingress:
+ - from:
+   - podSelector:
+      matchLabels:
+       role: frontend
+   ports:
+    - protocol: tcp
+      port: 80
