@@ -12,8 +12,7 @@
 - name: Move to apt archive directory
   become: true
   become_user: root
-  synchronize: src="/var/tmp/apt_cache/" dest="/var/cache/apt/archives/" delete=yes
-  delegate_to: inventory_hostname
+  command: rsync -az --remove-source-files "/var/tmp/apt_cache/" "/var/cache/apt/archives/"
   when: inventory_hostname not in groups.controller and platform in [ "vagrant", "static" ]
 
 - name: Perform a "safe" upgrade
