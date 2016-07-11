@@ -1,0 +1,202 @@
+#!/bin/bash
+log_message() {
+        printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+        if ((verbose)); then
+                log_message "$@"
+        fi
+}
+
+defer_i=()
+defer_l=()
+defer_v=()
+defer() {
+	defer_i+=( "${#defer_v[@]}" )
+	defer_l+=( "${#@}" )
+	defer_v+=( "$@" )
+}
+run_defers() {
+	exit_code=$?
+	for ((i=${#defer_i[@]}-1;i>=0;i--)); do
+		"${defer_v[@]:${defer_i[i]}:${defer_l[i]}}"
+	done
+	exit "$exit_code"
+}
+
+trap 'run_defers' EXIT
+
+verbose=0
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+-*)
+	log_message "Unknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+if [[ -f $HOME/.profile ]]; then
+	source "$HOME/.profile"
+elif [[ -f $HOME/.bash_profile ]]; then
+	source "$HOME/.bash_profile"
+fi
+
+set -o pipefail
+
+# Retrieve romana network id
+if ! romana_net_id=$(openstack network show romana -f value -c id); then
+	log_message "Unable to retrieve romana network id from openstack"
+	exit 1
+fi
+if ! [[ "$romana_net_id" ]]; then
+	log_message "Empty romana network id from openstack"
+	exit 1
+fi
+
+active_servers=()
+server_ips=()
+hostnames_for_servers=()
+create_server() {
+	if (( $# != 2 )); then
+		log_message "create_server: usage error ($# != 2)"
+		return 1
+	fi
+	local name=$1
+	local segment=$2
+	local id
+
+	if ! id=$(openstack server create --flavor m1.nano --image cirros-0.3.4-x86_64-uec --key-name shared-key --nic net-id="$romana_net_id" --property romanaSegment="$segment" "$name" -f value -c id); then
+		log_message "Error creating server $name/$segment"
+		return 1
+	fi
+	log_message "Created server $id"
+	defer delete_server "$id"
+
+	local intervals=(1 2 5 8 13)
+	local active=0
+	local state=""
+	local i
+	for i in "${intervals[@]}"; do
+		state=$(openstack server show "$id" -f value -c status)
+		case "$state" in
+			ACTIVE)
+				log_message "Server $id is ACTIVE"
+				active=1
+				break
+				;;
+			ERROR)
+				log_message "Server $id has ERROR state"
+				break
+				;;
+		esac
+		sleep "$i"
+	done
+	if ! (( active )); then
+		log_message "Server not booted. Last state was $state"
+		return 1
+	fi
+	local addresses
+	if ! addresses=$(openstack server show "$id" -f value -c addresses); then
+		log_message "Failed to look up IP of server $id"
+		exit 1
+	fi
+	# Addresses value should be "romana=w.x.y.z", so just extract the value
+	if ! [[ $addresses = romana=* ]]; then
+		log_message "Unexpected format of addressses value '$addresses' for server $id"
+		exit 1
+	fi
+	local server_ip=${addresses#romana=}
+
+	active_servers+=( "$id" )
+	server_ips+=( "$server_ip" )
+	hostnames_for_servers+=( "$(openstack server show "$id" -f value -c OS-EXT-SRV-ATTR:hypervisor_hostname)" )
+}
+
+delete_server() {
+	if (( $# != 1 )); then
+		log_message "delete_server: usage error ($# != 1)"
+		return 1
+	fi
+	local id="$1"
+	if ! openstack server delete "$id"; then
+		log_message "Error deleting server $id"
+		return 1
+	fi
+	log_message "Server $id deleted"
+}
+
+# Create two servers in default segment
+num_servers=2
+for ((i=1; i<=num_servers; i++)); do
+	if ! create_server "connectivity-test" "default"; then
+		log_message "Error creating server #$i"
+		exit 1
+	fi
+done
+log_message "Created $num_servers servers"
+
+if (( ${#active_servers[@]} != num_servers )); then
+	log_message "Failed to activate the desired number of servers (${#active_servers[@]} != $num_servers)"
+	exit 1
+fi
+
+# Look up host IP for the first server
+target_host="${hostnames_for_servers[0]}"
+host_data=$(romana host show "$target_host" -f json)
+if ! num_hosts=$(jq -r 'length' <<< "$host_data"); then
+	log_message "Error parsing romana host data for server $target_host"
+	exit 1
+fi
+if (( num_hosts != 1 )); then
+	log_message "Unexpected number of hosts found in romana host data ($num_hosts != 1)"
+	exit 1
+fi
+target_ip=$(jq -r '.[0].ip' <<< "$host_data")
+if ! [[ "$target_ip" ]]; then
+	log_message "IP address not found in romana host data"
+	exit 1
+fi
+log_message "Target host will be $target_host ($target_ip)"
+
+# Ping the target. 
+ping_options=( -W 1 -c 5 )
+if ! ping "${ping_options[@]}"  "$target_ip"  &>/dev/null; then
+	log_message "Unable to ping target ip '$target_ip'"
+	exit 1
+fi
+log_message "Ping test to $target_ip succeeded"
+
+# SSH into the VM
+ssh_options=( -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o LogLevel=quiet )
+if ! ssh "$target_ip" ssh "${ssh_options[@]}" "cirros@${server_ips[0]}" /bin/true; then
+	log_message "Error opening SSH connection to cirros@${server_ips[0]} via host $target_ip"
+	exit 1
+fi
+log_message "SSH test to cirros@${server_ips[0]} via $target_ip succeeded"
+
+# Ping another VM from our first VM
+if ! ssh "$target_ip" ssh "${ssh_options[@]}" "cirros@${server_ips[0]}" ping "${ping_options[@]}" "${server_ips[1]}" '\&\>' /dev/null; then
+	log_message "Error when attempting ping from ${server_ips[0]} to ${server_ips[1]}"
+	exit 1
+fi
+log_message "Ping test between ${server_ips[0]} and ${server_ips[1]} succeeded"
+
+# Copy SSH Key into VM
+if ! ssh "$target_ip" scp "${ssh_options[@]}" -q -p "~/.ssh/id_rsa" "cirros@${server_ips[0]}:/tmp/id_rsa"; then
+	log_message "Error copying private key to cirros@${server_ips[0]}"
+	exit 1
+fi
+log_message "Inserted private key for cirros@${server_ips[0]}"
+ssh "$target_ip" ssh "${ssh_options[@]}" "cirros@${server_ips[0]}" dropbearconvert openssh dropbear /tmp/id_rsa .ssh/id_rsa '\&\>' /dev/null
+
+if ! ssh "$target_ip" ssh "${ssh_options[@]}" "cirros@${server_ips[0]}" ssh -y -i .ssh/id_rsa "${server_ips[1]}" /bin/true '\&\>' /dev/null; then
+	log_message "Error when attempting SSH from ${server_ips[0]} to ${server_ips[1]}"
+	exit 1
+fi
+log_message "SSH test between ${server_ips[0]} and ${server_ips[1]} succeeded"
+
+

@@ -84,6 +84,7 @@ create_server() {
 		log_message "Error creating server $name/$segment/$zone"
 		return 1
 	fi
+	log_message "Created server $id"
 	defer delete_server "$id"
 
 	intervals=(1 2 5 8 13)
@@ -93,6 +94,7 @@ create_server() {
 		state=$(openstack server show "$id" -f value -c status)
 		case "$state" in
 			ACTIVE)
+				log_message "Server $id is ACTIVE"
 				active=1
 				break
 				;;
@@ -111,7 +113,7 @@ create_server() {
 
 delete_server() {
 	if (( $# != 1 )); then
-		log_message "create_server: usage error ($# != 1)"
+		log_message "delete_server: usage error ($# != 1)"
 		return 1
 	fi
 	local id="$1"
@@ -119,6 +121,7 @@ delete_server() {
 		log_message "Error deleting server $id"
 		return 1
 	fi
+	log_message "Server $id deleted"
 }
 
 for zone in "${zones[@]}"; do
