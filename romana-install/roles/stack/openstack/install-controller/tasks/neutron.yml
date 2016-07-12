@@ -25,7 +25,7 @@
   shell: /var/tmp/neutron-post-install.sh
 
 - name: Install networking-romana module
-  pip: name="git+https://github.com/romana/networking-romana@realign-requirements" editable=false
+  pip: name="git+https://github.com/romana/networking-romana@{{ romana_networking_branch }}" editable=false
 
 - include: "{{ item }}"
   with_first_found:
