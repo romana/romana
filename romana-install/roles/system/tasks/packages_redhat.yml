@@ -1,10 +1,14 @@
 ---
 - name: Enable EPEL repository
+  become: true
+  become_user: root
   yum: pkg="epel-release" state=latest
   when: ansible_distribution|lower == "centos"
   retries: 3
 
 - name: Install additional packages
+  become: true
+  become_user: root
   yum: pkg={{ item }} state=latest update_cache=yes
   with_items:
     - git
