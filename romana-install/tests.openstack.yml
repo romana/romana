@@ -1,2 +1,24 @@
-# Tests not developed yet
 - hosts: localhost
+  tasks:
+    - add_host: name="{{ item }}" groups="openstack_nodes,openstack_controller,openstack_computes"
+      with_items: "{{ groups.controller }}"
+    - add_host: name="{{ item }}" groups="openstack_nodes,openstack_computes"
+      with_items: "{{ groups.computes }}"
+
+- hosts: openstack_nodes
+  tasks:
+    - name: Copy test scripts to all openstack nodes
+      synchronize: src="../test/openstack-cluster/" dest="{{ test_dir }}/"
+
+- hosts: openstack_controller
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l openstack -l services >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
+
+- hosts: openstack_computes
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-agent -l services >> {{ test_logfile }}
+
+- hosts: openstack_controller
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l openstack -l endpoints >> {{ test_logfile }}
