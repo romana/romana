@@ -22,3 +22,4 @@
 - hosts: devstack_controller
   tasks:
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l openstack -l endpoints >> {{ test_logfile }}
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l openstack -l e2e >> {{ test_logfile }}

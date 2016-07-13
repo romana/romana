@@ -57,6 +57,11 @@
     become_user: root
     copy: content='' dest="/etc/ethers" force=yes
     when: stack_type in [ "devstack", "openstack" ]
+  - name: Delete /var/lib/misc/dnsmasq.leases
+    become: true
+    become_user: root
+    file: path="/var/lib/misc/dnsmasq.leases" state="absent"
+    when: stack_type in [ "devstack", "openstack" ]
   - name: Restart services
     become: true
     become_user: root

@@ -16,3 +16,7 @@ labels: romana-agent, services
 command: run-vms-each-host
 description: Check that VMs can be created on each compute node
 labels: openstack, endpoints
+
+command: connectivity-test
+description: End-to-End test checking ping and SSH for VMs in same segment.
+labels: openstack, e2e
