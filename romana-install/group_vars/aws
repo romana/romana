@@ -2,9 +2,11 @@ ec2_keypair: ""
 instance_type:
   controller:
     devstack: "t2.large"
+    openstack: "t2.large"
     kubernetes: "t2.small"
   compute:
     devstack: "t2.small"
+    openstack: "t2.small"
     kubernetes: "t2.small"
 
 distro_info:

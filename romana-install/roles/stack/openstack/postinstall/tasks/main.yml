@@ -1,0 +1,16 @@
+---
+- name: Create openrc directory
+  file: name="~/openrc" state="directory"
+
+- name: Install openrc files
+  template: src="openrc/{{ item }}" dest="~/openrc/{{ item }}"
+  with_items:
+    - admin
+    - demo
+
+- name: Install openstack post-install script
+  template: src="openstack-post-install.sh" dest="/var/tmp/openstack-post-install.sh" mode=0755
+
+- name: Execute openstack post-install script
+  shell: /var/tmp/openstack-post-install.sh
+

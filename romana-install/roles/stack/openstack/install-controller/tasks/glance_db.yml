@@ -1,0 +1,13 @@
+---
+- name: Create Glance DB
+  mysql_db: name=glance state=present
+  register: gdb
+
+- name: Create Glance DB user
+  mysql_user: name=glance password="{{ stack_password }}" priv="glance.*:ALL" state=present
+
+- name: Sync Glance DB
+  command: glance-manage db_sync
+  when: gdb.changed
+  become: true
+  become_user: glance

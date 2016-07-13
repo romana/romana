@@ -1,0 +1,6 @@
+---
+- name: Install nova compute service and dependencies
+  apt: pkg="{{ item }}"
+  with_items:
+    - nova-compute
+    - sysfsutils

@@ -1,0 +1,4 @@
+---
+- hosts: openstack_controller
+  roles:
+    - romana/postinstall/openstack/master

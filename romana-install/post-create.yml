@@ -4,5 +4,5 @@
 - hosts: localhost
   tasks:
     - name: Wait for SSH Port to become active
-      wait_for: host="{{ hostvars[item].ansible_ssh_host }}" port="{{ hostvars[item].ansible_ssh_port | default(22) }}"
+      wait_for: host="{{ hostvars[item].ansible_ssh_host }}" port="{{ hostvars[item].ansible_ssh_port | default(22) }}" timeout=15
       with_items: "{{ groups.stack_nodes }}"

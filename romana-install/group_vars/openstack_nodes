@@ -1,0 +1,2 @@
+openstack_password: "{{ stack_password }}"
+openstack_service_token: "5fTQwXJgyYZfdEFewGftRwN4Fy5wT4g3ZNVGKf3w"

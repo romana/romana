@@ -1,0 +1,7 @@
+---
+- name: Install neutron service and dependencies
+  yum: pkg="{{ item }}"
+  with_items:
+    - openstack-neutron
+    - openstack-neutron-ml2
+    - python-neutronclient

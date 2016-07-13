@@ -1,0 +1,13 @@
+---
+- name: Create Keystone DB
+  mysql_db: name=keystone state=present
+  register: kdb
+
+- name: Create Keystone DB user
+  mysql_user: name=keystone password="{{ stack_password }}" priv="keystone.*:ALL" state=present
+
+- name: Sync Keystone DB
+  command: keystone-manage db_sync
+  when: kdb.changed
+  become: true
+  become_user: keystone

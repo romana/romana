@@ -1,0 +1,16 @@
+---
+- hosts: openstack_nodes
+  roles:
+    - stack/openstack/prep
+
+- hosts: openstack_controller
+  roles:
+    - stack/openstack/install-controller
+
+- hosts: openstack_computes
+  roles:
+    - stack/openstack/install-compute
+
+- hosts: openstack_controller
+  roles:
+    - stack/openstack/postinstall

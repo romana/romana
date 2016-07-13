@@ -1,0 +1,9 @@
+---
+- name: Install keystone service and dependencies
+  yum: pkg="{{ item }}"
+  with_items:
+    - python-openstackclient
+    - openstack-keystone
+    - httpd
+    - mod_wsgi
+    - policycoreutils-python

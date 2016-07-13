@@ -1,0 +1,6 @@
+---
+- name: Install nova compute service and dependencies
+  yum: pkg="{{ item }}"
+  with_items:
+    - openstack-nova-compute
+    - sysfsutils

@@ -1,0 +1,24 @@
+---
+- name: Install Keystone WSGI configuration
+  copy: src="redhat/wsgi-keystone.conf" dest="/etc/httpd/conf.d/wsgi-keystone.conf"
+  register: wsgi
+
+- name: Change SELinux policy for keystone ports
+  command: semanage port -m -t http_port_t -p tcp {{ item }}
+  with_items:
+    - 5000
+    - 35357
+
+- name: Enable additional httpd permissions
+  command: setsebool -P {{ item }} on
+  with_items:
+   - httpd_can_network_connect_db
+   - httpd_can_network_memcache
+
+- name: Copy policy package for Keystone WSGI
+  copy: src="redhat/httpd-keystone.pp" dest="/var/tmp/httpd-keystone.pp"
+  register: wsgipp
+
+- name: Install policy package for Keystone WSGI
+  command: semodule -i /var/tmp/httpd-keystone.pp
+  when: wsgipp.changed

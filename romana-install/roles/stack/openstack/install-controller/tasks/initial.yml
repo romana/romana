@@ -1,0 +1,29 @@
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "initial_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "initial_packages_{{ ansible_distribution|lower }}.yml"
+      - "initial_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  become: true
+  become_user: root
+
+- include: "{{ item }}"
+  with_first_found:
+    - files:
+      - "mariadb_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "mariadb_{{ ansible_distribution|lower }}.yml"
+      - "mariadb_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  become: true
+  become_user: root
+
+- name: Start remaining services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - rabbitmq-server
+    - memcached
+
+- include: initial_config.yml
+  become: true
+  become_user: root

@@ -1,0 +1,6 @@
+---
+- name: Start neutron services
+  service: name="{{ item }}" state="started"
+  with_items:
+    - neutron-server
+    - neutron-metadata-agent

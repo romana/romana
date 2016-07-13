@@ -24,7 +24,7 @@ usage() {
 	echo "Cluster Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
-	echo "Stack Types:   devstack (default), kubernetes"
+	echo "Stack Types:   devstack (default), openstack, kubernetes"
 	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall, test"
 	echo ""

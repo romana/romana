@@ -1,0 +1,8 @@
+---
+- name: Install neutron service and dependencies
+  apt: pkg="{{ item }}"
+  with_items:
+    - neutron-server
+    - neutron-plugin-ml2
+    - neutron-metadata-agent
+    - python-neutronclient
