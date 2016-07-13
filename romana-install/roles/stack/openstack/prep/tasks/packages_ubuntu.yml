@@ -15,4 +15,3 @@
   apt: pkg="{{ item }}"
   with_items:
     - python-pip
-    - jq

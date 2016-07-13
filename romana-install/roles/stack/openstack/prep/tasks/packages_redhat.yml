@@ -4,7 +4,6 @@
   with_items:
     - python-pip
     - patch
-    - jq
 
 - name: Install centos-openstack-release packages
   yum: pkg="centos-release-openstack-liberty" update_cache=yes
