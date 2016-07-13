@@ -13,4 +13,5 @@
   with_items:
     - git
     - vim-enhanced
+    - jq
     - gcc
