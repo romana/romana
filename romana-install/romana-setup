@@ -147,6 +147,7 @@ if (( $# > 0 )); then
 				shift
 				;;
 			--core-branch)
+			        core_source="github"
 				core_branch="$2"
 				shift 2
 				;;
