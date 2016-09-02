@@ -26,6 +26,7 @@ run_defers() {
 }
 
 trap 'run_defers' EXIT
+set -o pipefail
 
 verbose=0
 while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
@@ -41,20 +42,56 @@ esac; done
 
 tenant_name="e2e-test-1"
 
+log_verbose "Looking up API server"
 kube_apiserver=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "romana-cni-cluster")].cluster.server}')
 if ! [[ "$kube_apiserver" ]]; then
+	log_verbose "Failed to find API server in kubectl config"
 	log_message "kubectl configuration missing expected items"
 	exit 1
+fi
+log_verbose "API Server found: $kube_apiserver"
+
+log_verbose "Checking if tenant '$tenant_name' already exists"
+if result=$(kubectl get namespace "$tenant_name" -o json 2>/dev/null | jq -r '.status.phase // empty'); then
+	case "$result" in
+		Terminating)
+			log_verbose "Tenant '$tenant_name' is terminating"
+			intervals=(5 5 5 5 5 5)
+			terminated=0
+			for i in "${intervals[@]}"; do
+				sleep "$i"
+				if [[ "$(kubectl get namespace "$tenant_name" -o json 2>/dev/null | jq -r '.status.phase // empty')" != 'Terminating' ]]; then
+					terminated=1
+					break
+				fi
+				log_verbose "Tenant '$tenant_name' still terminating"
+			done
+			if ! (( terminated )); then
+				log_message "Failing because tenant '$tenant_name' still terminating"
+				exit 1
+			fi
+
+			;;
+		'')
+			;;
+		*)
+			log_verbose "Tenant '$tenant_name' already exists, in state '$result'"
+			log_message "Failing because tenant '$tenant_name' exists and state is '$result' not 'Terminating'"
+			exit 1
+			;;
+	esac
 fi
 
 if ! kubectl create namespace "$tenant_name"; then
 	log_message "Namespace creation problem."
 	exit 1
 fi
+log_verbose "Tenant '$tenant_name' created"
 defer kubectl delete namespace "$tenant_name"
 
 intervals=( 1 1 2 5 )
 found=0
+log_verbose "Checking for tenant in romana"
 for i in "${intervals[@]}"; do
 	if [[ "$(romana tenant list -f json | jq --arg tenantName "$tenant_name" '.[] | select(.name==$tenantName)')" ]]; then
 		found=1
@@ -66,6 +103,7 @@ if ! (( found )); then
 	log_message "Tenant not automagically created"
 	exit 1
 fi
+log_verbose "Tenant created in romana"
 
 create_deployment() {
 	if (( $# != 3 )); then
@@ -121,6 +159,7 @@ test_frontend_backend() {
 	if ! (create_deployment backend nginx backend && create_deployment frontend cirros frontend); then
 		return 1
 	fi
+	log_verbose "Deployments created"
 
 	# Get the backend pod IP
 	backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="segment=backend" -o json | jq -r '.items[0].status.podIP // empty')
@@ -128,6 +167,7 @@ test_frontend_backend() {
 		log_message "Failed to get backend IP"
 		return 1
 	fi
+	log_verbose "Backend IP is $backend_ip"
 
 	# Get the frontend pod name
 	frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="segment=frontend" -o json | jq -r '.items[0].metadata.name // empty')
@@ -136,6 +176,7 @@ test_frontend_backend() {
 		return 1
 	fi
 
+	log_verbose "Running curl in $frontend_podname to $backend_ip"
 	if kubectl --namespace="$tenant_name" exec "$frontend_podname" -- curl -s "$backend_ip" --connect-timeout 3 2>/dev/null; then
 		result="connected"
 	else
@@ -149,31 +190,38 @@ test_frontend_backend() {
 		log_message "Result was $result, expected $expected_result"
 		return 1
 	fi
+	log_verbose "Test succeeded"
 }
 
 # Default allow policy, should be able to connect
+log_verbose "Testing frontend-to-backend, expecting they can communicate"
 if ! test_frontend_backend "connected"; then
 	exit 1
 fi
 
 # Enable isolation
+log_verbose "Adding DefaultDeny annotation to the namespace"
 if ! kubectl annotate --overwrite namespaces "$tenant_name" 'net.beta.kubernetes.io/networkpolicy={"ingress": {"isolation": "DefaultDeny"}}'; then
 	log_message "Failed to annotate namespace"
 	exit 1
 fi
 
 # Isolation enabled, connection should fail
+log_verbose "Testing frontend-to-backend, expecting they cannot communicate"
 if ! test_frontend_backend "failed"; then
 	exit 1
 fi
 
 # Add policy permitting frontend -> backend
+log_verbose "Applying network policy that permits frontend to connect to backend"
 if ! kubectl --namespace="$tenant_name" create -f frontend-to-backend.yml; then
 	log_message "Error creating network policy"
 	exit 1
 fi
 defer kubectl --namespace="$tenant_name" delete networkpolicy pol1
 
+log_verbose "Testing frontend-to-backend, expecting they can communicate"
 if ! test_frontend_backend "connected"; then
 	exit 1
 fi
+log_verbose "Test completed successfully"
