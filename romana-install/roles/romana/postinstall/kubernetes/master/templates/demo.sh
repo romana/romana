@@ -21,7 +21,7 @@ function maybe_first_prompt() {
 }
 function run() {
     maybe_first_prompt
-    rate=30
+    rate=80
     if [ -n "$DEMO_RUN_FAST" ]; then
       rate=1000
     fi
@@ -46,6 +46,9 @@ function relative() {
 function get_pods() {
     kubectl ${1:+--namespace "$1"} get pods -o json | jq '.items[] | { Name: .metadata.name, podIP: .status.podIP, NodeID: .spec.nodeName, Status: .status.phase }'
 }
+function get_service_ip() {
+    kubectl ${1:+--namespace "$1"} get services -o json | jq -r '.items[0].spec.clusterIP'
+}
 function get_pod_ip() {
     kubectl ${2:+--namespace "$2"} get pod "$1" -o json | jq -r '.status.podIP'
 }
@@ -60,51 +63,74 @@ function delete_tenant() {
 SSH_NODE=$(kubectl get nodes | tail -1 | cut -f1 -d' ')
 trap "echo" EXIT
 cd "${0%/*}" # Change directory to where the script is
+
 ##### DEMO  ######
-desc "Get a list of nodes in the environment"
+
+desc "We'll setup a frontend (client) and backend (server). Following Kubernetes'"
+desc "established patterns, the backend pods are behind a service."
+
+desc "Get a list of nodes in the environment."
 run "kubectl get nodes"
-desc "anybody here? let's see if we have a pod"
+desc "Anybody here? let's see if we have a pod..."
 run "get_pods"
 
-desc "How about we start up a few pods with a resource controller"
-run "kubectl create -f example-controller.yaml"
-desc "anybody here now?"
-run "get_pods"
-
-desc "create the namespace for some additional pods"
+desc "Create a new namespace / tenant."
 run "kubectl create -f namespace-tenant-a.yaml"
-desc "create a pod on 'frontend' segment in 'tenant-a' namespace"
-run "kubectl create -f pod-frontend.yaml"
 
-desc "create a pod on 'backend' segment in 'tenant-a' namespace"
-run "kubectl create -f pod-backend.yaml; sleep 5"
+desc "We want our backend pods to receive traffic via a Kubernetes service."
+desc "Here is the service definition:"
+run "cat backend-service.yaml"
 
-desc "let’s find out where the pods are"
+desc "Let's create the service."
+run "kubectl create -f backend-service.yaml"
+
+desc "This is the service that was created."
+run "kubectl describe services --namespace='tenant-a'"
+
+desc "Create a pod on the 'backend' segment in 'tenant-a' namespace. The pod labels"
+desc "match the selectors in the service definition, so the service 'knows' to"
+desc "pods to sent traffic. This is the pod definition:"
+run "cat pod-backend.yaml"
+
+desc "Let's create the server pod."
+run "kubectl create -f pod-backend.yaml"
+
+desc "Create the client pod on the 'frontend' segment in 'tenant-a' namespace."
+run "kubectl create -f pod-frontend.yaml; sleep 5"
+
+desc "Let’s find out where the pods are."
 run "get_pods; get_pods 'tenant-a'"
 
-desc "we should only see our 'internal' local interface"
+desc "We should only see our 'internal' local interface."
 run "kubectl --namespace=tenant-a exec nginx-backend -- ip addr"
 
-desc "let's have our frontend load data from the backend"
-run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
+desc "The pods can 'ping' each other. Here, the frontend pings the backend pod directly."
+run "kubectl --namespace=tenant-a exec nginx-frontend -- ping -c 3 -W 1 $(get_pod_ip 'nginx-backend' 'tenant-a')"
 
-desc "we can add isolation too. Let's see that. Quick cleanup first"
-run "kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; sleep 5"
+desc "Let's have our frontend load data from the backend via the service."
+run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_service_ip 'tenant-a') --connect-timeout 5"
 
-desc "enable isolation for 'tenant-a' namespace."
+desc "This worked, because by default a Kubernetes namespace is non isolated (open for all traffic)."
+desc "So let's add isolation by annotating the namespace."
 run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.beta.kubernetes.io/networkpolicy={\"ingress\": {\"isolation\": \"DefaultDeny\"}}'"
 
-desc "create the frontend and backend pods"
-run "kubectl create -f pod-frontend.yaml; kubectl create -f pod-backend.yaml; sleep 5"
+desc "Now loading data via the service will fail, since the backend pod is in a different segment."
+run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_service_ip 'tenant-a') --connect-timeout 5"
 
-desc "let's try to have the frontend load data from the backend"
-run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
+desc "The 'ping' now also fails."
+run "kubectl --namespace=tenant-a exec nginx-frontend -- ping -c 3 -W 1 $(get_pod_ip 'nginx-backend' 'tenant-a')"
 
-desc "now let's add a policy that permits frontend to connect to the backend"
+desc "We add a policy that permits the frontend to connect to the backend. This is the policy:"
+run "cat romana-np-frontend-to-backend.yml"
+
+desc "Let's apply the policy now. Note that policies are applied to pods, not the service."
 run "kubectl --namespace=tenant-a create -f romana-np-frontend-to-backend.yml; sleep 5"
 
-desc "this permits us to connect from frontend to backend"
-run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_pod_ip 'nginx-backend' 'tenant-a') --connect-timeout 5"
+desc "Now we can connect from the frontend to the backend again."
+run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_service_ip 'tenant-a') --connect-timeout 5"
+
+desc "But as expected, 'ping' still fails, since it was not part of the policy."
+run "kubectl --namespace=tenant-a exec nginx-frontend -- ping -c 3 -W 1 $(get_pod_ip 'nginx-backend' 'tenant-a')"
 
 desc "Demo completed (cleaning up)"
-run "kubectl --namespace=tenant-a delete networkpolicy pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl delete namespace tenant-a; kubectl delete replicationcontroller nginx-default; delete_tenant 'tenant-a'"
+run "kubectl --namespace=tenant-a delete networkpolicy pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl --namespace=tenant-a delete service my-service; kubectl delete namespace tenant-a; delete_tenant 'tenant-a'"

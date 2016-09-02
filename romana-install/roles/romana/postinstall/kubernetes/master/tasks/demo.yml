@@ -21,6 +21,7 @@
     - pod-backend.yaml
     - pod-frontend.yaml
     - romana-np-frontend-to-backend.yml
+    - backend-service.yaml
 
 - name: Install and make demo script executable
   template: src="demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755
