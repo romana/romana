@@ -325,9 +325,15 @@ case "$platform" in
 				;;
 			test)
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml
+				passed=0
+				if ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml; then
+					passed=1
+				fi
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-tests.yml
 				[[ -f "${stack_data_dir}/clustertests.log" ]] && cat "${stack_data_dir}/clustertests.log"
+				if ! (( passed )); then
+					exit 1
+				fi
 				;;
 			*)
 				echo "Unknown action '$action' for platform '$platform'"
