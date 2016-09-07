@@ -1,0 +1,17 @@
+---
+- name: Create path for operator policies
+  become: true
+  become_user: root
+  file: path="{{ romana_etc_dir}}/policy.d" state=directory
+
+- name: Copy default policies
+  become: true
+  become_user: root
+  synchronize: src="policies/" dest="{{ romana_etc_dir }}/policy.d/"
+
+- name: Install romana policy script
+  template: src="romana-policies.sh" dest="/var/tmp/romana-policies.sh" mode=0755
+
+- name: Execute romana policy script
+  shell: /var/tmp/romana-policies.sh
+

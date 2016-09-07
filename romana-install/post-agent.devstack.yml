@@ -1,4 +1,4 @@
 ---
-- hosts: openstack_controller
+- hosts: devstack_controller
   roles:
     - romana/install-policies
