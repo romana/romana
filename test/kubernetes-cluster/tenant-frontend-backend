@@ -119,7 +119,7 @@ create_deployment() {
 		return 1
 	fi
 
-	local intervals=(1 1 2 5 8)
+	local intervals=(1 1 2 5 5 5 5 5)
 	local ready=0
 	for i in "${intervals[@]}"; do
 		{ read -r replicas; read -r available; } < <(kubectl --namespace="$tenant_name" get deployment "$name" -o json | jq '.spec.replicas // empty, .status.availableReplicas // empty')
