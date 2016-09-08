@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "ports": [
+        22
+      ],
+      "protocol": "TCP"
+    }
+  ],
+  "peers": [
+    {
+      "peer": "host"
+    }
+  ],
+  "applied_to": [
+    {
+      "dest": "local"
+    }
+  ],
+  "name": "pol-ssh-vm",
+  "direction": "ingress"
+}

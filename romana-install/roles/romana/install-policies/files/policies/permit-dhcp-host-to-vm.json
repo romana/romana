@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "ports": [
+        68
+      ],
+      "protocol": "UDP"
+    }
+  ],
+  "peers": [
+    {
+      "peer": "host"
+    }
+  ],
+  "applied_to": [
+    {
+      "dest": "local"
+    }
+  ],
+  "name": "pol-dhcp-vm",
+  "direction": "ingress"
+}
