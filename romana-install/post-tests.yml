@@ -77,3 +77,8 @@
       - romana-agent
       - romana-policy-agent
 
+- hosts: controller
+  tasks:
+  - name: Re-run policy installation step
+    shell: /var/tmp/romana-policies.sh
+    when: stack_type in [ "devstack", "openstack" ]
