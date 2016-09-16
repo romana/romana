@@ -5,7 +5,7 @@
 - name: Create /etc/ethers
   file: path="/etc/ethers" state="touch" mode=0644
 
-- name: Install Agent Proxy Add Policy
+- name: Install Agent DHCP Force Release
   become: true
   become_user: root
   copy: src="agent_dhcp_release.sh" dest="{{ romana_bin_dir }}/" mode=0755
