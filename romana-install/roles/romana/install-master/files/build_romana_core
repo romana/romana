@@ -9,3 +9,6 @@ while IFS= read -r p; do
 done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/core/... | grep -v /vendor/)
 
 go install "${pkgs[@]}"
+
+echo "export GOPATH=/var/tmp/gopath" >> ~/.profile
+echo "export PATH=$PATH:/usr/local/go/bin " >> ~/.profile
