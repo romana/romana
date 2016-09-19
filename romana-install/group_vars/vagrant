@@ -14,7 +14,7 @@ distro_info:
     box_url: "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
     user: "ubuntu"
     bootstrap:
-      - apt-get install python-apt
+      - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   "centos":
     box:     "centos/7"

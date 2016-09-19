@@ -319,7 +319,6 @@ case "$platform" in
 					echo "Unable to reach host(s). Exiting"
 					exit 1
 				fi
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
 					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
 				;;
