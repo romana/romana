@@ -60,6 +60,11 @@ services:
             method: DELETE
             when: before
             output: /var/log/policies-hook.log
+          - executable: {{ romana_bin_dir }}/agent_dhcp_release.sh
+            pattern: /vm
+            method: DELETE
+            when: before
+            output: /var/log/dhcp-release-hook.log
     config:
       lease_file : "/etc/ethers"
       wait_for_iface_try: 6
