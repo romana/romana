@@ -6,3 +6,7 @@ kubernetes_dl_dir: "/var/tmp"
 kubernetes_x_dir: "/var/tmp/kubernetes"
 
 docker_cidr: "172.17.0.1/16"
+
+# Romana specific configs for operation in a Kubernetes cluster
+romana_segment_label_name: "romanaSegment"
+
