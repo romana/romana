@@ -163,8 +163,8 @@ compile() {
 			return
 			;;
 		maybe)
-			if [[ -d "volumes/romana_bin_dir" ]]; then
-				local files=( "volumes/romana_bin_dir"/* )
+			if [[ -d "volumes/romana_bin_dir_$tag" ]]; then
+				local files=( "volumes/romana_bin_dir_$tag"/* )
 				if (( ${#files[@]} > 0 )); then
 					# skip, already compiled
 					log compile skipping
@@ -182,7 +182,7 @@ compile() {
 	log compile ... running compile stage
 	volume_flags=(
 		-v "$PWD/volumes/romana_romana":/romana
-		-v "$PWD/volumes/romana_bin_dir":/go/bin
+		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
 		-v "$PWD/volumes/romana_src_dir":/go/src/github.com/romana/core
 		-v "$PWD/volumes/romana_kube":/kube
 	)
@@ -227,13 +227,13 @@ copy() {
 	log copy start
 	log copy ... copying required files for services target
 	for f in root tenant topology ipam ipam policy listener; do
-		if ! cp -p "$PWD/volumes/romana_bin_dir/$f" "targets/services/$f"; then
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
 			fatal error copying "$f"
 		fi
 	done
 	log copy ... copying required files for agent target
 	for f in agent romana; do
-		if ! cp -p "$PWD/volumes/romana_bin_dir/$f" "targets/agent/$f"; then
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
 			fatal error copying "$f"
 		fi
 	done
