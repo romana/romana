@@ -1,0 +1,269 @@
+#!/bin/bash
+
+usage() {
+	echo "${0##*/}: entrypoint for romana services container."
+	echo "Options:"
+	echo " -h or --help: print usage"
+	echo " --api-server: URL for Kubernetes API Server, eg: http://127.0.0.1:8080"
+	echo " --ip-address: IP Address for the Romana services. If not provided, address of eth0 will be used"
+	echo " --interface: Interface for IP Address lookup, instead of eth0"
+	echo " --cidr: The CIDR used for Romana IPs (mandatory)"
+	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 256)"
+	echo " --namespaces: The number of namespaces that will be created. Used for internal Romana configuration (default: 16)"
+	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 16)"
+}
+
+# Parse command-line options
+api_server=http://127.0.0.1:8080
+ip_address=
+interface=
+cidr=
+nodes=256
+namespaces=16
+segments=16
+while [[ $1 == -* ]]; do
+	# expand --foo=bar options
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--api-server)
+		api_server="$2"
+		shift 2
+		;;
+	--ip-address)
+		ip_address="$2"
+		shift 2
+		;;
+	--interface)
+		interface="$2"
+		shift 2
+		;;
+	--cidr)
+		cidr="$2"
+		shift 2
+		;;
+	--namespaces)
+		namespaces="$2"
+		shift 2
+		;;
+	--segments)
+		segments="$2"
+		shift 2
+		;;
+	*)
+		echo "Unknown option '$1'"
+		usage
+		exit 1
+		;;
+	esac
+done
+
+usage_error() {
+	if (($# < 1)); then
+		internal_error "Call to usage_error without a message"
+	fi
+	echo "Error:" "$@"
+	usage
+	exit 1
+}
+	
+internal_error() {
+	echo "Internal Error:" "$@"
+	exit 2
+}
+
+# If IP address wasn't provided, try to look it up
+if ! [[ "$ip_address" ]]; then
+	found=0
+	if ! [[ "$interface" ]]; then
+		interface=eth0
+	fi
+	while read -r first second _; do
+		if [[ "$first" = "inet" ]]; then
+			ip_address="${second%/*}"
+			found=1
+		       	break
+		fi
+	done < <(ip addr show "$interface")
+	if ! ((found)); then
+		usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface or --ip-address to provide the address"
+	fi
+fi
+
+# Romana CIDR must be set
+if ! [[ "$cidr" ]]; then
+	usage_error "Romana CIDR must be provided."
+fi
+
+valid_number() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	if ! printf "%d\n" "$1" &> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+valid_cidr() {
+	if (($# != 1)); then
+		internal_error "valid_cidr(): expected 1 parameter, got $#"
+	fi
+	# Split w.x.y.z/p into pieces.
+	local w x y z p r v
+	IFS='./' read -r w x y z p r <<< "$1"
+	if [[ "$r" ]]; then
+		# Additional data in the CIDR. Return error.
+		return 1
+	fi
+	# Check w, x, y, z are valid numbers from 0-255.
+	error=0
+	for v in "$w" "$x" "$y" "$z"; do
+		if ! valid_number "$v"; then
+			error=1
+			break
+		fi
+		if ! ((v >= 0 && v < 256)); then
+			error=1
+			break
+		fi
+	done
+
+	if ((error)); then
+		return 1
+	fi
+	# Check p is some value between 0 and 32.
+	if ! valid_number "$p"; then
+		return 1
+	fi
+	if ! ((v >= 0 && v <= 32)); then
+		return 1
+	fi
+	
+	# Passed checks. return OK
+	return 0
+}
+	
+if ! valid_cidr "$cidr"; then
+	usage_error "CIDR '$cidr' is not valid."
+fi
+
+cidr_bits() {
+	if (($# != 1)); then
+		internal_error "cidr_bits(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_bits(): '$1' is not a valid CIDR."
+	fi
+	local p
+	IFS='./' read -r _ _ _ _ p _ <<< "$1"
+	printf "%d" "$p"
+}
+
+bits() {
+	if (($# != 1)); then
+		internal_error "bits(): expected 1 parameter, got $#"
+	fi
+	if ! valid_number "$1"; then
+		internal_error "bits(): '$1' is not a valid number."
+	fi
+	if (( $1 <= 0 )); then
+		internal_error "bits(): '$1' is not a positive number."
+	fi
+	local i
+	for ((i=1; 2**i < $1; i++)); do :; done
+	printf "%d\n" "$i"
+}
+
+# Generate the root config file using values from command-line options
+# and calculation of bits required
+cidr_bits=$(cidr_bits "$cidr")
+node_bits=$(bits "$nodes")
+namespace_bits=$(bits "$namespaces")
+segment_bits=$(bits "$segments")
+endpoint_bits=$((32 - cidr_bits - node_bits - namespace_bits - segment_bits))
+replacements=()
+replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
+replacements+=( -e 's|mysql-root-password|'"$MYSQL_ROOT_PASSWORD"'|g' )
+replacements+=( -e 's|kubernetes-apiserver|'"$api_server"'|g' )
+replacements+=( -e 's|romana-cidr|'"$cidr"'|g' )
+replacements+=( -e 's|host-bits|'"$node_bits"'|g' )
+replacements+=( -e 's|tenant-bits|'"$namespace_bits"'|g' )
+replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
+replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
+sed "${replacements[@]}" /var/tmp/romana.conf.template > /etc/romana/romana.conf.yml
+
+# Check if mysqladmin can connect to the database
+printf "Checking if database is running..."
+if ! mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
+	printf "mysqladmin status failed\n"
+	exit 1
+fi
+printf "OK.\n"
+
+# Check if databases already exist
+services=( tenant topology ipam policy )
+databases=( tenant topology ipam policy )
+printf "Checking if databases already exist:\n"
+for i in "${!databases[@]}"; do
+	if mysql ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 "${databases[i]}" &>/dev/null; then
+		# If we connected successfully, delete from list
+		printf "%s found.\n" "${databases[i]}"
+		unset services[i] databases[i]
+	else
+		printf "%s not found.\n" "${databases[i]}"
+	fi
+done
+
+# Create any missing databases
+if (( ${#databases[@]} )); then
+	# Start the root service (temporarily)
+	printf "Launching root service..."
+	/usr/local/bin/root -c /etc/romana/romana.conf.yml &>/dev/null &
+	root_svc=$!
+
+	# Wait until it's ready / listening on :9600	
+	intervals=( 0.5 0.5 0.5 1 4 )
+	ready=0
+	for i in "${intervals[@]}"; do
+		sleep "$i"
+		{ read -r _; read -r status; } < <(ss -nlt '( sport = :9600 )')
+		if [[ "$status" ]]; then
+			# Found a match
+			ready=1
+			break
+		else
+			printf " ."
+		fi
+	done
+	if ! (( ready )); then
+		printf " root service not running.\b"
+		exit 1
+	fi
+	printf " OK\n"
+
+	# Create databases for ones that were missing
+	for i in "${!services[@]}"; do
+		printf "Creating database for %s\n" "${services[i]}"
+		/usr/local/bin/"${services[i]}" -rootURL "http://$ip_address:9600" -createSchema
+	done
+	
+	# Stop the root service
+	printf "Stopping root service..."
+	kill "$root_svc"
+	wait "$root_svc"
+	printf "OK\n"
+fi
+# Generate romana-services.conf for supervisord
+replacements=()
+replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
+sed "${replacements[@]}" /var/tmp/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
+
+# Run things via supervisord
+printf "Launching Romana services via supervisord\n"
+exec supervisord
