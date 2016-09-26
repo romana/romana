@@ -308,7 +308,10 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	cp /var/lib/romana/cni-installation/cni-romana /host/opt/cni/bin/romana
+	# "temporary fix" to avoid needing another user-supplied variable
+	# cp /var/lib/romana/cni-installation/cni-romana /host/opt/cni/bin/romana
+	replacements=( -e 's|http://\$ROMANA_MASTER_IP:9601|'"${romana_root/9600/9601}"'|' )
+	sed "${replacements[@]}" /var/lib/romana/cni-installation/cni-romana > /host/opt/cni/bin/romana && chmod +x /host/opt/cni/bin/romana
 	cp /usr/local/bin/kubectl /host/opt/cni/bin/romana-kubectl
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
