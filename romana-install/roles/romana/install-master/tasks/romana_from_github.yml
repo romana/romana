@@ -14,20 +14,11 @@
 - name: Clone romana core repo into GOPATH
   git: repo="{{ romana_core_repo }}" version="{{ romana_core_branch }}" dest="/var/tmp/gopath/src/github.com/romana/core" key_file="{{ github_key is defined | ternary('~/.ssh/github_id_rsa', omit) }}" ssh_opts={{ git_ssh_options }}
 
-- name: Clone romana kube repo into GOPATH
-  git: repo="{{ romana_kube_repo }}" version="{{ romana_kube_branch }}" dest="/var/tmp/gopath/src/github.com/romana/kube" key_file="{{ github_key is defined | ternary('~/.ssh/github_id_rsa', omit) }}" ssh_opts={{ git_ssh_options }}
-
 - name: Copy a build core script
   copy: src="build_romana_core" dest="/var/tmp/build_romana_core" mode=0755
 
-- name: Copy a build kube script
-  copy: src="build_romana_kube" dest="/var/tmp/build_romana_kube" mode=0755
-
 - name: Run the build core script
   shell: /var/tmp/build_romana_core
-
-- name: Run the build kube script
-  shell: /var/tmp/build_romana_kube
 
 - name: Install files
   become: true
