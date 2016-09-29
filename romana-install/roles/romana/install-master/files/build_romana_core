@@ -1,7 +1,6 @@
 #!/bin/bash
 export GOPATH=/var/tmp/gopath
 export PATH=/usr/local/go/bin:$PATH
-export GIT_DIR=$GOPATH/src/github.com/romana/core/.git
 
 go get -d github.com/romana/core/...
 
@@ -9,6 +8,9 @@ while IFS= read -r p; do
 	pkgs+=("$p")
 done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/core/... | grep -v /vendor/)
 
+# GIT_DIR shouldn't be before go get, since it interferes with
+# git submodule update.
+export GIT_DIR=$GOPATH/src/github.com/romana/core/.git
 go install -ldflags \
 	"-X github.com/romana/core/common.buildInfo=`git describe --always` \
 	-X github.com/romana/core/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
