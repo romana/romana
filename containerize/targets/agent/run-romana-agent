@@ -271,6 +271,8 @@ if ! [[ "$romana_address" ]]; then
 	if ! romana host add "$HOSTNAME" "${host_address%/*}" "$romana_address" 9604; then
 		internal_error "unable to register host with topology"
 	fi
+	# Assume other agents on other nodes are doing the same thing. Wait for them to spin up.
+	sleep 42
 fi
 
 
