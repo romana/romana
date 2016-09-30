@@ -75,8 +75,7 @@ if ! [[ "$romana_root" ]]; then
 fi
 
 # Generate .romana.yml for romana cli tool
-replacements=()
-replacements+=( -e 's|romana-root|'"$romana_root"'|g' )
+replacements=( -e 's|romana-root|'"$romana_root"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
 
 # Check that we can reach root service
@@ -298,31 +297,22 @@ printf "Creating database for agent\n"
 /usr/local/bin/agent -rootURL "$romana_root" -createSchema
 	
 # Generate romana-agent.conf for supervisord
-replacements=()
-replacements+=( -e 's|romana-root|'"$romana_root"'|g' )
+replacements=( -e 's|romana-root|'"$romana_root"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
-
 
 # Install CNI
 if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	# "temporary fix" to avoid needing another user-supplied variable
-	# cp /var/lib/romana/cni-installation/cni-romana /host/opt/cni/bin/romana
-	replacements=( -e 's|http://\$ROMANA_MASTER_IP:9601|'"${romana_root/9600/9601}"'|' )
-	sed "${replacements[@]}" /var/lib/romana/cni-installation/cni-romana > /host/opt/cni/bin/romana && chmod +x /host/opt/cni/bin/romana
-	cp /usr/local/bin/kubectl /host/opt/cni/bin/romana-kubectl
+	cp /var/lib/romana/cni-installation/cni-romana /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
-	cp /var/lib/romana/cni-installation/10-romana.conf /host/etc/cni/net.d/10-romana.conf
+	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+	sed "${replacements[@]}" /var/lib/romana/cni-installation/10-romana.conf > /host/etc/cni/net.d/10-romana.conf
 fi
 if [[ -d /host/etc/romana ]]; then
 	cp /root/.romana.yml /host/etc/romana/cli.yml
-	# Configure kubectl, romana all the things
-	kubectl --kubeconfig=/host/etc/romana/kubectl config set-cluster romana --server="$api_server"
-	kubectl --kubeconfig=/host/etc/romana/kubectl config set-context romana --cluster=romana
-	kubectl --kubeconfig=/host/etc/romana/kubectl config use-context romana
 fi
 
 # Run things via supervisord

@@ -18,3 +18,6 @@ command=/usr/local/bin/policy -rootURL http://romana-master-address:9600
 
 [program:listener]
 command=/usr/local/bin/listener -rootURL http://romana-master-address:9600
+
+[program:kube-cni-proxy]
+command=/usr/local/bin/kube-cni-proxy -port 9609 -target http://romana-master-address:9601

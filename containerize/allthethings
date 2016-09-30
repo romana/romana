@@ -185,6 +185,7 @@ compile() {
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
 		-v "$PWD/volumes/romana_src_dir":/go/src/github.com/romana/core
 		-v "$PWD/volumes/romana_kube":/kube
+		-v "$PWD/targets/compile/src/kube-cni-proxy":/go/src/kube-cni-proxy
 	)
 	if ! docker run --rm "${volume_flags[@]}" romana/compile "$gittag"; then
 		fatal error running compile container
@@ -226,11 +227,14 @@ copy() {
 	fi
 	log copy start
 	log copy ... copying required files for services target
-	for f in root tenant topology ipam ipam policy listener; do
+	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
 			fatal error copying "$f"
 		fi
 	done
+	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl"; then
+		fatal error downloading kubectl
+	fi
 	log copy ... copying required files for agent target
 	for f in agent romana; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
@@ -240,22 +244,23 @@ copy() {
 	if ! cp -p "$PWD/volumes/romana_src_dir/pkg/util/policy/agent/agent.py" "targets/agent/agent.py"; then
 		fatal error copying agent.py
 	fi
-	if ! cp -p "$PWD/volumes/romana_kube/CNI/romana" "targets/agent/cni-romana"; then
-		fatal error copying cni-romana
-	fi
+	#if ! cp -p "$PWD/volumes/romana_kube/CNI/romana" "targets/agent/cni-romana"; then
+	#	fatal error copying cni-romana
+	#fi
 	# if ! cp -p "$PWD/volumes/romana_kube/CNI/net.d/10-romana.conf" "targets/agent/10-romana.conf"; then
 	# 	fatal error copying 10-romana.conf
 	# fi
-	if ! wget --continue --output-document="targets/agent/kubectl" "https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl"; then
-		fatal error downloading kubectl
-	fi
 	for f in agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh; do
 		if ! cp -p "$PWD/volumes/romana_romana/romana-install/roles/romana/install-agent/files/$f" "targets/agent/$f"; then
 			fatal error copying "$f"
 		fi
 	done
 	# Hack permission fixes here.
-	files_to_chmod=( agent.py cni-romana kubectl agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh )
+	files_to_chmod=( kubectl )
+	for f in "${files_to_chmod[@]}"; do
+		chmod +x "targets/services/$f"
+	done
+	files_to_chmod=( agent.py kubectl agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh )
 	for f in "${files_to_chmod[@]}"; do
 		chmod +x "targets/agent/$f"
 	done

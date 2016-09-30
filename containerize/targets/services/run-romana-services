@@ -196,7 +196,7 @@ replacements+=( -e 's|host-bits|'"$node_bits"'|g' )
 replacements+=( -e 's|tenant-bits|'"$namespace_bits"'|g' )
 replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
 replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
-sed "${replacements[@]}" /var/tmp/romana.conf.template > /etc/romana/romana.conf.yml
+sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
 
 # Check if mysqladmin can connect to the database
 printf "Checking if database is running..."
@@ -259,10 +259,16 @@ if (( ${#databases[@]} )); then
 	wait "$root_svc"
 	printf "OK\n"
 fi
+
+# Generate .romana.yml for romana cli tool
+replacements=()
+replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
+sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
+
 # Generate romana-services.conf for supervisord
 replacements=()
 replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
-sed "${replacements[@]}" /var/tmp/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
+sed "${replacements[@]}" /var/lib/romana/templates/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
 
 # Run things via supervisord
 printf "Launching Romana services via supervisord\n"

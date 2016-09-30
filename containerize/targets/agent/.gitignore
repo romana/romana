@@ -3,6 +3,4 @@ agent_dhcp_release.sh
 agent_proxy_add_policy.sh
 agent_proxy_delete_policy.sh
 agent.py
-cni-romana
-kubectl
 romana
