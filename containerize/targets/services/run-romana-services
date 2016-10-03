@@ -227,7 +227,7 @@ if (( ${#databases[@]} )); then
 	/usr/local/bin/root -c /etc/romana/romana.conf.yml &>/dev/null &
 	root_svc=$!
 
-	# Wait until it's ready / listening on :9600	
+	# Wait until it's ready / listening on :9600
 	intervals=( 0.5 0.5 0.5 1 4 )
 	ready=0
 	for i in "${intervals[@]}"; do

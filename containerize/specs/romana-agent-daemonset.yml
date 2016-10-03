@@ -14,7 +14,6 @@ spec:
       - name: romana-agent
         image: quay.io/romana/agent
         args:
-        # - --api-server=http://kube-apiserver:8080
         # - --romana-root=http://romana-root:9600
         securityContext:
           privileged: true
