@@ -11,7 +11,7 @@ instance_type:
 
 distro_info:
   "ubuntu":
-    ami:  "ami-bf3ec1fb" # Ubuntu 14.04.3 LTS
+    ami:  "ami-93d798f3" # Ubuntu 14.04.5 LTS
     user: "ubuntu"
     bootstrap:
       - apt-get install python-apt
