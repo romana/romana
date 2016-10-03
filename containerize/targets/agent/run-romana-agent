@@ -4,14 +4,12 @@ usage() {
 	echo "${0##*/}: entrypoint for romana services container."
 	echo "Options:"
 	echo " -h or --help: print usage"
-	echo " --api-server: URL for Kubernetes API Server, eg: http://127.0.0.1:8080"
 	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
 	echo " --interface: Interface for IP Address lookup, instead of eth0"
 }
 
 # Parse command-line options
 usage=0
-api_server=
 romana_root=
 interface=
 while [[ $1 == -* ]]; do
@@ -23,10 +21,6 @@ while [[ $1 == -* ]]; do
 	-h|--help)
 		usage
 		exit 0
-		;;
-	--api-server)
-		api_server="$2"
-		shift 2
 		;;
 	--romana-root)
 		romana_root="$2"
@@ -62,11 +56,6 @@ internal_error() {
 if ((usage)); then
 	usage
 	exit 0
-fi
-
-# Kubernetes API Server URL must be provided
-if ! [[ "$api_server" ]]; then
-	usage_error "Kubernetes API Server URL must be provided."
 fi
 
 # Romana Root URL must be provided
