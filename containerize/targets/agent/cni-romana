@@ -43,11 +43,21 @@ cni_success() {
 }
 
 cni_error() {
+	if [[ "$cni_error" ]]; then
+		log "cni_error: already called"
+		return
+	fi
+	cni_error=set
+
 	if (($# != 3)); then
 		# Log but continue anyway
 		log "cni_error: Expected 3 arguments, got $#"
 	fi
 	log "cni_error: $1 $2 $3"
+	if [[ "$allocated_address" ]]; then
+		log "cni_error: deallocating $allocated_address"
+		address_deallocation
+	fi
 	printf '{"cniVersion": "%s", "code": %d,"msg": "%s", "details": "%s" }\n' "$cni_version" "$1" "$2" "$3"
 	exit 1
 }
@@ -186,7 +196,7 @@ address_deallocation() {
 	if ! [[ "$deallocated_address" ]]; then
 		cni_error 202 "service-error" "address_deallocation: missing IP address"
 	fi
-		log "address_deallocation completed"
+	log "address_deallocation completed"
 }
 
 interface_address() {
@@ -205,6 +215,26 @@ interface_address() {
 	done < <(ip addr show "$1")
 	if ! ((found)); then
 		cni_error 201 "internal-error" "interface_address: inet address not found"
+	fi
+	printf "%s" "$second"
+}
+
+interface_mac() {
+	if (($# != 1)); then
+		cni_error 201 "internal-error" "interface_mac: expected 1 argument, got $#" 
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		cni_error 201 "internal-error" "interface_mac: ip link show failed"
+	fi
+	local found=0 first second
+	while read -r first second _; do
+		if [[ "$first" = "link/ether" ]]; then
+			found=1
+			break
+		fi
+	done < <(ip link show "$1")
+	if ! ((found)); then
+		cni_error 201 "internal-error" "interface_mac: mac address not found"
 	fi
 	printf "%s" "$second"
 }
@@ -267,7 +297,13 @@ namespace_isolation() {
 }
 
 agent_post_pod() {
-	post_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "de:ad:be:ef:00:00", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$allocated_address" "$namespace_isolation")
+	if ! result=$(interface_mac "veth0-${nspid}"); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	interface_mac=${result}
+
+	post_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "%s", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$interface_mac" "$allocated_address" "$namespace_isolation")
 	if ! result=$(curl -f -s -S -X POST -H "Content-Type: application/json" --data "$post_body" "http://localhost:9604/pod" 2>&1); then
 		cni_error 202 "service-error" "agent_post_pod: error posting to agent: $result"
 	fi
@@ -275,7 +311,13 @@ agent_post_pod() {
 }
 
 agent_delete_pod() {
-	delete_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "de:ad:be:ef:00:00", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$deallocated_address" "$namespace_isolation")
+	if ! result=$(interface_mac "veth0-${nspid}"); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	interface_mac=${result}
+
+	delete_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "%s", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$interface_mac" "$deallocated_address" "$namespace_isolation")
 	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "http://localhost:9604/pod" 2>&1); then
 		cni_error 202 "service-error" "agent_delete_pod: error deleting from agent: $result"
 	fi
