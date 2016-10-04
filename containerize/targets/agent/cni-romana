@@ -311,13 +311,7 @@ agent_post_pod() {
 }
 
 agent_delete_pod() {
-	if ! result=$(interface_mac "veth0-${nspid}"); then
-		printf "%s\n" "$result"
-		exit 1
-	fi
-	interface_mac=${result}
-
-	delete_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "%s", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$interface_mac" "$deallocated_address" "$namespace_isolation")
+	delete_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$deallocated_address" "$namespace_isolation")
 	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "http://localhost:9604/pod" 2>&1); then
 		cni_error 202 "service-error" "agent_delete_pod: error deleting from agent: $result"
 	fi
