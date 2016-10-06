@@ -53,11 +53,11 @@ function get_pod_ip() {
     kubectl ${2:+--namespace "$2"} get pod "$1" -o json | jq -r '.status.podIP'
 }
 function delete_tenant() {
-    TENANT_ID=$(mysql -s --disable-column-names -u root --password={{ stack_password }} tenant --execute='select id from tenants where name="'"$1"'"')
+    TENANT_ID=$(sudo mysql -s --disable-column-names -u root --password={{ stack_password }} tenant --execute='select id from tenants where name="'"$1"'"')
     if [[ $TENANT_ID ]]; then
-        mysql -u root --password={{ stack_password }} tenant --execute='delete from tenants where id='$TENANT_ID
-        mysql -u root --password={{ stack_password }} tenant --execute='delete from segments where tenant_id='$TENANT_ID
-        mysql -u root --password={{ stack_password }} ipam --execute='delete from endpoints where tenant_id='$TENANT_ID
+        sudo mysql -u root --password={{ stack_password }} tenant --execute='delete from tenants where id='$TENANT_ID
+        sudo mysql -u root --password={{ stack_password }} tenant --execute='delete from segments where tenant_id='$TENANT_ID
+        sudo mysql -u root --password={{ stack_password }} ipam --execute='delete from endpoints where tenant_id='$TENANT_ID
     fi
 }
 
