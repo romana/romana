@@ -13,6 +13,15 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+// This package provides a proxy between kubernetes nodes using Romana CNI and
+// Romana services running on a kubernetes master.
+// When allocating an IP, the proxy looks up "labels" in the Kubernetes pod spec,
+// and adds that to the IPAM request.
+// When deallocating an IP, the proxy finds the IP previously allocated for the pod,
+// and passes that to IPAM. (The interface on the node is deleted before CNI is triggered,
+// so it can't be provided by the node directly.)
+// An endpoint for looking up kubernetes namespace information is also provided.
+
 package main
 
 import (
@@ -148,6 +157,7 @@ func endpointsHandler(w http.ResponseWriter, r *http.Request) {
 func cniPostRequest(w http.ResponseWriter, r *http.Request) {
 	// Decode request body
 	reqData := romanaCNIRequest{Method: r.Method}
+	// TODO: Consider replacing calls to json.NewDecoder().Decode with json.Unmarshal
 	err := json.NewDecoder(&io.LimitedReader{R: r.Body, N: 1 << 16}).Decode(&reqData)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %s", err), 422) // http.StatusUnprocessableEntity
@@ -209,6 +219,7 @@ func cniPostRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error during request to %s: %s", ipamReq.URL, err), http.StatusBadGateway)
 		return
 	}
+	defer ipamRes.Body.Close()
 
 	// Create a file that will hold the data received from IPAM
 	f, err := os.Create(filepath.Join(allocatedAddressDir, reqData.Namespace+":"+reqData.PodName))
@@ -277,6 +288,7 @@ func cniDeleteRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error from request: %s", err), http.StatusBadGateway)
 		return
 	}
+	defer ipamRes.Body.Close()
 
 	// Copy the data through
 	w.WriteHeader(ipamRes.StatusCode)

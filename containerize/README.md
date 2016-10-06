@@ -25,18 +25,15 @@ romana/containerize/allthethings --tag=v0.9.3
 
 ## Romana Services
 
-Edit the file: `romana/containerize/specs/romana-services.manifest`:
+Edit the file: `romana/containerize/specs/romana-services-manifest.yml`:
 ```yaml
   - name: romana-services
     image: quay.io/romana/services
     args:
     # - --cidr=10.0.0.0/8
-    # - --api-server=http://kube-apiserver:8080
 ```
-Uncomment the two lines, and replace with the appropriate values for your environment.
+Uncomment the `--cidr` line, and replace the value with an appropriate setting for your environment.
 Copy the file into `/etc/kubernetes/manifests` on your master node.
-
-
 
 ## Romana Agent
 
@@ -45,10 +42,9 @@ Edit the file: `romana/containerize/specs/romana-agent-daemonset.yml`:
       - name: romana-agent
         image: quay.io/romana/agent
         args:
-        # - --api-server=http://kube-apiserver:8080
         # - --romana-root=http://romana-root:9600
 ```
-Uncomment the two lines, and replace with the appropriate values for your environment.
+Uncomment the `--romana-root` line, and replace with the IP of the node runing romana-services.
 Then run:
 ```bash
 kubectl create -f romana-agent-daemonset.yml`
