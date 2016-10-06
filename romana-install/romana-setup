@@ -304,7 +304,10 @@ case "$platform" in
 				hosts_ready=0
 				for ((i=0; i < 5; i++)); do
 					echo "Attempting to connect to hosts"
-					if ansible -i "${stack_data_dir}/inventory" stack_nodes -m ping; then
+					# ansible ping requires python, if python is missing then
+					# install it later below and use raw mode here instead.
+					# if ansible -i "${stack_data_dir}/inventory" stack_nodes -m ping; then
+					if ansible -i "${stack_data_dir}/inventory" stack_nodes -m raw -a "uname -a"; then
 						hosts_ready=1
 						break
 					fi

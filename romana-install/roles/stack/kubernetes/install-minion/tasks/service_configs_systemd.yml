@@ -5,6 +5,10 @@
 - name: Override ExecStart to add bridge IP option
   template: src="systemd/docker_with_bip.conf" dest="/etc/systemd/system/docker.service.d/docker_with_bip.conf"
 
+- name: Create service configurations directories
+  file: path="/usr/lib/systemd/system/" state="directory" owner="root" group="root"
+  ignore_errors: True
+
 - name: Install service configurations
   copy: src="systemd/{{ item }}" dest="/usr/lib/systemd/system/{{ item }}"
   with_items:
