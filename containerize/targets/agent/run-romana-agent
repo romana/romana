@@ -1,0 +1,378 @@
+#!/bin/bash
+
+usage() {
+	echo "${0##*/}: entrypoint for romana services container."
+	echo "Options:"
+	echo " -h or --help: print usage"
+	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
+	echo " --interface: Interface for IP Address lookup, instead of eth0"
+}
+
+# Parse command-line options
+usage=0
+romana_root=
+interface=
+while [[ $1 == -* ]]; do
+	# expand --foo=bar options
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--romana-root)
+		romana_root="$2"
+		shift 2
+		;;
+	--interface)
+		interface="$2"
+		shift 2
+		;;
+	*)
+		echo "Unknown option '$1'"
+		usage
+		exit 1
+		;;
+	esac
+done
+
+usage_error() {
+	if (($# < 1)); then
+		internal_error "Call to usage_error without a message"
+	fi
+	echo "Error:" "$@"
+	usage
+	exit 1
+}
+	
+internal_error() {
+	echo "Internal Error:" "$@"
+	exit 2
+}
+
+# If usage was requested, call usage function
+if ((usage)); then
+	usage
+	exit 0
+fi
+
+# Romana Root URL must be provided
+if ! [[ "$romana_root" ]]; then
+	usage_error "Romana Root URL must be provided."
+fi
+
+# Generate .romana.yml for romana cli tool
+replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
+
+# Check that we can reach root service
+if ! romana host list &>/dev/null; then
+	usage_error "Unable to fetch list of hosts using '$romana_root'"
+fi
+
+# Check if this host is already configured
+# Note: 'romana host show' returns empty list for this query.
+if ! host_info=$(romana host show "$HOSTNAME" -f json 2>/dev/null); then
+	internal_error "romana host show command failed."
+fi
+romana_address=
+case "$(jq -r 'length' <<< "$host_info")" in
+1)
+	# Already exists. Extract Romana address
+	romana_address=$(jq -r '.[0].romana_ip // empty' <<< "$host_info")
+	if ! [[ "$romana_address" ]]; then
+		internal_error "Unable to find romana_ip for '$HOSTNAME'"
+	fi
+	;;
+0)
+	# Attempt to allocate address, below.
+	;;
+*)
+	internal_error "Bad response for host list for '$HOSTNAME'"
+	;;
+esac
+
+# Networking functions
+interface_address() {
+	if (($# != 1)); then
+		internal_error "interface_address(): expected 1 parameter, got $#"
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		return 1
+	fi
+	local found=0 first second
+	while read -r first second _; do
+		if [[ "$first" = "inet" ]]; then
+			found=1
+			break
+		fi
+	done < <(ip addr show "$1")
+	if ! ((found)); then
+		return 1
+	fi
+	printf "%s" "$second"
+}
+
+valid_number() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	if ! printf "%d\n" "$1" &> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+valid_cidr() {
+	if (($# != 1)); then
+		internal_error "valid_cidr(): expected 1 parameter, got $#"
+	fi
+	# Split w.x.y.z/p into pieces.
+	local w x y z p r v
+	IFS='./' read -r w x y z p r <<< "$1"
+	if [[ "$r" ]]; then
+		# Additional data in the CIDR. Return error.
+		return 1
+	fi
+	# Check w, x, y, z are valid numbers from 0-255.
+	error=0
+	for v in "$w" "$x" "$y" "$z"; do
+		if ! valid_number "$v"; then
+			error=1
+			break
+		fi
+		if ! ((v >= 0 && v < 256)); then
+			error=1
+			break
+		fi
+	done
+
+	if ((error)); then
+		return 1
+	fi
+	# Check p is some value between 0 and 32.
+	if ! valid_number "$p"; then
+		return 1
+	fi
+	if ! ((v >= 0 && v <= 32)); then
+		return 1
+	fi
+	
+	# Passed checks. return OK
+	return 0
+}
+
+cidr_addr() {
+	if (($# != 1)); then
+		internal_error "cidr_addr(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_addr(): '$1' is not a valid CIDR."
+	fi
+	local a
+	IFS='/' read -r a _ <<< "$1"
+	printf "%s" "$a"
+}
+
+cidr_bits() {
+	if (($# != 1)); then
+		internal_error "cidr_bits(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_bits(): '$1' is not a valid CIDR."
+	fi
+	local p
+	IFS='./' read -r _ _ _ _ p _ <<< "$1"
+	printf "%d" "$p"
+}
+
+cidr_pos() {
+	if (($# != 1)); then
+		internal_error "cidr_pos(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_pos(): '$1' is not a valid CIDR."
+	fi
+	local w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	printf "%d" "$((((w<<24) + (x<<16) + (y<<8) + z) % p))"
+}
+
+cidr_to_int() {
+	if (($# != 1)); then
+		internal_error "cidr_to_int(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_to_int(): '$1' is not a valid CIDR."
+	fi
+	local w x y z
+	IFS='.' read -r w x y z _ <<< "$(cidr_addr "$1")"
+	printf "%d" "$(((w<<24) + (x<<16) + (y<<8) + z))"
+}
+
+# Romana config functions
+allocate_romana_address() {
+	if (($# != 1)); then
+		internal_error "allocate_romana_address(): expected 1 parameter, got $#"
+	fi
+	if ! valid_number "$1"; then
+		internal_error "allocate_romana_address(): '$1' is not a valid number."
+	fi
+	local path topology_config romana_cidr host_bits cidr_bits host_prefix v
+	# Try to resolve topology config
+	path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="topology-config") | .href')
+	if ! [[ "$path" ]]; then
+		internal_error "empty result attempting to resolve topology-config"
+	fi
+	topology_config=$(curl -s "${romana_root}${path}")
+	romana_cidr=$(jq -r '.config.datacenter.cidr // empty' <<< "$topology_config")
+	host_bits=$(jq -r '.config.datacenter.host_bits // empty' <<< "$topology_config")
+	if ! valid_cidr "$romana_cidr"; then
+		internal_error "invalid result attempting to get cidr configuration for topology"
+	fi
+	if ! valid_number "$host_bits"; then
+		internal_error "invalid result attempting to get host_bits configuration for topology"
+	fi
+	cidr_bits=$(cidr_bits "$romana_cidr")
+	host_prefix=$((cidr_bits + host_bits))
+	v=$(cidr_to_int "$romana_cidr")
+	((v+=$1<<host_prefix))
+	((v+=1))
+	printf "%d.%d.%d.%d/%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))" "$host_prefix"
+}
+
+# If no address found, allocate one.
+if ! [[ "$romana_address" ]]; then
+	host_address=
+	if ! [[ "$interface" ]]; then
+		# Default to eth0
+		interface=eth0
+	fi
+	if ! host_address=$(interface_address "$interface"); then
+		usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface"
+	fi
+	host_number=$(cidr_pos "$host_address")
+	if ! romana_address=$(allocate_romana_address "$host_number"); then
+		exit $?
+	fi
+	if ! romana host add "$HOSTNAME" "${host_address%/*}" "$romana_address" 9604; then
+		internal_error "unable to register host with topology"
+	fi
+	# Assume other agents on other nodes are doing the same thing. Wait for them to spin up.
+	sleep 42
+fi
+
+# Create romana-gw interface if not present.
+if ! ip link show romana-gw &>/dev/null; then
+	if ! ip link add romana-gw type dummy; then
+		internal_error "Error attempting to add romana-gw device. Ensure the container is launched with host privileges"
+	fi
+fi
+# Force link up
+ip link set romana-gw up
+# Assign address if not already set
+if ! interface_address romana_gw; then
+	ip addr add "$romana_address" dev romana-gw
+fi
+
+# Check that our address is set correctly
+if [[ "$(interface_address romana-gw)" != "$romana_address" ]]; then
+	internal_error "romana-gw address does not match expected address '$romana_address'"
+fi
+
+# Create agent database
+printf "Creating database for agent\n"
+/usr/local/bin/agent -rootURL "$romana_root" -createSchema
+	
+# Generate romana-agent.conf for supervisord
+replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
+
+# Install CNI
+if [[ -d /host/usr/local/bin ]]; then
+	cp /usr/local/bin/romana /host/usr/local/bin/romana
+fi
+if [[ -d /host/opt/cni/bin ]]; then
+	cp /var/lib/romana/cni-installation/cni-romana /host/opt/cni/bin/romana
+fi
+if [[ -d /host/etc/cni/net.d ]]; then
+	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+	sed "${replacements[@]}" /var/lib/romana/cni-installation/10-romana.conf > /host/etc/cni/net.d/10-romana.conf
+fi
+if [[ -d /host/etc/romana ]]; then
+	cp /root/.romana.yml /host/etc/romana/cli.yml
+fi
+
+# Apply any existing policies
+policy_path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="policy-config") | .href')
+if ! [[ "$policy_path" ]]; then
+	internal_error "empty result attempting to resolve policy-config"
+fi
+policy_config=$(curl -s "$romana_root$policy_path")
+
+policy_host=$(jq -r '.common.api.host // empty' <<< "$policy_config" )
+policy_port=$(jq -r '.common.api.port // empty' <<< "$policy_config" )
+if ! [[ "$policy_host" ]]; then
+	internal_error "invalid value for policy host"
+fi
+if ! [[ "$policy_port" ]]; then
+	internal_error "invalid value for policy port"
+fi
+policy_url=$(printf "http://%s:%s/policies" "$policy_host" "$policy_port")
+
+policy_list=$(curl -s "$policy_url")
+num_policies=$(jq -r 'length' <<< "$policy_list")
+if [[ "$num_policies" ]] && (( num_policies )); then
+	# Start the policy-agent service (temporarily)
+	printf "Launching policy-agent service..."
+	/usr/local/bin/agent.py &>/dev/null &
+	pa_svc=$!
+
+	# Wait until it's ready / listening on :9630
+	intervals=( 0.5 0.5 0.5 1 4 )
+	ready=0
+	for i in "${intervals[@]}"; do
+		sleep "$i"
+		{ read -r _; read -r status; } < <(ss -nlt '( sport = :9630 )')
+		if [[ "$status" ]]; then
+			# Found a match
+			ready=1
+			break
+		else
+			printf " ."
+		fi
+	done
+	if ! (( ready )); then
+		printf " root service not running.\b"
+		exit 1
+	fi
+	printf " OK\n"
+
+	# Get a list of Policy IDs
+	policy_ids=()
+	while read -ra id; do
+		policy_ids+=( "$id" )
+	done < <(jq -r '.[] | .id'  <<< "$policy_list")
+	for i in "${policy_ids[@]}"; do
+		printf "Creating policy %s ..." "$i"
+		if ! result=$(curl -f -s -S "$policy_url/$i" 2>&1); then
+			internal_error "Error fetching policy $i: $result"
+		fi
+		if ! result=$(curl -f -s -S -H 'content-type: application/json' -d "$result" -X POST http://localhost:9630/ 2>&1); then
+			internal_error "Error pushing policy $i: $result"
+		fi
+		printf " done\n"
+	done
+	
+	# Stop the policy-agent service
+	printf "Stopping policy-agent service..."
+	kill "$pa_svc"
+	wait "$pa_svc"
+	printf "OK\n"
+fi
+
+# Run things via supervisord
+printf "Launching Romana services via supervisord\n"
+exec supervisord

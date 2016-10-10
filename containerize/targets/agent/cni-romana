@@ -1,0 +1,342 @@
+#!/bin/bash
+# Copyright (c) 2016 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# Romana CNI plugin for kubernetes.
+
+cni_version=0.2.0
+supported_versions=( 0.1.0 0.2.0 )
+
+log() {
+	printf "$(date +"%Y-%m-%d %H:%M:%S") %s:%s%s\n" "$pod_namespace" "$pod_name" "$(printf " %s" "$@")" >> /var/log/romana-cni.log
+}
+
+# Handle VERSION command before getting too complicated
+if [[ "$CNI_COMMAND" = "VERSION" ]]; then
+	log "VERSION requested"
+	supported=""
+	sep=""
+	for v in "${supported_versions[@]}"; do
+		printf -v supported '%s%s"%s"' "$supported" "$sep" "$v"
+		sep=", "
+	done
+	printf '{ "cniVersion": "%s", "supportedVersions": [ %s ] }\n' "$cni_version" "$supported"
+	exit 0
+fi
+
+cni_success() {
+	log "cni_success: $allocated_address"
+	printf '{ "cniVersion": "%s", "ip4": { "ip": "%s/32" } }\n' "$cni_version" "$allocated_address" 
+	exit
+}
+
+cni_error() {
+	if [[ "$cni_error" ]]; then
+		log "cni_error: already called"
+		return
+	fi
+	cni_error=set
+
+	if (($# != 3)); then
+		# Log but continue anyway
+		log "cni_error: Expected 3 arguments, got $#"
+	fi
+	log "cni_error: $1 $2 $3"
+	if [[ "$allocated_address" ]]; then
+		log "cni_error: deallocating $allocated_address"
+		address_deallocation
+	fi
+	printf '{"cniVersion": "%s", "code": %d,"msg": "%s", "details": "%s" }\n' "$cni_version" "$1" "$2" "$3"
+	exit 1
+}
+
+# Read network configuration. CNI provides this on stdin.
+network_config="$(cat)"
+
+# Extract all the important things.
+cfg_cni_version=$(jq -r '.cniVersion // empty' <<< "$network_config")
+cfg_name=$(jq -r '.name // empty' <<< "$network_config")
+cfg_type=$(jq -r '.type // empty' <<< "$network_config")
+cfg_ipam_type=$(jq -r '.ipam.type // empty' <<< "$network_config")
+# Not adding version check.
+expected_name="romana-k8s-network"
+expected_type="romana"
+expected_ipam_type="romana-ipam"
+if ! [[ "$cfg_name" ]] || [[ "$cfg_name" != "$expected_name" ]]; then
+	cni_error 101 "cni-name-error" "CNI name is '$cfg_name', expected '$expected_name'"
+fi
+if ! [[ "$cfg_type" ]] || [[ "$cfg_type" != "$expected_type" ]]; then
+	cni_error 102 "cni-type-error" "CNI type is '$cfg_name', expected '$expected_name'"
+fi
+if ! [[ "$cfg_ipam_type" ]] || [[ "$cfg_ipam_type" != "$expected_ipam_type" ]]; then
+	cni_error 103 "cni-ipam-type-error" "CNI ipam type is '$cfg_ipam_type', expected '$expected_ipam_type'"
+fi
+
+# Required config items
+romana_root=$(jq -r '.romana_root // empty' <<< "$network_config")
+segment_label_name=$(jq -r '.segment_label_name // empty' <<< "$network_config")
+if ! [[ "$romana_root" ]]; then
+	cni_error 110 "cni-misssing-config" "romana_root"
+fi
+if ! [[ "$segment_label_name" ]]; then
+	cni_error 110 "cni-misssing-config" "segment_label_name"
+fi
+
+service_address() {
+	if (($# != 1)); then
+		cni_error 201 "internal-error" "service_address: expected 1 argument, got $#" 
+	fi
+	if ! result=$(curl -f -s -S "$romana_root/" 2>&1); then
+		cni_error 202 "service-error" "service_address: error requesting root service list: $result"
+	fi
+	if ! [[ "$(jq -r '.services // empty' <<< "$result")" ]]; then
+		cni_error 202 "service-error" "service_address: service list not found"
+	fi
+	address=$(jq -r --arg name "$1" '.services[] | select(.name==$name) | .links[0].href // empty' <<< "$result")
+	if ! [[ "$address" ]]; then
+		cni_error 202 "service-error" "service_address: address not found for '$1'"
+	fi
+	printf "%s" "$address"
+}
+
+service_config() {
+	if (($# != 1)); then
+		cni_error 201 "internal-error" "service_config: expected 1 argument, got $#" 
+	fi
+	if ! result=$(curl -f -s -S "$romana_root/" 2>&1); then
+		cni_error 202 "service-error" "service_config: error requesting root service list: $result"
+	fi
+	local config="$1-config"
+	path=$(jq -r --arg config "$config" '.links[] | select(.rel==$config) | .href // empty')
+	if ! [[ "$path" ]]; then
+		cni_error 202 "service-error" "service_config: no $config in root service"
+	fi
+	if ! result=$(curl -f -s -S "$romana_root$path" 2>&1); then
+		cni_error 202 "service-error" "service_config: error requesting $path for $config: $result"
+	fi
+	printf "%s" "$result"
+}
+
+parse_cni_args() {
+	IFS=/ read -r _ _ nspid _ <<< "$CNI_NETNS"
+	if ! [[ "$nspid" ]]; then
+		cni_error 199 "invocation-error" "unexpected CNI_NETNS value: '$CNI_NETNS'"
+	fi
+	pod_namespace=
+	pod_name=
+	local args kv k v
+	IFS=';' read -ra args <<< "$CNI_ARGS"
+	for kv in "${args[@]}"; do
+		k=${kv%%=*}
+		v=${kv#*=}
+		case "$k" in
+		K8S_POD_NAMESPACE)
+			if ! [[ "$v" ]]; then
+				cni_error 199 "invocation-error" "empty value for K8S_POD_NAMESPACE in CNI_ARGS"
+			fi
+			pod_namespace="$v"
+			;;
+		K8S_POD_NAME)
+			if ! [[ "$v" ]]; then
+				cni_error 199 "invocation-error" "empty value for K8S_POD_NAME in CNI_ARGS"
+			fi
+			pod_name="$v"
+			;;
+		esac
+	done
+	if ! [[ "$pod_namespace" ]]; then
+		cni_error 199 "invocation-error" "K8S_POD_NAMESPACE missing in CNI_ARGS"
+	fi
+	if ! [[ "$pod_name" ]]; then
+		cni_error 199 "invocation-error" "K8S_POD_NAME missing in CNI_ARGS"
+	fi
+	log "parse_cni_args"
+}
+
+address_allocation() {
+	if ! result=$(service_address kube-cni-proxy); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	host="$result"
+	post_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$HOSTNAME" "$pod_namespace" "$pod_name")
+	if ! result=$(curl -f -s -S -X POST -H "Content-Type: application/json" --data "$post_body" "$host/endpoints" 2>&1); then
+		cni_error 202 "service-error" "address_allocation: error allocating address: $result"
+	fi
+	allocated_address=$(jq -r '.ip' <<< "$result")
+	if ! [[ "$allocated_address" ]]; then
+		cni_error 202 "service-error" "address_allocation: missing IP address"
+	fi
+	log "address_allocation: Address is $allocated_address"
+}
+
+address_deallocation() {
+	if ! result=$(service_address kube-cni-proxy); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	host="$result"
+	delete_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$HOSTNAME" "$pod_namespace" "$pod_name")
+	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "$host/endpoints" 2>&1); then
+		cni_error 202 "service-error" "address_deallocation: error deallocating address: $result"
+	fi
+	deallocated_address=$(jq -r '.ip' <<< "$result")
+	if ! [[ "$deallocated_address" ]]; then
+		cni_error 202 "service-error" "address_deallocation: missing IP address"
+	fi
+	log "address_deallocation completed"
+}
+
+interface_address() {
+	if (($# != 1)); then
+		cni_error 201 "internal-error" "interface_address: expected 1 argument, got $#" 
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		cni_error 201 "internal-error" "interface_address: ip link show failed"
+	fi
+	local found=0 first second
+	while read -r first second _; do
+		if [[ "$first" = "inet" ]]; then
+			found=1
+			break
+		fi
+	done < <(ip addr show "$1")
+	if ! ((found)); then
+		cni_error 201 "internal-error" "interface_address: inet address not found"
+	fi
+	printf "%s" "$second"
+}
+
+interface_mac() {
+	if (($# != 1)); then
+		cni_error 201 "internal-error" "interface_mac: expected 1 argument, got $#" 
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		cni_error 201 "internal-error" "interface_mac: ip link show failed"
+	fi
+	local found=0 first second
+	while read -r first second _; do
+		if [[ "$first" = "link/ether" ]]; then
+			found=1
+			break
+		fi
+	done < <(ip link show "$1")
+	if ! ((found)); then
+		cni_error 201 "internal-error" "interface_mac: mac address not found"
+	fi
+	printf "%s" "$second"
+}
+
+configure_address() {
+	if ! [[ "$allocated_address" ]]; then
+		cni_error 201 "internal-error" "configure_address: no address allocated"
+	fi
+	if ! result=$(interface_address romana-gw); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	gw_ip=${result%/*}
+	
+	if ! ip link add "veth0-${nspid}" type veth peer name "veth1-${nspid}"; then
+		cni_error 203 "execution-error" "ip link add failed"
+	fi
+	if ! ip link set "veth1-${nspid}" netns "${nspid}"; then
+		cni_error 203 "execution-error" "ip link set netns failed"
+	fi
+	if ! nsenter -t "${nspid}" -n ip link set "veth1-${nspid}" name eth0; then
+		cni_error 203 "execution-error" "ip link set name failed"
+	fi
+	if ! nsenter -t "${nspid}" -n ip link set eth0 up; then
+		cni_error 203 "execution-error" "ip link set up failed"
+	fi
+	if ! nsenter -t "${nspid}" -n ip addr add "$allocated_address/32" dev eth0; then
+		cni_error 203 "execution-error" "ip addr add failed"
+	fi
+	if ! nsenter -t "${nspid}" -n ip ro add "$gw_ip" dev eth0; then
+		cni_error 203 "execution-error" "ip ro add failed"
+	fi
+	if ! nsenter -t "${nspid}" -n ip ro add default via "$gw_ip" dev eth0; then
+		cni_error 203 "execution-error" "ip ro add default failed"
+	fi
+	if ! ip link set "veth0-${nspid}" up; then
+		cni_error 203 "execution-error" "ip link set netns failed"
+	fi
+	log "configure_address: configured address $allocated_address"
+}
+
+namespace_isolation() {
+	namespace_isolation="off"
+	if ! result=$(service_address kube-cni-proxy); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	host="$result"
+	if ! result=$(curl -f -s -S "$host/namespaces?namespace=$pod_namespace" 2>&1); then
+		cni_error 202 "service-error" "namespace isolation: error fetching namespace data: $result"
+	fi
+	ingress_policy=$(jq -r '.metadata.annotations["net.beta.kubernetes.io/networkpolicy"] // empty' <<< "$result")
+	if [[ "$ingress_policy" ]]; then
+		isolation=$(jq -r '.ingress.isolation // empty' <<< "$ingress_policy")
+		if [[ "$isolation" = "DefaultDeny" ]]; then
+			namespace_isolation="on"
+		fi
+	fi
+	log "namespace_isolation: $namespace_isolation"
+}
+
+agent_post_pod() {
+	if ! result=$(interface_mac "veth0-${nspid}"); then
+		printf "%s\n" "$result"
+		exit 1
+	fi
+	interface_mac=${result}
+
+	post_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "%s", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$interface_mac" "$allocated_address" "$namespace_isolation")
+	if ! result=$(curl -f -s -S -X POST -H "Content-Type: application/json" --data "$post_body" "http://localhost:9604/pod" 2>&1); then
+		cni_error 202 "service-error" "agent_post_pod: error posting to agent: $result"
+	fi
+	log "agent_post_pod: completed"
+}
+
+agent_delete_pod() {
+	delete_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$deallocated_address" "$namespace_isolation")
+	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "http://localhost:9604/pod" 2>&1); then
+		cni_error 202 "service-error" "agent_delete_pod: error deleting from agent: $result"
+	fi
+	log "agent_delete_pod: completed"
+}
+
+# Main body
+case "$CNI_COMMAND" in
+	ADD)
+		parse_cni_args
+		address_allocation
+		configure_address
+		namespace_isolation
+		agent_post_pod
+		cni_success
+		;;
+	DEL)
+		parse_cni_args
+		address_deallocation
+		agent_delete_pod
+		;;
+	VERSION)
+		cni_error 201 "internal-error" "VERSION command unhandled"
+		;;
+	*)
+		cni_error 199 "invocation-error" "Unknown CNI_COMMAND: '$CNI_COMMAND'"
+		;;
+esac

@@ -1,0 +1,41 @@
+#!/bin/bash
+if (($# != 1)); then
+	echo "expected 1 parameter (branch/tag to build)"
+	exit 1
+fi
+if ! [[ -d "/go/src/github.com/romana/core/.git" ]]; then
+	git clone https://github.com/romana/core /go/src/github.com/romana/core
+fi
+if ! git -C /go/src/github.com/romana/core fetch; then
+	echo "failed to fetch"
+	exit 1
+fi
+if ! git -C /go/src/github.com/romana/core checkout "$1"; then
+	echo "failed to checkout '$1'"
+	exit 1
+fi
+if ! git -C /go/src/github.com/romana/core pull; then
+	echo "failed to pull"
+	exit 1
+fi
+git -C /go/src/github.com/romana/core submodule update --init --recursive
+go get -d github.com/romana/core/...
+while IFS= read -r p; do pkgs+=("$p"); done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}' github.com/romana/core/... | grep -v /vendor/)
+go install "${pkgs[@]}"
+go install kube-cni-proxy
+
+if ! [[ -d "/kube/.git" ]]; then
+	git clone https://github.com/romana/kube /kube
+fi
+if ! git -C /kube checkout "$1"; then
+	echo "failed to checkout '$1'"
+	exit 1
+fi
+
+if ! [[ -d "/romana/.git" ]]; then
+	git clone https://github.com/romana/romana /romana
+fi
+if ! git -C /romana checkout "$1"; then
+	echo "failed to checkout '$1'"
+	exit 1
+fi
