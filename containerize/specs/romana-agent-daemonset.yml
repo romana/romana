@@ -12,7 +12,7 @@ spec:
       hostNetwork: true
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent
+        image: quay.io/romana/agent:v0.9.3.2
         args:
         # - --romana-root=http://romana-root:9600
         securityContext:
