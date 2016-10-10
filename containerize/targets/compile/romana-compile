@@ -14,7 +14,7 @@ if ! git -C /go/src/github.com/romana/core checkout "$1"; then
 	echo "failed to checkout '$1'"
 	exit 1
 fi
-if ! git -C /go/src/github.com/romana/core pull; then
+if [[ "$(git -C /go/src/github.com/romana/core symbolic-ref --short -q HEAD)" ]] && ! git -C /go/src/github.com/romana/core pull; then
 	echo "failed to pull"
 	exit 1
 fi
