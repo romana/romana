@@ -17,17 +17,12 @@ spec:
     - name: db-path
       mountPath: /var/lib/mysql
   - name: romana-services
-    image: quay.io/romana/services
+    image: quay.io/romana/services:v0.9.3.2
     args:
     # - --cidr=10.0.0.0/8
-    # - --api-server=http://kube-apiserver:8080
     env:
     - name: MYSQL_ROOT_PASSWORD
       value: romana 
-    ports:
-    - name: "romana-root"
-      containerPort: 9600
-      protocol: "TCP"
   volumes:
   - name: db-path
     hostPath:
