@@ -23,32 +23,54 @@ romana/containerize/allthethings --tag=v0.9.3
 
 # Installation
 
-## Romana Services
+## Using kubeadm
 
-Edit the file: `romana/containerize/specs/romana-services-manifest.yml`:
+Please see the [kubeadm getting started guide](http://kubernetes.io/docs/getting-started-guides/kubeadm/) and complete steps 1, 2, and 3.
+
+Once completed, the following steps will install Romana Services and Romana Agent (CNI).
+
+Download the YAML files.
+
+```bash
+files=(
+	https://raw.githubusercontent.com/romana/romana/master/containerize/specs/romana-services-manifest.yml
+	https://raw.githubusercontent.com/romana/romana/master/containerize/specs/romana-agent-daemonset.yml
+)
+wget "${files[@]}"
+```
+
+Edit `romana-services-manifest.yml`:
 ```yaml
   - name: romana-services
     image: quay.io/romana/services
     args:
     # - --cidr=10.0.0.0/8
 ```
+
 Uncomment the `--cidr` line, and replace the value with an appropriate setting for your environment.
+
 Copy the file into `/etc/kubernetes/manifests` on your master node.
 
-## Romana Agent
+```bash
+sudo cp romana-services-manifest.yml /etc/kubernetes/manifests
+```
 
-Edit the file: `romana/containerize/specs/romana-agent-daemonset.yml`:
+Edit `romana-agent-daemonset.yml`:
 ```yaml
       - name: romana-agent
         image: quay.io/romana/agent
         args:
         # - --romana-root=http://romana-root:9600
 ```
+
 Uncomment the `--romana-root` line, and replace with the IP of the node runing romana-services.
+
 Then run:
 ```bash
-kubectl create -f romana-agent-daemonset.yml`
+kubectl apply -f romana-agent-daemonset.yml
 ```
+
+Note: The kube-dns component may not operate properly. It can be disabled by runningi `kubectl --namespace=kube-system scale --replicas=0 deployment/kube-dns`
 
 # TODO
 
