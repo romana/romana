@@ -63,14 +63,14 @@ Edit `romana-agent-daemonset.yml`:
         # - --romana-root=http://romana-root:9600
 ```
 
-Uncomment the `--romana-root` line, and replace with the IP of the node runing romana-services.
+Uncomment the `--romana-root` line, and replace with the IP of the node running romana-services.
 
 Then run:
 ```bash
 kubectl apply -f romana-agent-daemonset.yml
 ```
 
-Note: The kube-dns component may not operate properly. It can be disabled by runningi `kubectl --namespace=kube-system scale --replicas=0 deployment/kube-dns`
+Note: The kube-dns component may not operate properly. It can be disabled by running `kubectl --namespace=kube-system scale --replicas=0 deployment/kube-dns`
 
 # TODO
 
