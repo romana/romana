@@ -11,13 +11,16 @@ instance_type:
 
 distro_info:
   "ubuntu":
-    ami:  "ami-93d798f3" # Ubuntu 14.04.5 LTS
+    ami:
+      "trusty": "ami-93d798f3" # Ubuntu 14.04.5 LTS
+      "xenial": "ami-36094156" # Ubuntu 16.04 LTS
     user: "ubuntu"
     bootstrap:
       - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   "centos":
-    ami:  "ami-af4333cf" # CentOS Linux 7 x86_64 HVM EBS 1602
+    ami:
+      "7": "ami-af4333cf" # CentOS Linux 7 x86_64 HVM EBS 1602
     user: "centos"
     bootstrap:
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/centos/.ssh/authorized_keys

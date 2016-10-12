@@ -10,15 +10,22 @@ ram_size:
 
 distro_info:
   "ubuntu":
-    box:     "ubuntu/trusty64"
-    box_url: "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+    box:
+      "trusty":
+        name: "ubuntu/trusty64"
+        url:  "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+      "xenial":
+        name: "ubuntu/xenial64"
+        url:  "https://cloud-images.ubuntu.com/releases/16.04/release-20161010/ubuntu-16.04-server-cloudimg-amd64-vagrant.box"
     user: "ubuntu"
     bootstrap:
       - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   "centos":
-    box:     "centos/7"
-    box_url: "http://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1602_02.VirtualBox.box"
+    box:
+      "7":
+        name: "centos/7"
+        url:  "http://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1602_02.VirtualBox.box"
     user:    "centos"
     bootstrap:
       - groupadd -g 1001 centos

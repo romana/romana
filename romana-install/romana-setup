@@ -242,6 +242,32 @@ if [[ "$cluster_nodes" ]]; then case "$cluster_nodes" in
 		exit 1
 		;;
 esac; fi
+# try to determine an appropriate distro release to use
+if [[ "$platform" != "static" ]]; then
+	case "$distro" in
+		ubuntu)
+			case "$stack_type" in
+				kubernetes)
+					release=xenial
+					;;
+				devstack|openstack)
+					release=trusty
+					;;
+			esac
+			;;
+		centos)
+			case "$stack_type" in
+				kubernetes|devstack|openstack)
+					release=7
+				;;
+			esac
+			;;
+	esac
+	if ! [[ "$release" ]]; then
+		echo "Failed to determine appropriate release for distro '$distro' and stack type '$stack_type'"
+		exit 1
+	fi
+fi
 
 stack_data_dir="stacks/${stack_name}_${platform}_${distro}_${stack_type}"
 mkdir -p "${stack_data_dir}"
@@ -259,9 +285,15 @@ if [[ "$platform" == "aws" ]] && [[ -r ~/.aws/ec2_keypair ]]; then
 		ansible_args+=( -e ec2_keypair="$ec2_keypair" )
 	fi
 fi
+
 # Add static inventory setting if platform is static
 if [[ "$platform" == "static" ]]; then
 	ansible_args+=( -e static_inventory="$inventory" )
+fi
+
+# Add release setting if platform is not static
+if [[ "$platform" != "static" ]]; then
+	ansible_args+=( -e release="$release" )
 fi
 
 # Add number of compute nodes. One fewer than number of cluster nodes.
@@ -319,7 +351,11 @@ case "$platform" in
 					echo "Unable to reach host(s). Exiting"
 					exit 1
 				fi
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
+				# only do this step if platform is static. If it doesn't work for other platforms, that's a bug
+				# and should be fixed in the provisioning
+				if [[ "$platform" == "static" ]]; then
+					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
+				fi
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
 					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
 				;;
