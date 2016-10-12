@@ -1,16 +1,15 @@
 ---
+- name: Get the romana/kube repository
+  git: repo="{{ romana_kube_repo }}" version="{{ romana_kube_branch }}" dest="/var/tmp/kube" key_file="{{github_key is defined | ternary('~/.ssh/github_id_rsa', omit) }}" ssh_opts={{ git_ssh_options }}
+
 - name: CNI config directory
   file: path="/etc/cni/net.d" state="directory"
 
 - name: CNI config file
-  template: src="cni/romana-k8s-network" dest="/etc/cni/net.d/10-romana.conf"
+  template: src="romana-k8s-network" dest="/etc/cni/net.d/10-romana.conf"
 
 - name: CNI plugin directory
   file: path="/opt/cni/bin" state="directory"
 
 - name: CNI plugin executable
   command: install -o root -g root -m 0755 /var/tmp/kube/CNI/romana /opt/cni/bin/romana
-
-- name: Install nsenter for CNI plugin
-  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/external/nsenter" dest="/usr/local/bin/" mode=0755
-  when: ansible_os_family|lower == "debian"

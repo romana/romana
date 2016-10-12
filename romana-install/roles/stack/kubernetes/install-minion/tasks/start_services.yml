@@ -1,6 +1,8 @@
 ---
+- name: Install kubelet.conf
+  template: src="kubelet.conf" dest="/etc/kubernetes/kubelet.conf" mode=0600
+
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
     - kubelet
-    - kube-proxy
