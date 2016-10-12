@@ -1,6 +1,0 @@
----
-- name: Copy kubernetes release tarball
-  synchronize: mode="pull" src="{{ kubernetes_dl_dir }}/kubernetes_binaries.tar.bz2" dest="{{ cache_dir }}/kubernetes/kubernetes_v{{ kubernetes_version }}.tar.gz"
-
-- name: Copy etcd release tarball
-  synchronize: mode="pull" src="{{ kubernetes_dl_dir }}/etcd.tar.gz" dest="{{ cache_dir }}/kubernetes/etcd_v{{ etcd_version }}.tar.gz"
