@@ -1,6 +1,7 @@
 ---
 - name: Install kubelet.conf
   template: src="kubelet.conf" dest="/etc/kubernetes/kubelet.conf" mode=0600
+  when: inventory_hostname not in groups.kube_master
 
 - name: Start services
   service: name="{{ item }}" state="started"

@@ -22,10 +22,12 @@
     loop_var: file
   become: true
   become_user: root
+  when: stack_type in [ "devstack", "openstack" ]
 
 - include: dnsmasq.yml
   become: true
   become_user: root
+  when: stack_type in [ "devstack", "openstack" ]
 
 - include: "service_configs_{{ ansible_service_mgr }}.yml"
   become: true

@@ -1,7 +1,12 @@
 ---
-- name: Install service configurations
+- name: Install dnsmasq service configuration
   template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
   with_items:
     - dnsmasq-calico.service
+  when: stack_type in [ "devstack", "openstack" ]
+
+- name: Install romana service configurations
+  template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
+  with_items:
     - romana-agent.service
     - romana-policy-agent.service
