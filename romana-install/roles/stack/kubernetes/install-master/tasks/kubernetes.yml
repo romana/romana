@@ -2,6 +2,12 @@
 - name: Install kubelet.conf
   template: src="kubelet.conf" dest="/etc/kubernetes/kubelet.conf" mode=0600
 
+- name: Start docker and kubelet
+  service: name="{{ item }}" state="started"
+  with_items:
+    - docker
+    - kubelet
+
 - name: Install manifests for kubernetes services
   copy: src="manifests/{{ item }}" dest="/etc/kubernetes/manifests/{{ item }}" mode=0600
   with_items:

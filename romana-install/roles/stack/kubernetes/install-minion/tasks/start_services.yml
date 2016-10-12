@@ -3,7 +3,12 @@
   template: src="kubelet.conf" dest="/etc/kubernetes/kubelet.conf" mode=0600
   when: inventory_hostname not in groups.kube_master
 
+- name: Restart docker (on master only)
+  service: name="docker" state="restarted"
+  when: inventory_hostname in groups.kube_master
+
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
+    - docker
     - kubelet
