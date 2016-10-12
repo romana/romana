@@ -25,6 +25,8 @@
 - hosts: controller
   tasks:
   - name: Re-create databases
+    become: true
+    become_user: root
     shell: "{{ romana_bin_dir }}/{{ item }} -overwriteSchema -rootURL http://{{ romana_master_ip }}:9600"
     with_items:
       - topology
