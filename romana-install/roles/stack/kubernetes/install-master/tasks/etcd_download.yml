@@ -1,8 +1,0 @@
----
-- name: Fetch the etcd release
-  get_url: url="{{ etcd_url }}" checksum="sha1:{{ etcd_sha1 }}" dest="{{ kubernetes_dl_dir}}/etcd.tar.gz" mode=0644
-  register: etcddl
-
-- name: Extract files
-  unarchive: copy=no src="{{ kubernetes_dl_dir}}/etcd.tar.gz" dest="{{ kubernetes_x_dir}}"
-  when: etcddl.changed
