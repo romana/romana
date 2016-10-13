@@ -4,6 +4,7 @@
   with_first_found:
     - files:
       - "repo_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "repo_{{ ansible_distribution|lower }}.yml"
       skip: true
   become: true
   become_user: root

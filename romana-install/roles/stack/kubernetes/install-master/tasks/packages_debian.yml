@@ -1,7 +1,18 @@
 ---
+- name: Add Google packages apt key
+  apt_key: url="https://packages.cloud.google.com/apt/doc/apt-key.gpg" state="present"
+
+- name: Add Kubernetes apt source
+  copy: src="kubernetes.list" dest="/etc/apt/sources.list.d/kubernetes.list"
+
 - name: Install additional packages
-  apt: pkg="{{ item }}"
+  apt: update_cache="yes" pkg="{{ item }}"
   with_items:
+    - docker.io
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni
     - mariadb-server
     - python-simplejson
     - python-requests

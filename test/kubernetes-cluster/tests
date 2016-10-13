@@ -1,5 +1,5 @@
 command: services_running
-args: kube-apiserver kube-controller-manager kube-scheduler romana-kube-listener
+args: romana-kube-listener
 description: Check that Kubernetes services are running on master
 labels: kube-master, services
 
@@ -9,7 +9,7 @@ description: Check that Romana services are running on master
 labels: romana-master, services
 
 command: services_running
-args: kubelet kube-proxy
+args: kubelet
 description: Check that Kubernetes services are running on minion
 labels: kube-minion, services
 

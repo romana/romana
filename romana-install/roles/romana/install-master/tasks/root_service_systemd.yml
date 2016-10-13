@@ -1,5 +1,5 @@
 ---
 - name: Install root service
-  template: src="systemd/{{ item }}" dest="/usr/lib/systemd/system/{{ item }}"
+  template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
   with_items:
     - romana-root.service

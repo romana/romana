@@ -1,6 +1,6 @@
 ---
 - name: Install other service configurations
-  template: src="systemd/{{ item }}" dest="/usr/lib/systemd/system/{{ item }}"
+  template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
   with_items:
     - romana-topology.service
     - romana-tenant.service
