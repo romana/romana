@@ -130,6 +130,10 @@ if (( $# > 0 )); then
 						stack_type="kubernetes"
 						shift 2
 						;;
+					none|nostack)
+						stack_type="nostack"
+						shift 2
+						;;
 					*)
 						echo "Unknown stack type '$2'."
 						usage
@@ -247,7 +251,7 @@ if [[ "$platform" != "static" ]]; then
 	case "$distro" in
 		ubuntu)
 			case "$stack_type" in
-				kubernetes)
+				kubernetes|nostack)
 					release=xenial
 					;;
 				devstack|openstack)
@@ -257,7 +261,7 @@ if [[ "$platform" != "static" ]]; then
 			;;
 		centos)
 			case "$stack_type" in
-				kubernetes|devstack|openstack)
+				kubernetes|devstack|openstack|nostack)
 					release=7
 				;;
 			esac

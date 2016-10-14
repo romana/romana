@@ -4,10 +4,12 @@ instance_type:
     devstack: "t2.large"
     openstack: "t2.large"
     kubernetes: "t2.small"
+    nostack: "t2.small"
   compute:
     devstack: "t2.small"
     openstack: "t2.small"
     kubernetes: "t2.small"
+    nostack: "t2.small"
 
 distro_info:
   "ubuntu":
@@ -18,6 +20,7 @@ distro_info:
     bootstrap:
       - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
+      - touch /etc/udev/rules.d/40-vm-hotadd.rules
   "centos":
     ami:
       "7": "ami-af4333cf" # CentOS Linux 7 x86_64 HVM EBS 1602

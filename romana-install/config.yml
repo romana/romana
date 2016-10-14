@@ -25,21 +25,6 @@
 # Include stack-specific config stage
 - include: "config.{{ stack_type }}.yml"
 
-# Install Romana
-- hosts: controller
-  roles:
-    - romana/install-master
-# Stack-specific postinstall after installing master
-- include: "post-master.{{ stack_type }}.yml"
-
-# Install and launch agent (must be after other stages)
-- hosts: stack_nodes
-  roles:
-    - romana/install-agent
-
-# Stack-specific postinstall after installing agent
-- include: "post-agent.{{ stack_type }}.yml"
-
 - hosts: controller
   roles:
     - cache/update

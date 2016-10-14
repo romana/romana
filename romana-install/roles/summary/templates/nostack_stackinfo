@@ -1,0 +1,8 @@
+Nostack Summary
+===============
+
+Nodes
+-----
+{% for i in groups.stack_nodes %}{% set n = hostvars[i] %}
+ssh -i {{ n.ansible_ssh_private_key_file | realpath }}{% if n.ansible_ssh_port | default(22) != 22 %} -p {{ n.ansible_ssh_port }}{% endif %} {{ n.ansible_ssh_user }}@{{ n.ansible_ssh_host }}
+{% endfor %}
