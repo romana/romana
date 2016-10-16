@@ -9,7 +9,7 @@ This should be done on your host. A 'run from a VM' option is being developed, f
 
 To run this installation, you will need
 * [Vagrant](https://www.vagrantup.com/downloads.html) installed (and [tested](https://www.vagrantup.com/docs/getting-started/) to be sure it works)
-* [ansible](https://www.ansible.com) v2.0.1 or higher, and supporting python tools / libraries
+* [ansible](https://www.ansible.com) v2.1 or higher, and supporting python tools / libraries
 
 ## Set up Ansible
 
