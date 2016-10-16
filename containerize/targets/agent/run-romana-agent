@@ -6,12 +6,14 @@ usage() {
 	echo " -h or --help: print usage"
 	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
 	echo " --interface: Interface for IP Address lookup, instead of eth0"
+	echo " --nat: Add NAT rule for traffic coming from pods"
 }
 
 # Parse command-line options
 usage=0
 romana_root=
 interface=
+nat=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -28,6 +30,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--interface)
 		interface="$2"
+		shift 2
+		;;
+	--nat)
+		nat="$2"
 		shift 2
 		;;
 	*)
@@ -61,6 +67,29 @@ fi
 # Romana Root URL must be provided
 if ! [[ "$romana_root" ]]; then
 	usage_error "Romana Root URL must be provided."
+fi
+
+valid_bool() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	case "$1" in
+	true|false)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
+# Check NAT option is valid
+if [[ "$nat" ]]; then
+	if ! valid_bool "$nat"; then
+		usage_error "Expected 'true' or 'false' for --nat option. ('$nat')"
+	fi
+else
+	nat=true
 fi
 
 # Generate .romana.yml for romana cli tool
@@ -281,6 +310,26 @@ fi
 if [[ "$(interface_address romana-gw)" != "$romana_address" ]]; then
 	internal_error "romana-gw address does not match expected address '$romana_address'"
 fi
+
+case "$nat" in
+true)
+	if ! iptables -t nat -C POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE 2>/dev/null; then
+		if ! iptables -t nat -A POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE; then
+			internal_error "Error adding NAT rule for $romana_address / $interface"
+		fi
+	fi
+	;;
+false)
+	if iptables -t nat -C POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE 2>/dev/null; then
+		if ! iptables -t nat -D POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE; then
+			internal_error "Error deleting NAT rule for $romana_address / $interface"
+		fi
+	fi
+	;;
+*)
+	internal_error "nat variable was not true or false: '$nat'"
+	;;
+esac
 
 # Create agent database
 printf "Creating database for agent\n"
