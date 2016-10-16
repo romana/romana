@@ -272,13 +272,13 @@ allocate_romana_address() {
 	printf "%d.%d.%d.%d/%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))" "$host_prefix"
 }
 
+# Use eth0 as interface name if not provided
+if ! [[ "$interface" ]]; then
+	interface=eth0
+fi
 # If no address found, allocate one.
 if ! [[ "$romana_address" ]]; then
 	host_address=
-	if ! [[ "$interface" ]]; then
-		# Default to eth0
-		interface=eth0
-	fi
 	if ! host_address=$(interface_address "$interface"); then
 		usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface"
 	fi
