@@ -9,6 +9,8 @@ Wants=romana-tenant.service
 EnvironmentFile=-{{ romana_etc_dir }}/ipam
 ExecStart={{ romana_bin_dir }}/ipam -rootURL http://{{ romana_master_ip }}:9600
 Restart=always
+StartLimitInterval=180s
+StartLimitBurst=10
 LimitNOFILE=65536
 
 [Install]
