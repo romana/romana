@@ -18,13 +18,15 @@
   patch: src="dashboard_romana_segment.patch" basedir="/opt/stack/horizon" strip=1
   register: p
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files: 
       - "restart_webserver_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "restart_webserver_{{ ansible_distribution|lower }}.yml"
       - "restart_webserver_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   when: p.changed
   become: true
   become_user: root

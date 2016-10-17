@@ -1,6 +1,19 @@
 ---
 - name: Update user profile
-  patch: src="{{ ansible_distribution|lower }}_profile_add_openrc.patch" basedir="/home/{{ ansible_ssh_user }}"
+  blockinfile:
+    dest: "~/.profile"
+    block: |
+      # Source openstack environment using user=admin and tenant=admin
+      . "$HOME/openrc/admin"
+  when: ansible_distribution|lower == "ubuntu"
+
+- name: Update user profile
+  blockinfile:
+    dest: "~/.bash_profile"
+    block: |
+      # Source openstack environment using user=admin and tenant=admin
+      . "$HOME/openrc/admin"
+  when: ansible_distribution|lower == "centos"
 
 - name: Install romana post-install script
   template: src="romana-post-install.sh" dest="/var/tmp/romana-post-install.sh" mode=0755

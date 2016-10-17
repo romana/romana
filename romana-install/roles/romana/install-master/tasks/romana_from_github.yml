@@ -34,3 +34,25 @@
  
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
+
+- name: Update user environment for Go Development
+  blockinfile:
+    dest: "~/.profile"
+    block: |
+      # Go Development settings
+      if [ -d "/usr/local/go/bin" ]; then
+          export GOPATH=/var/tmp/gopath
+          PATH="$PATH:/usr/local/go/bin"
+      fi
+  when: ansible_distribution|lower == "ubuntu"
+
+- name: Update user environment for Go Development
+  blockinfile:
+    dest: "~/.bash_profile"
+    block: |
+      # Go Development settings
+      if [ -d "/usr/local/go/bin" ]; then
+          export GOPATH=/var/tmp/gopath
+          PATH="$PATH:/usr/local/go/bin"
+      fi
+  when: ansible_distribution|lower == "centos"
