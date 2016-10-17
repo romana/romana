@@ -5,7 +5,7 @@ Documentation=
 [Service]
 #User=...
 ExecStart={{ romana_bin_dir }}/dnsmasq-calico --no-daemon --dhcp-range={{ romana_gw | ipaddr('address') }},{{ romana_gw | ipaddr('address') }},static,{{ romana_gw | ipaddr('netmask') }},1 --bridge-interface=romana-gw,tap* --interface romana-gw --interface tap* --read-ethers --bind-dynamic
-Restart=always
+Restart=on-failure
 StartLimitInterval=180s
 StartLimitBurst=10
 LimitNOFILE=65536
