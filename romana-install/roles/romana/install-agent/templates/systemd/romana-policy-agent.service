@@ -6,7 +6,7 @@ Documentation=https://github.com/romana/core
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/agent
 ExecStart={{ romana_bin_dir }}/agent.py
-Restart=on-failure
+Restart=always
 LimitNOFILE=65536
 
 [Install]

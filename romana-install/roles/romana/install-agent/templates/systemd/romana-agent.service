@@ -6,7 +6,7 @@ Documentation=https://github.com/romana/core
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/agent
 ExecStart={{ romana_bin_dir }}/agent -rootURL http://{{ romana_master_ip }}:9600
-Restart=on-failure
+Restart=always
 LimitNOFILE=65536
 
 [Install]

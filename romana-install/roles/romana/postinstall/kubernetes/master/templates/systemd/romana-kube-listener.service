@@ -8,7 +8,7 @@ Wants=romana-tenant.service
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/listener
 ExecStart={{ romana_bin_dir }}/listener -rootURL http://{{ romana_master_ip }}:9600
-Restart=on-failure
+Restart=always
 LimitNOFILE=65536
 
 [Install]
