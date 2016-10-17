@@ -241,6 +241,17 @@ cidr_to_int() {
 	printf "%d" "$(((w<<24) + (x<<16) + (y<<8) + z))"
 }
 
+# Get the topology config. Used for allocation and/or NAT
+topology_path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="topology-config") | .href')
+if ! [[ "$topology_path" ]]; then
+	internal_error "empty result attempting to resolve topology-config"
+fi
+topology_config=$(curl -s "${romana_root}${topology_path}")
+romana_cidr=$(jq -r '.config.datacenter.cidr // empty' <<< "$topology_config")
+if ! valid_cidr "$romana_cidr"; then
+	internal_error "invalid result attempting to get cidr configuration for topology"
+fi
+
 # Romana config functions
 allocate_romana_address() {
 	if (($# != 1)); then
@@ -249,18 +260,8 @@ allocate_romana_address() {
 	if ! valid_number "$1"; then
 		internal_error "allocate_romana_address(): '$1' is not a valid number."
 	fi
-	local path topology_config romana_cidr host_bits cidr_bits host_prefix v
-	# Try to resolve topology config
-	path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="topology-config") | .href')
-	if ! [[ "$path" ]]; then
-		internal_error "empty result attempting to resolve topology-config"
-	fi
-	topology_config=$(curl -s "${romana_root}${path}")
-	romana_cidr=$(jq -r '.config.datacenter.cidr // empty' <<< "$topology_config")
+	local host_bits cidr_bits host_prefix v
 	host_bits=$(jq -r '.config.datacenter.host_bits // empty' <<< "$topology_config")
-	if ! valid_cidr "$romana_cidr"; then
-		internal_error "invalid result attempting to get cidr configuration for topology"
-	fi
 	if ! valid_number "$host_bits"; then
 		internal_error "invalid result attempting to get host_bits configuration for topology"
 	fi
@@ -313,16 +314,16 @@ fi
 
 case "$nat" in
 true)
-	if ! iptables -t nat -C POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE 2>/dev/null; then
-		if ! iptables -t nat -A POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE; then
-			internal_error "Error adding NAT rule for $romana_address / $interface"
+	if ! iptables -t nat -C POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE 2>/dev/null; then
+		if ! iptables -t nat -A POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE; then
+			internal_error "Error adding NAT rule for $romana_address / $romana_cidr / $interface"
 		fi
 	fi
 	;;
 false)
-	if iptables -t nat -C POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE 2>/dev/null; then
-		if ! iptables -t nat -D POSTROUTING -s "$romana_address" -o "$interface" -j MASQUERADE; then
-			internal_error "Error deleting NAT rule for $romana_address / $interface"
+	if iptables -t nat -C POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE 2>/dev/null; then
+		if ! iptables -t nat -D POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE; then
+			internal_error "Error deleting NAT rule for $romana_address / $romana_cidr / $interface"
 		fi
 	fi
 	;;
