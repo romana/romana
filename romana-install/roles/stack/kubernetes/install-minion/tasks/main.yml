@@ -17,8 +17,6 @@
   become_user: root
 
 - include: romana_cni.yml
-  become: true
-  become_user: root
 
 - include: start_services.yml
   become: true
