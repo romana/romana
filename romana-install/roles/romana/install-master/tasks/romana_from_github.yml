@@ -42,7 +42,7 @@
       # Go Development settings
       if [ -d "/usr/local/go/bin" ]; then
           export GOPATH=/var/tmp/gopath
-          PATH="$PATH:/usr/local/bin/go"
+          PATH="$PATH:/usr/local/go/bin"
       fi
   when: ansible_distribution|lower == "ubuntu"
 
@@ -53,6 +53,6 @@
       # Go Development settings
       if [ -d "/usr/local/go/bin" ]; then
           export GOPATH=/var/tmp/gopath
-          PATH="$PATH:/usr/local/bin/go"
+          PATH="$PATH:/usr/local/go/bin"
       fi
   when: ansible_distribution|lower == "centos"
