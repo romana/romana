@@ -1,11 +1,13 @@
 ---
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "nova_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "nova_packages_{{ ansible_distribution|lower }}.yml"
       - "nova_packages_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
 
 - include: disable_virbr0.yml
   become: true
@@ -18,10 +20,12 @@
 - name: Install nova-compute configuration
   template: src="nova-compute.conf" dest="/etc/nova/nova-compute.conf"
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "nova_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "nova_services_{{ ansible_distribution|lower }}.yml"
       - "nova_services_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file

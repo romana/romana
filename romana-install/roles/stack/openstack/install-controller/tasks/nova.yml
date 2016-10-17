@@ -1,11 +1,13 @@
 ---
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "nova_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "nova_packages_{{ ansible_distribution|lower }}.yml"
       - "nova_packages_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
 
 - name: Install nova configuration
   template: src="nova.conf" dest="/etc/nova/nova.conf"
@@ -18,10 +20,12 @@
 - name: Execute nova post-install script
   shell: /var/tmp/nova-post-install.sh
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "nova_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "nova_services_{{ ansible_distribution|lower }}.yml"
       - "nova_services_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
