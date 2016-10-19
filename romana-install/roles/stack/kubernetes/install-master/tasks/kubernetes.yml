@@ -28,3 +28,7 @@
 
 - name: Apply kube-proxy-daemonset
   command: kubectl apply -f "/var/tmp/kube-proxy-daemonset.yml"
+
+- name: Remove taint on master node
+  command: kubectl taint nodes --all dedicated-
+  ignore_errors: True
