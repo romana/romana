@@ -7,6 +7,7 @@ usage() {
 	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
 	echo " --interface: Interface for IP Address lookup, instead of eth0"
 	echo " --nat: Add NAT rule for traffic coming from pods"
+	echo " --pod-to-host: Permit pods to connect to the host server"
 }
 
 # Parse command-line options
@@ -15,6 +16,7 @@ romana_root=
 interface=
 nat=
 cluster_ip_cidr=
+pod_to_host=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -39,6 +41,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--cluster-ip-cidr)
 		cluster_ip_cidr="$2"
+		shift 2
+		;;
+	--pod-to-host)
+		pod_to_host="$2"
 		shift 2
 		;;
 	*)
@@ -96,12 +102,21 @@ if [[ "$nat" ]]; then
 else
 	nat=true
 fi
+# Check Cluster IP CIDR is valid
 if [[ "$cluster_ip_cidr" ]]; then
 	if ! valid_cidr "$cluster_ip_cidr"; then
 		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
 	fi
 else
 	cluster_ip_cidr="100.64.0.0/12"
+fi
+# Check pod-to-host is valid
+if [[ "$pod_to_host" ]]; then
+	if ! valid_bool "$pod_to_host"; then
+		usage_error "Expected 'true' or 'false' for --pod-to-host option. ('$pod_to_host')"
+	fi
+else
+	pod_to_host=true
 fi
 
 # Generate .romana.yml for romana cli tool
@@ -373,6 +388,28 @@ false)
 	;;
 *)
 	internal_error "nat variable was not true or false: '$nat'"
+	;;
+esac
+
+case "$pod_to_host" in
+true)
+	if ! result=$(romana policy show permit-all-pod-to-host -f json); then
+		internal_error "failed to look up existing policy"
+	fi
+	if ! (( $(jq -r length <<< "$result" ) )); then
+		romana policy add /var/lib/romana/policies/permit-all-pod-to-host.json
+	fi
+	;;
+false)
+	if ! result=$(romana policy show permit-all-pod-to-host -f json); then
+		internal_error "failed to look up existing policy"
+	fi
+	if (( $(jq -r length <<< "$result" ) )); then
+		romana policy remove permit-all-pod-to-host
+	fi
+		;;
+*)
+	internal_error "pod_to_host variable was not true or false: '$pod_to_host'"
 	;;
 esac
 
