@@ -14,6 +14,7 @@ usage=0
 romana_root=
 interface=
 nat=
+cluster_ip_cidr=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -34,6 +35,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--nat)
 		nat="$2"
+		shift 2
+		;;
+	--cluster-ip-cidr)
+		cluster_ip_cidr="$2"
 		shift 2
 		;;
 	*)
@@ -90,6 +95,13 @@ if [[ "$nat" ]]; then
 	fi
 else
 	nat=true
+fi
+if [[ "$cluster_ip_cidr" ]]; then
+	if ! valid_cidr "$cluster_ip_cidr"; then
+		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
+	fi
+else
+	cluster_ip_cidr="100.64.0.0/12"
 fi
 
 # Generate .romana.yml for romana cli tool
@@ -314,18 +326,50 @@ fi
 
 case "$nat" in
 true)
-	if ! iptables -t nat -C POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE 2>/dev/null; then
-		if ! iptables -t nat -A POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE; then
-			internal_error "Error adding NAT rule for $romana_address / $romana_cidr / $interface"
+	# Create chain
+	if ! iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+		if ! iptables -t nat -N ROMANA-MASQ; then
+			internal_error "Error creating chain for NAT rule"
+		fi
+	fi
+	# Flush rules from chain
+	if ! iptables -t nat -F ROMANA-MASQ; then
+		internal_error "Error flushing chain for NAT rule"
+	fi
+	# Add items to chain
+	if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
+		internal_error "Error adding exclusion for $romana_cidr"
+	fi
+	if ! iptables -t nat -A ROMANA-MASQ -d "$cluster_ip_cidr" -j RETURN; then
+		internal_error "Error adding exclusion for $cluster_ip_cidr"
+	fi
+	if ! iptables -t nat -A ROMANA-MASQ -o "$interface" -j MASQUERADE; then
+		internal_error "Error adding NAT for $interface"
+	fi
+	# Activate chain
+	if ! iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+		if ! iptables -t nat -A POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+			internal_error "Error adding $romana_address POSTROUTING rule"
 		fi
 	fi
 	;;
 false)
-	if iptables -t nat -C POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE 2>/dev/null; then
-		if ! iptables -t nat -D POSTROUTING -s "$romana_address" ! -d "$romana_cidr" -o "$interface" -j MASQUERADE; then
-			internal_error "Error deleting NAT rule for $romana_address / $romana_cidr / $interface"
-		fi
-	fi
+	# If chain is active, delete the rule
+	if iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+		if ! iptables -t nat -D POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+			internal_error "Error removing $romana_address POSTROUTING rule"
+		fi      
+	fi      
+
+	# If chain exists, flush and remove it
+	if iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+		if ! iptables -t nat -F ROMANA-MASQ; then
+			internal_error "Error flushing chain for NAT rule"
+		fi      
+		if ! iptables -t nat -X ROMANA-MASQ; then
+			internal_error "Error removing chain for NAT rule"
+		fi      
+	fi      
 	;;
 *)
 	internal_error "nat variable was not true or false: '$nat'"
