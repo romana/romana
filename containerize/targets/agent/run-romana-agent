@@ -304,12 +304,14 @@ allocate_romana_address() {
 if ! [[ "$interface" ]]; then
 	interface=eth0
 fi
+# Look up the host's IP address using the interface
+host_address=
+if ! host_address=$(interface_address "$interface"); then
+	usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface"
+fi
+
 # If no address found, allocate one.
 if ! [[ "$romana_address" ]]; then
-	host_address=
-	if ! host_address=$(interface_address "$interface"); then
-		usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface"
-	fi
 	host_number=$(cidr_pos "$host_address")
 	if ! romana_address=$(allocate_romana_address "$host_number"); then
 		exit $?
@@ -352,6 +354,9 @@ true)
 		internal_error "Error flushing chain for NAT rule"
 	fi
 	# Add items to chain
+	if ! iptables -t nat -A ROMANA-MASQ -d "$host_address" -j RETURN; then
+		internal_error "Error adding exclusion for $host_address"
+	fi
 	if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
 		internal_error "Error adding exclusion for $romana_cidr"
 	fi
