@@ -6,12 +6,17 @@ usage() {
 	echo " -h or --help: print usage"
 	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
 	echo " --interface: Interface for IP Address lookup, instead of eth0"
+	echo " --nat: Add NAT rule for traffic coming from pods"
+	echo " --pod-to-host: Permit pods to connect to the host server"
 }
 
 # Parse command-line options
 usage=0
 romana_root=
 interface=
+nat=
+cluster_ip_cidr=
+pod_to_host=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -28,6 +33,18 @@ while [[ $1 == -* ]]; do
 		;;
 	--interface)
 		interface="$2"
+		shift 2
+		;;
+	--nat)
+		nat="$2"
+		shift 2
+		;;
+	--cluster-ip-cidr)
+		cluster_ip_cidr="$2"
+		shift 2
+		;;
+	--pod-to-host)
+		pod_to_host="$2"
 		shift 2
 		;;
 	*)
@@ -61,6 +78,45 @@ fi
 # Romana Root URL must be provided
 if ! [[ "$romana_root" ]]; then
 	usage_error "Romana Root URL must be provided."
+fi
+
+valid_bool() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	case "$1" in
+	true|false)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
+# Check NAT option is valid
+if [[ "$nat" ]]; then
+	if ! valid_bool "$nat"; then
+		usage_error "Expected 'true' or 'false' for --nat option. ('$nat')"
+	fi
+else
+	nat=true
+fi
+# Check Cluster IP CIDR is valid
+if [[ "$cluster_ip_cidr" ]]; then
+	if ! valid_cidr "$cluster_ip_cidr"; then
+		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
+	fi
+else
+	cluster_ip_cidr="100.64.0.0/12"
+fi
+# Check pod-to-host is valid
+if [[ "$pod_to_host" ]]; then
+	if ! valid_bool "$pod_to_host"; then
+		usage_error "Expected 'true' or 'false' for --pod-to-host option. ('$pod_to_host')"
+	fi
+else
+	pod_to_host=true
 fi
 
 # Generate .romana.yml for romana cli tool
@@ -212,6 +268,17 @@ cidr_to_int() {
 	printf "%d" "$(((w<<24) + (x<<16) + (y<<8) + z))"
 }
 
+# Get the topology config. Used for allocation and/or NAT
+topology_path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="topology-config") | .href')
+if ! [[ "$topology_path" ]]; then
+	internal_error "empty result attempting to resolve topology-config"
+fi
+topology_config=$(curl -s "${romana_root}${topology_path}")
+romana_cidr=$(jq -r '.config.datacenter.cidr // empty' <<< "$topology_config")
+if ! valid_cidr "$romana_cidr"; then
+	internal_error "invalid result attempting to get cidr configuration for topology"
+fi
+
 # Romana config functions
 allocate_romana_address() {
 	if (($# != 1)); then
@@ -220,18 +287,8 @@ allocate_romana_address() {
 	if ! valid_number "$1"; then
 		internal_error "allocate_romana_address(): '$1' is not a valid number."
 	fi
-	local path topology_config romana_cidr host_bits cidr_bits host_prefix v
-	# Try to resolve topology config
-	path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="topology-config") | .href')
-	if ! [[ "$path" ]]; then
-		internal_error "empty result attempting to resolve topology-config"
-	fi
-	topology_config=$(curl -s "${romana_root}${path}")
-	romana_cidr=$(jq -r '.config.datacenter.cidr // empty' <<< "$topology_config")
+	local host_bits cidr_bits host_prefix v
 	host_bits=$(jq -r '.config.datacenter.host_bits // empty' <<< "$topology_config")
-	if ! valid_cidr "$romana_cidr"; then
-		internal_error "invalid result attempting to get cidr configuration for topology"
-	fi
 	if ! valid_number "$host_bits"; then
 		internal_error "invalid result attempting to get host_bits configuration for topology"
 	fi
@@ -243,16 +300,18 @@ allocate_romana_address() {
 	printf "%d.%d.%d.%d/%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))" "$host_prefix"
 }
 
+# Use eth0 as interface name if not provided
+if ! [[ "$interface" ]]; then
+	interface=eth0
+fi
+# Look up the host's IP address using the interface
+host_address=
+if ! host_address=$(interface_address "$interface"); then
+	usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface"
+fi
+
 # If no address found, allocate one.
 if ! [[ "$romana_address" ]]; then
-	host_address=
-	if ! [[ "$interface" ]]; then
-		# Default to eth0
-		interface=eth0
-	fi
-	if ! host_address=$(interface_address "$interface"); then
-		usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface"
-	fi
 	host_number=$(cidr_pos "$host_address")
 	if ! romana_address=$(allocate_romana_address "$host_number"); then
 		exit $?
@@ -281,6 +340,83 @@ fi
 if [[ "$(interface_address romana-gw)" != "$romana_address" ]]; then
 	internal_error "romana-gw address does not match expected address '$romana_address'"
 fi
+
+case "$nat" in
+true)
+	# Create chain
+	if ! iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+		if ! iptables -t nat -N ROMANA-MASQ; then
+			internal_error "Error creating chain for NAT rule"
+		fi
+	fi
+	# Flush rules from chain
+	if ! iptables -t nat -F ROMANA-MASQ; then
+		internal_error "Error flushing chain for NAT rule"
+	fi
+	# Add items to chain
+	if ! iptables -t nat -A ROMANA-MASQ -d "$host_address" -j RETURN; then
+		internal_error "Error adding exclusion for $host_address"
+	fi
+	if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
+		internal_error "Error adding exclusion for $romana_cidr"
+	fi
+	if ! iptables -t nat -A ROMANA-MASQ -d "$cluster_ip_cidr" -j RETURN; then
+		internal_error "Error adding exclusion for $cluster_ip_cidr"
+	fi
+	if ! iptables -t nat -A ROMANA-MASQ -o "$interface" -j MASQUERADE; then
+		internal_error "Error adding NAT for $interface"
+	fi
+	# Activate chain
+	if ! iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+		if ! iptables -t nat -A POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+			internal_error "Error adding $romana_address POSTROUTING rule"
+		fi
+	fi
+	;;
+false)
+	# If chain is active, delete the rule
+	if iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+		if ! iptables -t nat -D POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
+			internal_error "Error removing $romana_address POSTROUTING rule"
+		fi      
+	fi      
+
+	# If chain exists, flush and remove it
+	if iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+		if ! iptables -t nat -F ROMANA-MASQ; then
+			internal_error "Error flushing chain for NAT rule"
+		fi      
+		if ! iptables -t nat -X ROMANA-MASQ; then
+			internal_error "Error removing chain for NAT rule"
+		fi      
+	fi      
+	;;
+*)
+	internal_error "nat variable was not true or false: '$nat'"
+	;;
+esac
+
+case "$pod_to_host" in
+true)
+	if ! result=$(romana policy show permit-all-pod-to-host -f json); then
+		internal_error "failed to look up existing policy"
+	fi
+	if ! (( $(jq -r length <<< "$result" ) )); then
+		romana policy add /var/lib/romana/policies/permit-all-pod-to-host.json
+	fi
+	;;
+false)
+	if ! result=$(romana policy show permit-all-pod-to-host -f json); then
+		internal_error "failed to look up existing policy"
+	fi
+	if (( $(jq -r length <<< "$result" ) )); then
+		romana policy remove permit-all-pod-to-host
+	fi
+		;;
+*)
+	internal_error "pod_to_host variable was not true or false: '$pod_to_host'"
+	;;
+esac
 
 # Create agent database
 printf "Creating database for agent\n"
