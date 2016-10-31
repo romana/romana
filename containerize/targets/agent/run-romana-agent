@@ -354,9 +354,6 @@ true)
 		internal_error "Error flushing chain for NAT rule"
 	fi
 	# Add items to chain
-	if ! iptables -t nat -A ROMANA-MASQ -d "$host_address" -j RETURN; then
-		internal_error "Error adding exclusion for $host_address"
-	fi
 	if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
 		internal_error "Error adding exclusion for $romana_cidr"
 	fi
