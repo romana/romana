@@ -7,6 +7,8 @@ usage() {
 	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
 	echo " --interface: Interface for IP Address lookup, instead of eth0"
 	echo " --nat: Add NAT rule for traffic coming from pods"
+	echo " --nat-interface: Interface that NATs traffic, instead of eth0 or --interface setting."
+	echo " --cluster-ip-cidr: CIDR for cluster IPs. Excluded from NAT rule."
 	echo " --pod-to-host: Permit pods to connect to the host server"
 }
 
@@ -15,6 +17,7 @@ usage=0
 romana_root=
 interface=
 nat=
+nat_interface=
 cluster_ip_cidr=
 pod_to_host=
 while [[ $1 == -* ]]; do
@@ -37,6 +40,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--nat)
 		nat="$2"
+		shift 2
+		;;
+	--nat-interface)
+		nat_interface="$2"
 		shift 2
 		;;
 	--cluster-ip-cidr)
@@ -304,6 +311,10 @@ allocate_romana_address() {
 if ! [[ "$interface" ]]; then
 	interface=eth0
 fi
+# Use interface as default for nat_interface
+if ! [[ "$nat_interface" ]]; then
+	nat_interface="$interface"
+fi
 # Look up the host's IP address using the interface
 host_address=
 if ! host_address=$(interface_address "$interface"); then
@@ -360,8 +371,8 @@ true)
 	if ! iptables -t nat -A ROMANA-MASQ -d "$cluster_ip_cidr" -j RETURN; then
 		internal_error "Error adding exclusion for $cluster_ip_cidr"
 	fi
-	if ! iptables -t nat -A ROMANA-MASQ -o "$interface" -j MASQUERADE; then
-		internal_error "Error adding NAT for $interface"
+	if ! iptables -t nat -A ROMANA-MASQ -o "$nat_interface" -j MASQUERADE; then
+		internal_error "Error adding NAT for $nat_interface"
 	fi
 	# Activate chain
 	if ! iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
