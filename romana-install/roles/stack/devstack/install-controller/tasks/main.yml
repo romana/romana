@@ -10,7 +10,13 @@
   template: src="local.conf" dest="~/devstack/local.conf"
 
 - name: Run devstack "stack" script. This may take around 10 minutes.
-  shell: chdir="~/devstack" creates="~/devstack/stack.sh.log" ./stack.sh
+  shell: ./stack.sh
+  args:
+    chdir: "~/devstack"
+    creates: "~/devstack/stack.sh.log"
+  environment:
+    GIT_BASE: https://github.com/romana
+    NOVNC_REPO: https://github.com/romana/noVNC.git
   async: 3600
   poll: 30
 
