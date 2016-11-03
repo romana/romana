@@ -1,5 +1,5 @@
 - name: Clone devstack
-  git: repo="https://github.com/openstack-dev/devstack" version="stable/liberty" dest="~/devstack"
+  git: repo="https://github.com/romana-forks/devstack" version="stable/liberty" dest="~/devstack"
 
 - name: Install extras script - add romana-specific patch to nova
   copy: src="nova-patch.sh" dest="~/devstack/extras.d/91-nova-patch.sh" mode=0644

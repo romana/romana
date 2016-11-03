@@ -15,8 +15,14 @@
     chdir: "~/devstack"
     creates: "~/devstack/stack.sh.log"
   environment:
-    GIT_BASE: https://github.com/romana
-    NOVNC_REPO: https://github.com/romana/noVNC.git
+    CINDER_REPO:       https://github.com/romana-forks/cinder
+    GLANCE_REPO:       https://github.com/romana-forks/glance
+    HORIZON_REPO:      https://github.com/romana-forks/horizon
+    KEYSTONE_REPO:     https://github.com/romana-forks/keystone
+    NEUTRON_REPO:      https://github.com/romana-forks/neutron
+    NOVA_REPO:         https://github.com/romana-forks/nova
+    REQUIREMENTS_REPO: https://github.com/romana-forks/requirements
+    NOVNC_REPO:        https://github.com/romana-forks/noVNC
   async: 3600
   poll: 30
 
