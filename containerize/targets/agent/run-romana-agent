@@ -212,7 +212,7 @@ valid_cidr() {
 	if ! valid_number "$p"; then
 		return 1
 	fi
-	if ! ((v >= 0 && v <= 32)); then
+	if ! ((p >= 0 && p <= 32)); then
 		return 1
 	fi
 	
@@ -253,7 +253,7 @@ cidr_pos() {
 	fi
 	local w x y z p
 	IFS='./' read -r w x y z p <<< "$1"
-	printf "%d" "$((((w<<24) + (x<<16) + (y<<8) + z) % p))"
+	printf "%d" "$((((w<<24) + (x<<16) + (y<<8) + z) % (2**(32-p))))"
 }
 
 cidr_to_int() {
