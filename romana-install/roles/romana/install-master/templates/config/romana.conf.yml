@@ -69,6 +69,7 @@ services:
 {% endif %}
     config:
       lease_file : "/etc/ethers"
+      firewall_provider : "save-restore"
       wait_for_iface_try: 6
       store:
         type: sqlite3
