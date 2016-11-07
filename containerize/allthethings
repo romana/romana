@@ -232,7 +232,7 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
-	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl"; then
+	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/v1.4.5/bin/linux/amd64/kubectl"; then
 		fatal error downloading kubectl
 	fi
 	log copy ... copying required files for agent target
