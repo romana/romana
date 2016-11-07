@@ -1,6 +1,7 @@
 ---
 - name: Install additional packages
   apt: pkg="{{ item }}"
+  ignore_errors: True
   with_items:
     - dnsmasq-base
     - libnettle4

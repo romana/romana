@@ -1,24 +1,25 @@
 ---
-- include: kube_download.yml
-- include: etcd_download.yml
-
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files: 
       - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "packages_{{ ansible_distribution|lower }}.yml"
       - "packages_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files: 
       - "start_mysql_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "start_mysql_{{ ansible_distribution|lower }}.yml"
       - "start_mysql_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
 
@@ -26,14 +27,6 @@
   become: true
   become_user: root
 
-- include: kube_files.yml
-  become: true
-  become_user: root
-
-- include: "service_configs_{{ ansible_service_mgr }}.yml"
-  become: true
-  become_user: root
-
-- include: start_services.yml
+- include: kubernetes.yml
   become: true
   become_user: root

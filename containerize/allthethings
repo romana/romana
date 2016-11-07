@@ -1,0 +1,336 @@
+#!/bin/bash
+
+usage() {
+	if (( $# > 0 )); then
+		echo '               _     _ '
+		echo '__      ____ _| |_  | |'
+		echo '\ \ /\ / / _` | __| | |'
+		echo ' \ V  V / (_| | |_  |_|'
+		echo '  \_/\_/ \__,_|\__| (_)'
+		echo
+		echo "$@"
+		echo
+	fi
+
+	echo "allthethings: consistent build for docker containers"
+	echo ""
+	echo "usage: allthethings [options]"
+	echo " -t (or --tag):      container tag. also used for github build tags"
+	echo " -c (or --compile):  yes or no"
+	echo " -b (or --build):    yes or no"
+	echo " -p (or --push):     yes or no"
+}
+
+error() {
+	echo
+	echo '       _                             _ ' 
+	echo '  ___ | |__  _ __   ___   ___  ___  | |'
+	echo ' / _ \|  _ \|  _ \ / _ \ / _ \/ __| | |'
+	echo '| (_) | | | | | | | (_) |  __/\__ \ |_|'
+	echo ' \___/|_| |_|_| |_|\___/ \___||___/ (_)'
+	echo
+	echo "$@"
+	echo
+}
+
+fatal() {
+	error "$@"
+	exit 1
+}
+
+log() {
+	if (( $# < 2 )); then
+		error "log(): insufficient parameters" "$@"
+		exit
+	fi
+	local target=$1 state=$2
+	shift 2
+	if (( $# > 0 )); then
+		printf "%s:%s:%s\n" "$target" "$state" "$(printf " %s" "$@")"
+	else
+		printf "%s:%s\n" "$target" "$state"
+	fi
+}
+
+
+if ! cd "${0%/*}"; then
+	error "Error attempting to cd to installation directory."
+	exit 1
+fi
+
+# Common shopt's
+shopt -s nullglob
+
+# Parse command-line options
+tag=latest
+gittag=master
+compile=maybe
+build=maybe
+push=maybe
+
+acceptable_tag() {
+	if (($# != 1)); then
+		fatal "acceptable_tag(): expected 1 parameter, got $#"
+	fi
+	if ! [[ "$1" ]]; then
+		echo "tag empty"
+		return 1
+	fi
+	if ((${#1} > 128)); then
+		echo "tag too long"
+		return 1
+	fi
+	if [[ "${1:0:1}" != [A-Za-z0-9] ]]; then
+		echo "first character must be uppercase/lowercase letter or a digit"
+		return 1
+	fi
+	if [[ "${1//[A-Za-z0-9._-]/}" ]]; then
+		echo "tag can only contain uppercase/lowercase letters, digits, underscore, period or dash"
+		return 1
+	fi
+}
+
+yes_no_maybe() {
+	if (($# != 1)); then
+		fatal "yes_no_maybe(): expected 1 paramter, got $#"
+	fi
+	case "$1" in 
+	yes|no|maybe)
+		return 0
+		;;
+	*)
+		return 42
+		;;
+	esac
+}
+
+while [[ $1 == -* ]]; do
+	# expand --foo=bar options
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	-t|--tag)
+		if ! result=$(acceptable_tag "$2"); then
+			usage "tag '$2' was not valid: $result"
+			exit 1
+		fi
+		tag="$2"
+		gittag="$2"
+		shift 2
+		;;
+	-c|--compile)
+		if ! yes_no_maybe "$2"; then
+			usage "$1: $2 is not valid"
+			exit 1
+		fi
+		compile="$2"
+		shift 2
+		;;
+	-b|--build)
+		if ! yes_no_maybe "$2"; then
+			usage "$1: $2 is not valid"
+			exit 1
+		fi
+		build="$2"
+		shift 2
+		;;
+	-p|--push)
+		if ! yes_no_maybe "$2"; then
+			usage "$1: $2 is not valid"
+			exit 1
+		fi
+		push="$2"
+		shift 2
+		;;
+	*)
+		usage "Unrecognized option '$1'"
+		exit 1
+		;;
+esac; done
+
+# Compile allthethings
+compile() {
+	case "$compile" in
+		yes)
+			;;
+		no)
+			log compile skipping
+			return
+			;;
+		maybe)
+			if [[ -d "volumes/romana_bin_dir_$tag" ]]; then
+				local files=( "volumes/romana_bin_dir_$tag"/* )
+				if (( ${#files[@]} > 0 )); then
+					# skip, already compiled
+					log compile skipping
+					return
+				fi
+			fi
+			compile=yes
+			;;
+	esac
+
+	log compile start building container for compiling
+	if ! docker build -t romana/compile targets/compile; then
+		fatal error building compile container
+	fi
+	log compile ... running compile stage
+	volume_flags=(
+		-v "$PWD/volumes/romana_romana":/romana
+		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
+		-v "$PWD/volumes/romana_src_dir":/go/src/github.com/romana/core
+		-v "$PWD/volumes/romana_kube":/kube
+		-v "$PWD/targets/compile/src/kube-cni-proxy":/go/src/kube-cni-proxy
+	)
+	if ! docker run --rm "${volume_flags[@]}" romana/compile "$gittag"; then
+		fatal error running compile container
+	fi
+	log compile end
+}
+
+build() {
+	case "$build" in
+	yes)
+		return 0
+		;;
+	no)
+		return 42
+		;;
+	maybe)
+		if compile; then
+			build=yes
+			return 0
+		fi
+		if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "quay.io/romana/services:$tag") != "quay.io/romana/services:$tag" ]]; then
+			build=yes
+			return 0
+		fi
+		if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "quay.io/romana/agent:$tag") != "quay.io/romana/agent:$tag" ]]; then
+			build=yes
+			return 0
+		fi
+		build=no
+		return 42
+	esac
+}
+
+# Copy allthethings to allthecontainers
+copy() {
+	if ! build;then
+		log copy skipping
+		return
+	fi
+	log copy start
+	log copy ... copying required files for services target
+	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
+			fatal error copying "$f"
+		fi
+	done
+	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl"; then
+		fatal error downloading kubectl
+	fi
+	log copy ... copying required files for agent target
+	for f in agent romana; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
+			fatal error copying "$f"
+		fi
+	done
+	if ! cp -p "$PWD/volumes/romana_src_dir/pkg/util/policy/agent/agent.py" "targets/agent/agent.py"; then
+		fatal error copying agent.py
+	fi
+	#if ! cp -p "$PWD/volumes/romana_kube/CNI/romana" "targets/agent/cni-romana"; then
+	#	fatal error copying cni-romana
+	#fi
+	# if ! cp -p "$PWD/volumes/romana_kube/CNI/net.d/10-romana.conf" "targets/agent/10-romana.conf"; then
+	# 	fatal error copying 10-romana.conf
+	# fi
+	for f in agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh; do
+		if ! cp -p "$PWD/volumes/romana_romana/romana-install/roles/romana/install-agent/files/$f" "targets/agent/$f"; then
+			fatal error copying "$f"
+		fi
+	done
+	# Hack permission fixes here.
+	files_to_chmod=( kubectl )
+	for f in "${files_to_chmod[@]}"; do
+		chmod +x "targets/services/$f"
+	done
+	files_to_chmod=( agent.py kubectl agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh )
+	for f in "${files_to_chmod[@]}"; do
+		chmod +x "targets/agent/$f"
+	done
+	log copy end
+}
+
+# Build services container
+build_services() {
+	if ! build;then
+		log services skipping
+		return
+	fi
+	log services start building container for romana service components
+	if ! docker build -t "romana/services:$tag" -t "quay.io/romana/services:$tag" targets/services; then
+		fatal error building services container
+	fi
+	log services end
+}
+
+build_agent() {
+	if ! build;then
+		log agent skipping
+		return
+	fi
+	log agent start building container for romana agent components
+	if ! docker build -t "romana/agent:$tag" -t "quay.io/romana/agent:$tag" targets/agent; then
+		fatal error building agent container
+	fi
+	log agent end
+}
+
+push() {
+	case "$push" in
+	yes)
+		;;
+	no)
+		log push skipping
+		return
+		;;
+	maybe)
+		if ! build; then
+			log push skipping
+			return
+		fi
+		;;
+	esac
+	log push start pushing containers to quay.io
+	logged_in=0
+	if [[ -f ~/.docker/config.json ]] && [[ "$(jq -r '.auths["quay.io"].auth // empty' < ~/.docker/config.json)" ]]; then
+		log push ... already logged in
+		logged_in=1
+	fi
+	if ! ((logged_in)); then
+	       	if ! docker login quay.io; then
+			fatal error logging into quay.io
+		fi
+	fi
+	for i in services agent; do
+		log push ... pushing "$i"
+		if ! docker push "quay.io/romana/$i:$tag"; then
+			fatal error pushing "$i" to quay.io
+		fi
+		log push ... "$i" pushed
+	done
+	log push end
+}
+
+# Script body
+compile
+copy
+build_services
+build_agent
+push

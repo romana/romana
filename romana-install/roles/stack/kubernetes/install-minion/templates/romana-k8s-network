@@ -1,0 +1,10 @@
+{
+  "name": "romana-k8s-network",
+  "type": "romana",
+  "kube_master_ip": "{{ romana_master_ip }}",
+  "romana_cli_config": "/home/{{ ansible_ssh_user }}/.romana.yaml",
+  "segment_label_name": "{{ romana_segment_label_name }}",
+  "ipam": {
+      "type": "romana-ipam"
+  }
+}

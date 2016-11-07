@@ -14,3 +14,5 @@
 - hosts: devstack_controller
   roles:
     - stack/devstack/postinstall
+
+- include: config.romana.yml

@@ -1,0 +1,6 @@
+RootURL: "romana-root"
+RootPort: 9600
+LogFile: "/var/tmp/romana.log"
+Format: "table" # options are table/json 
+Platform: "kubernetes"
+Verbose: false

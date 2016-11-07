@@ -1,7 +1,12 @@
 ---
-- name: Install service configurations
+- name: Install dnsmasq service configuration
   template: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
   with_items:
     - dnsmasq-calico.conf
+  when: stack_type in [ "devstack", "openstack" ]
+
+- name: Install romana service configurations
+  template: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
+  with_items:
     - romana-agent.conf
     - romana-policy-agent.conf

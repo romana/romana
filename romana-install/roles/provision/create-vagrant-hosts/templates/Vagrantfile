@@ -3,8 +3,8 @@
 
 Vagrant.configure(2) do |config|
   # Common VM configuration
-  config.vm.box = "{{ distro_info[distro].box }}"
-  config.vm.box_url = "{{ distro_info[distro].box_url }}"
+  config.vm.box = "{{ distro_info[distro].box[release].name }}"
+  config.vm.box_url = "{{ distro_info[distro].box[release].url }}"
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provision "shell", inline: <<-EOF
 {% for cmd in distro_info[distro].bootstrap %}

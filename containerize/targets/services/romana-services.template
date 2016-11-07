@@ -1,0 +1,23 @@
+[supervisord]
+nodaemon=true
+
+[program:root]
+command=/usr/local/bin/root -c /etc/romana/romana.conf.yml
+
+[program:topology]
+command=/usr/local/bin/topology -rootURL http://romana-master-address:9600
+
+[program:tenant]
+command=/usr/local/bin/tenant -rootURL http://romana-master-address:9600
+
+[program:ipam]
+command=/usr/local/bin/ipam -rootURL http://romana-master-address:9600
+
+[program:policy]
+command=/usr/local/bin/policy -rootURL http://romana-master-address:9600
+
+[program:listener]
+command=/usr/local/bin/listener -rootURL http://romana-master-address:9600
+
+[program:kube-cni-proxy]
+command=/usr/local/bin/kube-cni-proxy -port 9609 -target http://romana-master-address:9601

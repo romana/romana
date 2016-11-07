@@ -60,6 +60,13 @@ services:
             method: DELETE
             when: before
             output: /var/log/policies-hook.log
+{% if stack_type in [ "devstack", "openstack" ] %}
+          - executable: {{ romana_bin_dir }}/agent_dhcp_release.sh
+            pattern: /vm
+            method: DELETE
+            when: before
+            output: /var/log/dhcp-release-hook.log
+{% endif %}
     config:
       lease_file : "/etc/ethers"
       firewall_provider : "save-restore"
@@ -78,6 +85,7 @@ services:
         username: root
         password: {{ stack_password }}
         database: policy
+{% if stack_type == "kubernetes" %}
   - service: kubernetesListener 
     api:
       host: 0.0.0.0
@@ -87,4 +95,5 @@ services:
       namespace_notification_path: "api/v1/namespaces"
       policy_notification_path_prefix : "apis/extensions/v1beta1/namespaces"
       policy_notification_path_postfix : "networkpolicies"
-      segment_label_name: "role"
+      segment_label_name: "{{ romana_segment_label_name }}"
+{% endif %}

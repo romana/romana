@@ -9,6 +9,8 @@ Wants=romana-root.service
 EnvironmentFile=-{{ romana_etc_dir }}/topology
 ExecStart={{ romana_bin_dir }}/topology -rootURL http://{{ romana_master_ip }}:9600
 Restart=on-failure
+StartLimitInterval=180s
+StartLimitBurst=10
 LimitNOFILE=65536
 
 [Install]

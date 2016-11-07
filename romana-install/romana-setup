@@ -130,6 +130,10 @@ if (( $# > 0 )); then
 						stack_type="kubernetes"
 						shift 2
 						;;
+					none|nostack)
+						stack_type="nostack"
+						shift 2
+						;;
 					*)
 						echo "Unknown stack type '$2'."
 						usage
@@ -242,6 +246,32 @@ if [[ "$cluster_nodes" ]]; then case "$cluster_nodes" in
 		exit 1
 		;;
 esac; fi
+# try to determine an appropriate distro release to use
+if [[ "$platform" != "static" ]]; then
+	case "$distro" in
+		ubuntu)
+			case "$stack_type" in
+				kubernetes|nostack)
+					release=xenial
+					;;
+				devstack|openstack)
+					release=trusty
+					;;
+			esac
+			;;
+		centos)
+			case "$stack_type" in
+				kubernetes|devstack|openstack|nostack)
+					release=7
+				;;
+			esac
+			;;
+	esac
+	if ! [[ "$release" ]]; then
+		echo "Failed to determine appropriate release for distro '$distro' and stack type '$stack_type'"
+		exit 1
+	fi
+fi
 
 stack_data_dir="stacks/${stack_name}_${platform}_${distro}_${stack_type}"
 mkdir -p "${stack_data_dir}"
@@ -259,9 +289,15 @@ if [[ "$platform" == "aws" ]] && [[ -r ~/.aws/ec2_keypair ]]; then
 		ansible_args+=( -e ec2_keypair="$ec2_keypair" )
 	fi
 fi
+
 # Add static inventory setting if platform is static
 if [[ "$platform" == "static" ]]; then
 	ansible_args+=( -e static_inventory="$inventory" )
+fi
+
+# Add release setting if platform is not static
+if [[ "$platform" != "static" ]]; then
+	ansible_args+=( -e release="$release" )
 fi
 
 # Add number of compute nodes. One fewer than number of cluster nodes.
@@ -302,19 +338,30 @@ case "$platform" in
 				ansible-playbook "$@" "${ansible_args[@]}" -i localhost create_hosts.yml  || exit 1
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-create.yml
 				hosts_ready=0
-				for ((i=0; i < 5; i++)); do
+				sleep_intervals=( 0 10 10 10 10 10 10 15 15 )
+				for i in "${sleep_intervals[@]}"; do
+					if (( i )); then
+						echo "Checking in $i seconds"
+						sleep "$i"
+					fi
 					echo "Attempting to connect to hosts"
-					if ansible -i "${stack_data_dir}/inventory" stack_nodes -m ping; then
+					# ansible ping requires python, if python is missing then
+					# install it later below and use raw mode here instead.
+					# if ansible -i "${stack_data_dir}/inventory" stack_nodes -m ping; then
+					if ansible -i "${stack_data_dir}/inventory" stack_nodes -m raw -a "uname -a"; then
 						hosts_ready=1
 						break
 					fi
-					echo "Retrying in 10 seconds."
-					sleep 10
 					
 				done
 				if (( ! hosts_ready )); then
 					echo "Unable to reach host(s). Exiting"
 					exit 1
+				fi
+				# only do this step if platform is static. If it doesn't work for other platforms, that's a bug
+				# and should be fixed in the provisioning
+				if [[ "$platform" == "static" ]]; then
+					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
 				fi
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
 					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"

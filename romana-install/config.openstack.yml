@@ -14,3 +14,5 @@
 - hosts: openstack_controller
   roles:
     - stack/openstack/postinstall
+
+- include: config.romana.yml

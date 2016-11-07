@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-agent
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: romana-agent
+    spec:
+      hostNetwork: true
+      containers:
+      - name: romana-agent
+        image: quay.io/romana/agent:v0.9.3.4
+        args:
+        # - --romana-root=http://romana-root:9600
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-usr-local-bin
+          mountPath: /host/usr/local/bin
+        - name: host-etc-romana
+          mountPath: /host/etc/romana
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin
+        - name: host-cni-net-d
+          mountPath: /host/etc/cni/net.d
+      volumes:
+      - name: host-usr-local-bin
+        hostPath:
+          path: /usr/local/bin
+      - name: host-etc-romana
+        hostPath:
+          path: /etc/romana
+      - name: host-cni-bin
+        hostPath:
+          path: /opt/cni/bin
+      - name: host-cni-net-d
+        hostPath:
+          path: /etc/cni/net.d

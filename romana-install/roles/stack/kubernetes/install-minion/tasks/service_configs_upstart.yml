@@ -1,9 +1,0 @@
----
-- name: Add docker defaults file to add bridge IP option
-  template: src="upstart/defaults_docker" dest="/etc/default/docker"
-
-- name: Install service configurations
-  copy: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
-  with_items:
-    - kubelet.conf
-    - kube-proxy.conf

@@ -114,7 +114,7 @@ create_deployment() {
 	local image="$2"
 	local segment="$3"
 
-	if ! kubectl run --namespace="$tenant_name" --image="$image" --labels="segment=$segment" "$name"; then
+	if ! kubectl run --namespace="$tenant_name" --image="$image" --labels="romanaSegment=$segment" "$name"; then
 		log_message "Deployment creation problem ($name)"
 		return 1
 	fi
@@ -162,7 +162,7 @@ test_frontend_backend() {
 	log_verbose "Deployments created"
 
 	# Get the backend pod IP
-	backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="segment=backend" -o json | jq -r '.items[0].status.podIP // empty')
+	backend_ip=$(kubectl --namespace="$tenant_name" get pods --selector="romanaSegment=backend" -o json | jq -r '.items[0].status.podIP // empty')
 	if ! [[ "$backend_ip" ]]; then
 		log_message "Failed to get backend IP"
 		return 1
@@ -170,7 +170,7 @@ test_frontend_backend() {
 	log_verbose "Backend IP is $backend_ip"
 
 	# Get the frontend pod name
-	frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="segment=frontend" -o json | jq -r '.items[0].metadata.name // empty')
+	frontend_podname=$(kubectl --namespace="$tenant_name" get pods --selector="romanaSegment=frontend" -o json | jq -r '.items[0].metadata.name // empty')
 	if ! [[ "$frontend_podname" ]]; then
 		log_message "Failed to get frontend podname"
 		return 1

@@ -1,0 +1,34 @@
+---
+- name: Install kubelet.conf
+  template: src="kubelet.conf" dest="/etc/kubernetes/kubelet.conf" mode=0600
+
+- name: Start docker and kubelet
+  service: name="{{ item }}" state="started"
+  with_items:
+    - docker
+    - kubelet
+
+- name: Install manifests for kubernetes services
+  copy: src="manifests/{{ item }}" dest="/etc/kubernetes/manifests/{{ item }}" mode=0600
+  with_items:
+    - etcd.json
+    - kube-apiserver.json
+    - kube-scheduler.json
+    - kube-controller-manager.json
+
+- name: Wait for etcd to be running
+  wait_for: host="127.0.0.1" port="2379" state=started
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Wait for apiserver to be running
+  wait_for: host="{{ romana_master_ip }}" port="8080" state=started
+
+- name: Copy kube-proxy-daemonset.yml
+  copy: src="kube-proxy-daemonset.yml" dest="/var/tmp/kube-proxy-daemonset.yml"
+
+- name: Apply kube-proxy-daemonset
+  command: kubectl apply -f "/var/tmp/kube-proxy-daemonset.yml"
+
+- name: Remove taint on master node
+  command: kubectl taint nodes --all dedicated-
+  ignore_errors: True

@@ -5,12 +5,12 @@ metadata:
 spec:
  podSelector:
   matchLabels:
-   role: backend
+   romanaSegment: backend
  ingress:
  - from:
    - podSelector:
       matchLabels:
-       role: frontend
+       romanaSegment: frontend
    ports:
     - protocol: tcp
       port: 80

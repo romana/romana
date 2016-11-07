@@ -1,38 +1,46 @@
 ---
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "keystone_override_{{ ansible_service_mgr }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "keystone_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "keystone_packages_{{ ansible_distribution|lower }}.yml"
       - "keystone_packages_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
 
 - name: Install keystone configuration
   template: src="keystone.conf" dest="/etc/keystone/keystone.conf"
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "keystone_wsgi_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "keystone_wsgi_{{ ansible_distribution|lower }}.yml"
       - "keystone_wsgi_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
 
 - include: keystone_db.yml
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "restart_webserver_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "restart_webserver_{{ ansible_distribution|lower }}.yml"
       - "restart_webserver_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   when: wsgi.changed
 
 - name: Install keystone post-install script

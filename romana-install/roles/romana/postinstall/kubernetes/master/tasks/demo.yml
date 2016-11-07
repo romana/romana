@@ -3,13 +3,15 @@
   file: path="/home/{{ ansible_ssh_user }}/demo/" mode=0775 state=directory
 
 - name: Install additional tools (required for demo script)
-  include: "{{ item }}"
+  include: "{{ file }}"
   with_first_found:
     - files: 
       - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "packages_{{ ansible_distribution|lower }}.yml"
       - "packages_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
 

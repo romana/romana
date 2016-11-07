@@ -1,20 +1,24 @@
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "initial_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "initial_packages_{{ ansible_distribution|lower }}.yml"
       - "initial_packages_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
 
-- include: "{{ item }}"
+- include: "{{ file }}"
   with_first_found:
     - files:
       - "mariadb_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
       - "mariadb_{{ ansible_distribution|lower }}.yml"
       - "mariadb_{{ ansible_os_family|lower }}.yml"
       skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
 
