@@ -1,11 +1,47 @@
 ---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-services
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: romana-services
+    spec:
+      nodeSelector:
+        kubernetes.io/role: master
+      hostNetwork: true
+      containers:
+      - name: romana-datastore
+        image: mysql:5
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: romana
+        volumeMounts:
+        - name: db-path
+          mountPath: /var/lib/mysql
+      - name: romana-services
+        image: quay.io/romana/services:v0.9.3.4
+        imagePullPolicy: Always
+        args:
+        - --cidr=10.192.0.0/10
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: romana
+      volumes:
+      - name: db-path
+        hostPath:
+          path: /var/lib/romana/db
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: romana-root
   namespace: kube-system
 spec:
-  clusterIP: 100.64.0.99
+  clusterIP: 100.64.99.99
   ports:
   - name: root
     port: 9600
@@ -30,9 +66,10 @@ spec:
       hostNetwork: true
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v0.9.3.4
+        image: quay.io/romana/agent
+        imagePullPolicy: Always
         args:
-        - --romana-root=http://100.64.0.99:9600
+        - --romana-root=http://100.64.99.99:9600
         securityContext:
           privileged: true
         volumeMounts:

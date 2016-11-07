@@ -1,0 +1,14 @@
+#!/bin/bash
+image="quay.io/romana/cni"
+volumes=(
+  -v /var/log:/var/log
+)
+env=(
+  -e CNI_ARGS="$CNI_ARGS"
+  -e CNI_COMMAND="$CNI_COMMAND"
+  -e CNI_IFNAME="$CNI_IFNAME"
+  -e CNI_NETNS="$CNI_NETNS"
+  -e CNI_CONTAINERID="$CNI_CONTAINERID"
+  -e CNI_PATH="$CNI_PATH"
+)
+exec docker run --interactive --privileged --rm --net=host --pid=host "${env[@]}" "${volumes[@]}" "$image" "$@"

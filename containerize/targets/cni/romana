@@ -38,7 +38,7 @@ fi
 
 cni_success() {
 	log "cni_success: $allocated_address"
-	printf '{ "cniVersion": "%s", "ip4": { "ip": "%s/32" } }\n' "$cni_version" "$allocated_address" 
+	printf '{ "cniVersion": "%s", "ip4": { "ip": "%s/32" } }\n' "$cni_version" "$allocated_address"
 	exit
 }
 
@@ -96,7 +96,7 @@ fi
 
 service_address() {
 	if (($# != 1)); then
-		cni_error 201 "internal-error" "service_address: expected 1 argument, got $#" 
+		cni_error 201 "internal-error" "service_address: expected 1 argument, got $#"
 	fi
 	if ! result=$(curl -f -s -S "$romana_root/" 2>&1); then
 		cni_error 202 "service-error" "service_address: error requesting root service list: $result"
@@ -113,7 +113,7 @@ service_address() {
 
 service_config() {
 	if (($# != 1)); then
-		cni_error 201 "internal-error" "service_config: expected 1 argument, got $#" 
+		cni_error 201 "internal-error" "service_config: expected 1 argument, got $#"
 	fi
 	if ! result=$(curl -f -s -S "$romana_root/" 2>&1); then
 		cni_error 202 "service-error" "service_config: error requesting root service list: $result"
@@ -201,7 +201,7 @@ address_deallocation() {
 
 interface_address() {
 	if (($# != 1)); then
-		cni_error 201 "internal-error" "interface_address: expected 1 argument, got $#" 
+		cni_error 201 "internal-error" "interface_address: expected 1 argument, got $#"
 	fi
 	if ! ip link show "$1" &>/dev/null; then
 		cni_error 201 "internal-error" "interface_address: ip link show failed"
@@ -221,7 +221,7 @@ interface_address() {
 
 interface_mac() {
 	if (($# != 1)); then
-		cni_error 201 "internal-error" "interface_mac: expected 1 argument, got $#" 
+		cni_error 201 "internal-error" "interface_mac: expected 1 argument, got $#"
 	fi
 	if ! ip link show "$1" &>/dev/null; then
 		cni_error 201 "internal-error" "interface_mac: ip link show failed"
@@ -248,7 +248,7 @@ configure_address() {
 		exit 1
 	fi
 	gw_ip=${result%/*}
-	
+
 	if ! ip link add "veth0-${nspid}" type veth peer name "veth1-${nspid}"; then
 		cni_error 203 "execution-error" "ip link add failed"
 	fi
