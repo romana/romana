@@ -15,7 +15,7 @@ Vagrant.configure(2) do |config|
 
   # Controller-specific VM configuration
   config.vm.define "{{ stack_name }}-controller" do |controller|
-    config.vm.hostname = "{{ stack_name }}-controller"
+    controller.vm.hostname = "{{ stack_name }}-controller"
     controller.vm.network "private_network", ip: "{{ host_cidr | ipaddr(10) | ipaddr('address') }}"
     controller.vm.provider "virtualbox" do |vb|
       vb.name = "{{ stack_name }}-controller"
@@ -29,7 +29,7 @@ Vagrant.configure(2) do |config|
   # Compute-specific VM configuration
 {% for _ in range(compute_nodes) %}
   config.vm.define "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}" do |compute|
-    config.vm.hostname = "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}"
+    compute.vm.hostname = "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}"
     compute.vm.network "private_network", ip: "{{ host_cidr | ipaddr(10 + loop.index) | ipaddr('address') }}"
     compute.vm.provider "virtualbox" do |vb|
       vb.name = "{{ stack_name }}-compute{{ '%02d' | format(loop.index) }}"
