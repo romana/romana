@@ -91,8 +91,8 @@ services:
       port: 9606
     config:
       kubernetes_url : "http://{{ romana_master_ip }}:8080"
-      namespace_notification_path: "/api/v1/namespaces/?watch=true"
-      policy_notification_path_prefix : "/apis/extensions/v1beta1/namespaces/"
-      policy_notification_path_postfix : "/networkpolicies/?watch=true"
+      namespace_notification_path: "api/v1/namespaces"
+      policy_notification_path_prefix : "apis/extensions/v1beta1/namespaces"
+      policy_notification_path_postfix : "networkpolicies"
       segment_label_name: "{{ romana_segment_label_name }}"
 {% endif %}
