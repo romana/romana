@@ -292,6 +292,18 @@ build_agent() {
 	log agent end
 }
 
+build_cni() {
+	if ! build;then
+		log cni skipping
+		return
+	fi
+	log cni start building container for romana cni component
+	if ! docker build -t "romana/cni:$tag" -t "quay.io/romana/cni:$tag" targets/cni; then
+		fatal error building cni container
+	fi
+	log cni end
+}
+
 push() {
 	case "$push" in
 	yes)
@@ -318,7 +330,7 @@ push() {
 			fatal error logging into quay.io
 		fi
 	fi
-	for i in services agent; do
+	for i in services agent cni; do
 		log push ... pushing "$i"
 		if ! docker push "quay.io/romana/$i:$tag"; then
 			fatal error pushing "$i" to quay.io
@@ -333,4 +345,5 @@ compile
 copy
 build_services
 build_agent
+build_cni
 push

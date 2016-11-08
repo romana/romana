@@ -109,14 +109,6 @@ if [[ "$nat" ]]; then
 else
 	nat=true
 fi
-# Check Cluster IP CIDR is valid
-if [[ "$cluster_ip_cidr" ]]; then
-	if ! valid_cidr "$cluster_ip_cidr"; then
-		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
-	fi
-else
-	cluster_ip_cidr="100.64.0.0/12"
-fi
 # Check pod-to-host is valid
 if [[ "$pod_to_host" ]]; then
 	if ! valid_bool "$pod_to_host"; then
@@ -302,7 +294,7 @@ allocate_romana_address() {
 	cidr_bits=$(cidr_bits "$romana_cidr")
 	host_prefix=$((cidr_bits + host_bits))
 	v=$(cidr_to_int "$romana_cidr")
-	((v+=$1<<host_prefix))
+	((v+=$1<<32-host_prefix))
 	((v+=1))
 	printf "%d.%d.%d.%d/%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))" "$host_prefix"
 }
@@ -314,6 +306,14 @@ fi
 # Use interface as default for nat_interface
 if ! [[ "$nat_interface" ]]; then
 	nat_interface="$interface"
+fi
+# Check Cluster IP CIDR is valid
+if [[ "$cluster_ip_cidr" ]]; then
+	if ! valid_cidr "$cluster_ip_cidr"; then
+		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
+	fi
+else
+	cluster_ip_cidr="100.64.0.0/12"
 fi
 # Look up the host's IP address using the interface
 host_address=
@@ -386,18 +386,18 @@ false)
 	if iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
 		if ! iptables -t nat -D POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
 			internal_error "Error removing $romana_address POSTROUTING rule"
-		fi      
-	fi      
+		fi
+	fi
 
 	# If chain exists, flush and remove it
 	if iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
 		if ! iptables -t nat -F ROMANA-MASQ; then
 			internal_error "Error flushing chain for NAT rule"
-		fi      
+		fi
 		if ! iptables -t nat -X ROMANA-MASQ; then
 			internal_error "Error removing chain for NAT rule"
-		fi      
-	fi      
+		fi
+	fi
 	;;
 *)
 	internal_error "nat variable was not true or false: '$nat'"
@@ -412,6 +412,12 @@ true)
 	if ! (( $(jq -r length <<< "$result" ) )); then
 		romana policy add /var/lib/romana/policies/permit-all-pod-to-host.json
 	fi
+	if ! result=$(romana policy show permit-all-host-to-pod -f json); then
+		internal_error "failed to look up existing policy"
+	fi
+	if ! (( $(jq -r length <<< "$result" ) )); then
+		romana policy add /var/lib/romana/policies/permit-all-host-to-pod.json
+	fi
 	;;
 false)
 	if ! result=$(romana policy show permit-all-pod-to-host -f json); then
@@ -419,6 +425,12 @@ false)
 	fi
 	if (( $(jq -r length <<< "$result" ) )); then
 		romana policy remove permit-all-pod-to-host
+	fi
+	if ! result=$(romana policy show permit-all-host-to-pod -f json); then
+		internal_error "failed to look up existing policy"
+	fi
+	if (( $(jq -r length <<< "$result" ) )); then
+		romana policy remove permit-all-host-to-pod
 	fi
 		;;
 *)
@@ -439,7 +451,7 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	cp /var/lib/romana/cni-installation/cni-romana /host/opt/cni/bin/romana
+	cp /var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
 	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
