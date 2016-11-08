@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-services
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: romana-services
+    spec:
+      nodeSelector:
+        # To ensure this runs only on the master node, a nodeSelector is used.
+        # The label and value specified should only match the master node
+        # in your environment.
+        # Eg:
+        # kubernetes.io/role: master                 # label used by kops
+        # kubeadm.alpha.kubernetes.io/role: master   # label used by kubeadm
+        placeholder-label: master
+      hostNetwork: true
+      containers:
+      - name: romana-datastore
+        image: mysql:5
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: romana
+        volumeMounts:
+        - name: db-path
+          mountPath: /var/lib/mysql
+      - name: romana-services
+        image: quay.io/romana/services:v0.9.3.4
+        imagePullPolicy: Always
+        args:
+        # - --cidr=10.0.0.0/8
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: romana
+      volumes:
+      - name: db-path
+        hostPath:
+          path: /var/lib/romana/db
