@@ -16,3 +16,4 @@
     - mariadb-server
     - python-simplejson
     - python-requests
+    - python-netaddr
