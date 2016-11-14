@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Copyright (c) 2016 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 usage() {
 	echo "${0##*/}: entrypoint for romana services container."
 	echo "Options:"
@@ -89,7 +104,7 @@ fi
 
 valid_bool() {
 	if (($# != 1)); then
-		internal_error "valid_number(): expected 1 parameter, got $#"
+		internal_error "valid_bool(): expected 1 parameter, got $#"
 	fi
 	case "$1" in
 	true|false)
@@ -263,7 +278,7 @@ cidr_to_int() {
 		internal_error "cidr_to_int(): '$1' is not a valid CIDR."
 	fi
 	local w x y z
-	IFS='.' read -r w x y z _ <<< "$(cidr_addr "$1")"
+	IFS='./' read -r w x y z _ <<< "$(cidr_addr "$1")"
 	printf "%d" "$(((w<<24) + (x<<16) + (y<<8) + z))"
 }
 
@@ -443,7 +458,7 @@ printf "Creating database for agent\n"
 /usr/local/bin/agent -rootURL "$romana_root" -createSchema
 	
 # Generate romana-agent.conf for supervisord
-replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+replacements=( -e 's|romana-root$|'"$romana_root"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
 
 # Install CNI
