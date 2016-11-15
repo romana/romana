@@ -1,4 +1,4 @@
 # Go version to download and install
-go_version: "1.7.1"
-go_sha1:    "919ab01305ada0078a9fdf8a12bb56fb0b8a1444"
+go_version: "1.7.3"
+go_sha1:    "ead40e884ad4d6512bcf7b3c7420dd7fa4a96140"
 go_url:     "https://storage.googleapis.com/golang/go{{ go_version }}.linux-amd64.tar.gz"
