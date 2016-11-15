@@ -41,6 +41,17 @@ For installation on a cluster created with [kops](https://github.com/kubernetes/
 kubectl apply -f https://raw.githubusercontent.com/romana/romana/master/containerize/specs/romana-kops.yml
 ```
 
+### Limitations
+
+There are some minor restrictions in an automated, single-command install of Romana that differ from the environment kops creates by default.
+
+1. *Single subnet*: An automated setup only supports a single subnet in this release.
+Multiple subnets are supported, but automating that configuration is coming in a future release.
+2. *Smaller CIDR*: By default, kops will use `172.20.0.0/16` as a network CIDR and allocate smaller /19 subnets from that range.
+Please override this with `--network-cidr=172.20.0.0/21`
+3. *EC2 Source Dest Check*: By default, AWS EC2 instances have `SourceDestCheck` enabled.
+This needs to be disabled for pods on different hosts to communicate using their podIP addresses.
+
 ## Manual / Custom Installation
 
 The installation steps above provide preconfigured values for a number of Romana components. These can be customized to suit a specific environment, and can be installed manually.
@@ -51,8 +62,9 @@ The romana services pod contains the database and microservices used within Roma
 This includes features for IPAM (IP Address Allocation), Policy, and Kubernetes integration.
 
 There are two different ways to deploy this:
-1) A manifest file
-2) A daemonset restricted to the master node
+
+1. A manifest file
+2. A daemonset restricted to the master node
 
 To install using a manifest, you can refer to [romana-services-manifest.yml](https://raw.githubusercontent.com/romana/romana/master/containerize/specs/romana-services-manifest.yml).
 This file should be copied into the "manifest path" on your master node, usually `/etc/kubernetes/manifest`.
