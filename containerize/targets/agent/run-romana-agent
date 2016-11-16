@@ -168,6 +168,7 @@ esac
 interface_address() {
 	if (($# != 1)); then
 		internal_error "interface_address(): expected 1 parameter, got $#"
+		return $?
 	fi
 	if ! ip link show "$1" &>/dev/null; then
 		return 1
@@ -297,19 +298,37 @@ fi
 allocate_romana_address() {
 	if (($# != 1)); then
 		internal_error "allocate_romana_address(): expected 1 parameter, got $#"
+		return $?
 	fi
-	if ! valid_number "$1"; then
-		internal_error "allocate_romana_address(): '$1' is not a valid number."
+	if ! valid_cidr "$1"; then
+		internal_error "allocate_romana_address(): '$1' is not a valid cidr."
+		return $?
 	fi
 	local host_bits cidr_bits host_prefix v
 	host_bits=$(jq -r '.config.datacenter.host_bits // empty' <<< "$topology_config")
 	if ! valid_number "$host_bits"; then
 		internal_error "invalid result attempting to get host_bits configuration for topology"
+		return $?
+	fi
+	address_prefix=$(cidr_bits "$1")
+	if ! valid_number "$address_prefix"; then
+		internal_error "invalid result attempting to get address_prefix from address '$1'"
+		return $?
+	fi
+	address_bits=$((32 - address_prefix))
+	if ((address_bits > host_bits)); then
+		internal_error "invalid configuration: subnet requires $address_bits bits for hosts, but only $host_bits bits configured"
+		return $?
 	fi
 	cidr_bits=$(cidr_bits "$romana_cidr")
+	host_number=$(cidr_pos "$host_address")
+	if ! valid_number "$host_number"; then
+		internal_error "host_number '$host_number' is not a valid number."
+		return $?
+	fi
 	host_prefix=$((cidr_bits + host_bits))
 	v=$(cidr_to_int "$romana_cidr")
-	((v+=$1<<32-host_prefix))
+	((v+=host_number<<32-host_prefix))
 	((v+=1))
 	printf "%d.%d.%d.%d/%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))" "$host_prefix"
 }
@@ -338,15 +357,13 @@ fi
 
 # If no address found, allocate one.
 if ! [[ "$romana_address" ]]; then
-	host_number=$(cidr_pos "$host_address")
-	if ! romana_address=$(allocate_romana_address "$host_number"); then
-		exit $?
+	if ! result=$(allocate_romana_address "$host_address"); then
+		internal_error "error allocating romana address: $result"
 	fi
+	romana_address="$result"
 	if ! romana host add "$HOSTNAME" "${host_address%/*}" "$romana_address" 9604; then
 		internal_error "unable to register host with topology"
 	fi
-	# Assume other agents on other nodes are doing the same thing. Wait for them to spin up.
-	sleep 42
 fi
 
 # Create romana-gw interface if not present.
