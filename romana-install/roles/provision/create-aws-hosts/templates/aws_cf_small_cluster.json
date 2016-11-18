@@ -180,10 +180,29 @@ under the License.
             "IpProtocol": "-1",
             "CidrIp": "{{ host_cidr }}"
           },
+{% if stack_type == "nostack" %}
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "10.0.0.0/8"
+          },
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "100.64.0.0/10"
+          },
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "172.16.0.0/12"
+          },
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "192.168.0.0/16"
+          },
+{% else %}
           {
             "IpProtocol": "-1",
             "CidrIp": "{{ romana_cidr }}"
           },
+{% endif %}
           {
             "IpProtocol": "icmp",
             "FromPort": "-1",
