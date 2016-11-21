@@ -14,11 +14,25 @@
 - name: Clone romana core repo into GOPATH
   git: repo="{{ romana_core_repo }}" version="{{ romana_core_branch }}" dest="/var/tmp/gopath/src/github.com/romana/core" key_file="{{ github_key is defined | ternary('~/.ssh/github_id_rsa', omit) }}" ssh_opts={{ git_ssh_options }}
 
+- name: Get the romana/kube repository for listener
+  git: repo="{{ romana_kube_repo }}" version="{{ romana_kube_branch }}" dest="/var/tmp/gopath/src/github.com/romana/kube" key_file="{{github_key is defined | ternary('~/.ssh/github_id_rsa', omit) }}" ssh_opts={{ git_ssh_options }}
+ 
 - name: Copy a build script
   copy: src="build_romana_core" dest="/var/tmp/build_romana_core" mode=0755
 
+- name: Copy a build script for listener
+  copy: src="build_kube_listener" dest="/var/tmp/build_kube_listener" mode=0755
+
+- name: Copy a kubernetes config for the listener
+  become: true
+  become_user: root
+  copy: src="kubeconfig" dest="/etc/romana/kubeconfig" mode=0644
+
 - name: Run the build script
   shell: /var/tmp/build_romana_core
+
+- name: Run the build script
+  shell: /var/tmp/build_kube_listener
 
 - name: Install files
   become: true
@@ -31,7 +45,7 @@
     - topology
     - romana
     - policy
- 
+
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
 

@@ -1,0 +1,19 @@
+#!/bin/bash
+export GOPATH=/var/tmp/gopath
+export PATH=/usr/local/go/bin:$PATH
+
+go get -d github.com/romana/kube/...
+
+rm -rf /var/tmp/gopath/src/github.com/romana/kube/vendor/k8s.io/client-go/1.5/vendor/github.com/golang/glog
+
+while IFS= read -r p; do
+	pkgs+=("$p")
+done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/kube/... | grep -v /vendor/)
+
+# GIT_DIR shouldn't be before go get, since it interferes with
+# git submodule update.
+export GIT_DIR=$GOPATH/src/github.com/romana/kube/.git
+go install -ldflags \
+	"-X github.com/romana/kube/common.buildInfo=`git describe --always` \
+	-X github.com/romana/kube/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
+	"${pkgs[@]}"
