@@ -23,11 +23,6 @@
 - name: Copy a build script for listener
   copy: src="build_kube_listener" dest="/var/tmp/build_kube_listener" mode=0755
 
-- name: Copy a kubernetes config for the listener
-  become: true
-  become_user: root
-  copy: src="kubeconfig" dest="/etc/romana/kubeconfig" mode=0644
-
 - name: Run the build script
   shell: /var/tmp/build_romana_core
 
