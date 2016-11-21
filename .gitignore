@@ -1,2 +1,7 @@
 *~
 #*#
+
+# Folders
+_obj
+_test
+.idea
