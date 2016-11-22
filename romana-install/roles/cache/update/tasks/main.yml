@@ -17,4 +17,4 @@
   when: cache_update and platform in [ "vagrant", "static" ]
 
 - include: "romana.yml"
-  when: cache_update and platform in [ "vagrant", "static" ]
+  when: cache_update and platform in [ "vagrant", "static" ] and romana_core_source == "s3"
