@@ -15,6 +15,6 @@ done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github
 # git submodule update.
 export GIT_DIR=$GOPATH/src/github.com/romana/kube/.git
 go install -ldflags \
-	"-X github.com/romana/kube/common.buildInfo=`git describe --always` \
-	-X github.com/romana/kube/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
+	"-X github.com/romana/romana/common.buildInfo=`git describe --always` \
+	-X github.com/romana/romana/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
 	"${pkgs[@]}"
