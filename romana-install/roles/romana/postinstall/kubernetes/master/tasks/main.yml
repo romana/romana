@@ -12,5 +12,4 @@
   become: true
   become_user: root
 
-- include: "script.yml"
 - include: "demo.yml"
