@@ -4,11 +4,12 @@ export PATH=/usr/local/go/bin:$PATH
 
 go get -d github.com/romana/kube/...
 
-rm -rf /var/tmp/gopath/src/github.com/romana/kube/vendor/k8s.io/client-go/1.5/vendor/github.com/golang/glog
+rm -rf /var/tmp/gopath/src/github.com/romana/kube/vendor/k8s.io/client-go/1.5/vendor/github.com/golang/glog \
+	/var/tmp/gopath/src/github.com/romana/kube/vendor/k8s.io/client-go/examples
 
 while IFS= read -r p; do
 	pkgs+=("$p")
-done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/kube/... | grep -v /vendor/)
+done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/kube/cmd/...)
 
 # GIT_DIR shouldn't be before go get, since it interferes with
 # git submodule update.
