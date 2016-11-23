@@ -2,18 +2,29 @@
 export GOPATH=/var/tmp/gopath
 export PATH=/usr/local/go/bin:$PATH
 
-go get -d github.com/romana/kube/...
+KUBE_DIR=github.com/romana/kube
+KUBE_PATH=$GOPATH/src/$KUBE_DIR
+
+go get -d $KUBE_DIR/...
+
+# glog changes flags, which causes listener to crash due to
+# multiple glog imports, get rid of secondary glog import.
+#
+# TODO: get rid of glog :(, use a real logger instead.
+#
+GLOG_FIX=$KUBE_PATH/vendor/k8s.io/client-go/1.5/vendor/github.com/golang/glog
+rm -rf "$GLOG_FIX"
 
 while IFS= read -r p; do
 	pkgs+=("$p")
-done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/kube/... | grep -v /vendor/)
+done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  $KUBE_DIR/... | grep -v /vendor/)
 
 # GIT_DIR shouldn't be before go get, since it interferes with
 # git submodule update.
-export GIT_DIR=$GOPATH/src/github.com/romana/kube/.git
+export GIT_DIR=$KUBE_PATH/.git
 go install -ldflags \
-	"-X github.com/romana/kube/common.buildInfo=`git describe --always` \
-	-X github.com/romana/kube/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
+	"-X $KUBE_DIR/common.buildInfo=`git describe --always` \
+	-X $KUBE_DIR/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
 	"${pkgs[@]}"
 
 echo "export GOPATH=/var/tmp/gopath" >> ~/.profile

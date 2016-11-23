@@ -6,7 +6,7 @@ go get -d github.com/romana/core/...
 
 while IFS= read -r p; do
 	pkgs+=("$p")
-done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/core/... | grep -v /vendor/)
+done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github.com/romana/core/... | grep -v -e /vendor/ -e '/listener$')
 
 # GIT_DIR shouldn't be before go get, since it interferes with
 # git submodule update.
