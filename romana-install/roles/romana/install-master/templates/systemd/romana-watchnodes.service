@@ -5,7 +5,7 @@ After=romana-topology.service
 Wants=romana-topology.service
 
 [Service]
-#User=...
+User=ubuntu
 EnvironmentFile=-{{ romana_etc_dir }}/watchnodes
 ExecStart={{ romana_bin_dir }}/watchnodes
 Restart=on-failure
