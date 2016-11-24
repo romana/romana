@@ -18,6 +18,7 @@ distro_info:
       "xenial": "ami-6e165d0e" # Ubuntu 16.04 LTS (20161020)
     user: "ubuntu"
     bootstrap:
+      - apt-get update
       - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   "centos":
