@@ -6,3 +6,4 @@
     - romana-tenant.service
     - romana-ipam.service
     - romana-policy.service
+    - romana-watchnodes.service

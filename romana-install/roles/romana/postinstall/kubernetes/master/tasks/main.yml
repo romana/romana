@@ -9,8 +9,8 @@
   service: name="{{ item }}" state="started"
   with_items:
     - romana-kube-listener
+    - romana-watchnodes
   become: true
   become_user: root
 
-- include: "script.yml"
 - include: "demo.yml"

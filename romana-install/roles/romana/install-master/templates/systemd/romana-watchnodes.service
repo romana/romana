@@ -1,0 +1,17 @@
+[Unit]
+Description=Romana Cloud Native Networking Watch Nodes Service
+Documentation=https://github.com/romana/kube
+After=romana-topology.service
+Wants=romana-topology.service
+
+[Service]
+User=ubuntu
+EnvironmentFile=-{{ romana_etc_dir }}/watchnodes
+ExecStart={{ romana_bin_dir }}/watchnodes
+Restart=on-failure
+StartLimitInterval=180s
+StartLimitBurst=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
