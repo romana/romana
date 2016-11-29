@@ -1,5 +1,5 @@
 command: services_running
-args: romana-kube-listener
+args: romana-listener
 description: Check that Kubernetes services are running on master
 labels: kube-master, services
 

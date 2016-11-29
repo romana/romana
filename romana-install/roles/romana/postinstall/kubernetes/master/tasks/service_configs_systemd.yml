@@ -2,4 +2,4 @@
 - name: Install service configurations
   template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
   with_items:
-    - romana-kube-listener.service
+    - romana-listener.service
