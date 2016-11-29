@@ -1,6 +1,4 @@
 ---
-- include: "kube_listener_from_{{ romana_core_source }}.yml"
-
 - include: "service_configs_{{ ansible_service_mgr }}.yml"
   become: true
   become_user: root
