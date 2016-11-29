@@ -11,10 +11,6 @@
     - topology
     - romana
     - policy
-
-- name: Download Kube binaries
-  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/core/latest/origin/{{ romana_core_branch }}/{{ item }}" dest="{{ romana_dl_dir }}/{{ item }}" mode=0755
-  with_items:
     - watchnodes
 
 - name: Install Core/Kube binaries
