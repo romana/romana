@@ -21,6 +21,7 @@ distro_info:
         url:  "https://cloud-images.ubuntu.com/releases/16.04/release-20161010/ubuntu-16.04-server-cloudimg-amd64-vagrant.box"
     user: "ubuntu"
     bootstrap:
+      - apt-get update
       - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   "centos":
