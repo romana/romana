@@ -60,7 +60,6 @@ required=( ansible ansible-playbook )
 core_source=
 core_branch=
 networking_branch=
-kube_branch=
 github_key=
 github_user=
 github_repo=
@@ -157,10 +156,6 @@ if (( $# > 0 )); then
 				;;
 			--networking-branch)
 				networking_branch="$2"
-				shift 2
-				;;
-			--kube-branch)
-				kube_branch="$2"
 				shift 2
 				;;
 			--github-key)
@@ -322,9 +317,6 @@ if [[ "$core_branch" ]]; then
 fi
 if [[ "$networking_branch" ]]; then
 	ansible_args+=( -e romana_networking_branch="$networking_branch" )
-fi
-if [[ "$kube_branch" ]]; then
-	ansible_args+=( -e romana_kube_branch="$kube_branch" )
 fi
 # Change github key
 if [[ "$github_key" ]]; then

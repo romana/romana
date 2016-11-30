@@ -8,7 +8,6 @@ This repository contains the installer and documentation.
 The Romana source code, however, is contained in these repositories:
 
 * [core](https://github.com/romana/core ): A number of micro services written in Go, which comprise the core components of the Romana system.
-* [kube](https://github.com/romana/kube): The Romana CNI plugin and Network Policy Agents for Kubernetes
 * [networking-romana](https://github.com/romana/networking-romana): The Romana ML2 plugin and IPAM driver for OpenStack
 
 The READMEs of those repos contain more information about the source code and how to run and test it.

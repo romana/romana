@@ -1,6 +1,6 @@
 [Unit]
 Description=Romana Cloud Native Networking Watch Nodes Service
-Documentation=https://github.com/romana/kube
+Documentation=https://github.com/romana/core
 After=romana-topology.service
 Wants=romana-topology.service
 

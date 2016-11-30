@@ -1,6 +1,4 @@
 ---
-- include: "kube_listener_from_{{ romana_core_source }}.yml"
-
 - include: "service_configs_{{ ansible_service_mgr }}.yml"
   become: true
   become_user: root
@@ -8,7 +6,7 @@
 - name: Start services
   service: name="{{ item }}" state="started"
   with_items:
-    - romana-kube-listener
+    - romana-listener
     - romana-watchnodes
   become: true
   become_user: root

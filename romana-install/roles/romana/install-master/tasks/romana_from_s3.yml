@@ -11,13 +11,10 @@
     - topology
     - romana
     - policy
-
-- name: Download Kube binaries
-  get_url: url="https://s3-us-west-1.amazonaws.com/romana-binaries/kube/latest/origin/{{ romana_kube_branch }}/{{ item }}" dest="{{ romana_dl_dir }}/{{ item }}" mode=0755
-  with_items:
     - watchnodes
+    - listener
 
-- name: Install Core/Kube binaries
+- name: Install Core binaries
   become: true
   become_user: root
   command: install -o root -g root -m 0755 "{{ romana_dl_dir }}/{{ item }}" "{{ romana_bin_dir }}/{{ item }}"
@@ -29,6 +26,7 @@
     - romana
     - policy
     - watchnodes
+    - listener
 
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
