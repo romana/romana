@@ -24,7 +24,7 @@ usage() {
 	echo "Cluster Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
-	echo "Stack Types:   devstack (default), openstack, kubernetes"
+	echo "Stack Types:   kubernetes, none"
 	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall, test"
 	echo ""
@@ -53,10 +53,10 @@ stack_name="$USER"
 distro="ubuntu"
 platform="aws"
 inventory=""
-stack_type="devstack"
+stack_type=""
 cluster_nodes=""
 required=( ansible ansible-playbook )
-
+force=0
 core_source=
 core_branch=
 networking_branch=
@@ -146,6 +146,10 @@ if (( $# > 0 )); then
 				shift 2
 				;;
 # Options for core developers. Not for general users, so excluded from usage/documentation
+			--force)
+				force=1
+				shift
+				;;
 			--source)
 				core_source="github"
 				shift
@@ -183,6 +187,29 @@ if (( $# > 0 )); then
 		esac
 	done
 fi
+
+# Stack type must be specified
+if ! [[ "$stack_type" ]]; then
+	echo "Stack type (-s) must be specified"
+	exit 1
+fi
+
+# Only do devstack or openstack installs if force is set.
+# Otherwise print out a suggestion to use a different branch.
+case "$stack_type" in
+devstack|openstack)
+	if ! (( force )); then
+		echo "Development of Romana for $stack_type is currently on hold."
+		echo "To create a cluster for $stack_type with an older supported version of Romana, please run:"
+		echo "  git checkout release-v0.9.3"
+		echo "This will switch to the latest supported release for $stack_type"
+		echo ""
+		echo "Also please register your interest in Romana support for $stack_type by contacting us"
+		echo "or opening an issue on GitHub. ( https://github.com/romana/romana/issues/new )"
+		exit 1
+	fi
+	;;
+esac
 
 # Process action
 action=install
@@ -249,23 +276,12 @@ esac; fi
 # try to determine an appropriate distro release to use
 if [[ "$platform" != "static" ]]; then
 	case "$distro" in
-		ubuntu)
-			case "$stack_type" in
-				kubernetes|nostack)
-					release=xenial
-					;;
-				devstack|openstack)
-					release=trusty
-					;;
-			esac
-			;;
-		centos)
-			case "$stack_type" in
-				kubernetes|devstack|openstack|nostack)
-					release=7
-				;;
-			esac
-			;;
+	ubuntu)
+		release=xenial
+		;;
+	centos)
+		release=7
+		;;
 	esac
 	if ! [[ "$release" ]]; then
 		echo "Failed to determine appropriate release for distro '$distro' and stack type '$stack_type'"
