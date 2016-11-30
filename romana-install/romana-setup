@@ -57,6 +57,7 @@ stack_type="devstack"
 cluster_nodes=""
 required=( ansible ansible-playbook )
 
+verbose=0
 core_source=
 core_branch=
 networking_branch=
@@ -147,6 +148,10 @@ if (( $# > 0 )); then
 # Options for core developers. Not for general users, so excluded from usage/documentation
 			--source)
 				core_source="github"
+				shift
+				;;
+			--verbose)
+				verbose=1
 				shift
 				;;
 			--core-branch)
@@ -355,8 +360,14 @@ case "$platform" in
 				if [[ "$platform" == "static" ]]; then
 					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
 				fi
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
+				if (( verbose )); then
+					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml -vvv
+					[[ -f "${stack_data_dir}/inventory" ]] && cat "${stack_data_dir}/inventory" | grep ssh_host
 					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
+				else
+					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
+						[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
+				fi
 				;;
 			uninstall)
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
