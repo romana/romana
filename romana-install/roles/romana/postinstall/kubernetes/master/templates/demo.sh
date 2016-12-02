@@ -125,7 +125,7 @@ desc "We add a policy that permits the frontend to connect to the backend. This 
 run "cat romana-np-frontend-to-backend.yml"
 
 desc "Let's apply the policy now. Note that policies are applied to pods, not the service."
-run "kubectl --namespace=tenant-a create -f romana-np-frontend-to-backend.yml; sleep 5"
+run "kubectl create -f romana-np-frontend-to-backend.yml; sleep 5"
 
 desc "Now we can connect from the frontend to the backend again."
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_service_ip 'tenant-a') --connect-timeout 5"
@@ -134,4 +134,4 @@ desc "But as expected, 'ping' still fails, since it was not part of the policy."
 run "kubectl --namespace=tenant-a exec nginx-frontend -- ping -c 3 -W 1 $(get_pod_ip 'nginx-backend' 'tenant-a')"
 
 desc "Demo completed (cleaning up)"
-run "kubectl --namespace=tenant-a delete networkpolicy pol1; kubectl --namespace=tenant-a delete pod nginx-backend; kubectl --namespace=tenant-a delete pod nginx-frontend; kubectl --namespace=tenant-a delete service my-service; kubectl delete namespace tenant-a; delete_tenant 'tenant-a'"
+run "kubectl delete -f romana-np-frontend-to-backend.yml; kubectl delete -f pod-backend.yaml; kubectl delete -f pod-frontend.yaml; kubectl delete -f backend-service.yaml; kubectl delete -f namespace-tenant-a.yaml; delete_tenant 'tenant-a'"
