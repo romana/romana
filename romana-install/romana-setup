@@ -199,10 +199,11 @@ fi
 case "$stack_type" in
 devstack|openstack)
 	if ! (( force )); then
-		echo "Development of Romana for $stack_type is currently on hold."
-		echo "To create a cluster for $stack_type with an older supported version of Romana, please run:"
+		echo "The latest Romana features have not yet been implemented for $stack_type."
+		echo "To create a $stack_type cluster, please use the most recent supported Romana version"
+		echo "for this type of cluster. The command below switches to that version."
+		echo ""
 		echo "  git checkout release-v0.9.3"
-		echo "This will switch to the latest supported release for $stack_type"
 		echo ""
 		echo "Also please register your interest in Romana support for $stack_type by contacting us"
 		echo "or opening an issue on GitHub. ( https://github.com/romana/romana/issues/new )"
