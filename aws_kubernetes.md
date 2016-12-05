@@ -79,7 +79,7 @@ You can now proceed to [Using Romana on Kubernetes](kubernetes_romana.md).
 
 From the same directory, you can perform an uninstall
 ```bash
-./romana-setup -p aws -s kubernetes install
+./romana-setup -p aws -s kubernetes uninstall
 ```
 
 This will destroy the Kubernetes cluster.
