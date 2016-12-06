@@ -393,7 +393,7 @@ if [[ "$platform" == "aws" ]]; then
 		esac
 	fi
 	if [[ "$ami" ]]; then
-		ansible_args+=( -e '{ "distro_info": { "'"$distro"'": { "ami": { "'"$release"'": "'"$ami"'" } } } }' )
+		ansible_args+=( -e '{ "ami_info": { "'"$distro"'": { "'"$release"'": "'"$ami"'" } } }' )
 	fi
 fi
 
