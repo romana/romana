@@ -12,6 +12,9 @@ instance_type:
     kubernetes: "t2.small"
     nostack: "t2.small"
 
+# These AMIs are for reference and only apply to region us-west-1.
+# Normally the romana-setup script will do a lookup and use the discovered
+# AMI ID. You might need to use one listed below if overriding that lookup.
 ami_info:
   "ubuntu":
     "trusty": "ami-93d798f3" # Ubuntu 14.04.5 LTS
