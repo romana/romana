@@ -5,4 +5,5 @@
     - "{{ romana_bin_dir }}"
     - "{{ romana_lib_dir }}"
     - "{{ romana_etc_dir }}"
+    - "{{ romana_log_dir }}"
     - "{{ romana_db_dir }}"
