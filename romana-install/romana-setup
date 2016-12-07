@@ -28,6 +28,10 @@ usage() {
 	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall, test"
 	echo ""
+	echo "  Options for Platform 'aws':"
+	echo "    -r region-name"
+	echo "    -a ami-id"
+	echo ""
 	echo "Example 1: Romana with Kubernetes on AWS"
 	echo "./romana-setup -p aws -s kubernetes install"
 	echo "./romana-setup -p aws -s kubernetes test"
@@ -52,6 +56,8 @@ fi
 stack_name="$USER"
 distro="ubuntu"
 platform="aws"
+region=""
+ami=""
 inventory=""
 stack_type="devstack"
 cluster_nodes=""
@@ -116,6 +122,14 @@ if (( $# > 0 )); then
 						exit 1
 						;;
 				esac
+				;;
+			-r|--region)
+				region="$2"
+				shift 2
+				;;
+			-a|--ami)
+				ami="$2"
+				shift 2
 				;;
 			-s|--stack)
 				case "$2" in
@@ -241,6 +255,20 @@ if [[ $platform != "static" ]]; then
 		exit 1
 	fi
 fi
+# region is only applicable for AWS
+if [[ "$region" ]]; then
+	if [[ $platform != "aws" ]]; then
+		echo "Region must only be provided when using aws"
+		exit 1
+	fi
+fi
+# AMI is only applicable for AWS
+if [[ "$ami" ]]; then
+	if [[ $platform != "aws" ]]; then
+		echo "AMI must only be provided when using aws"
+		exit 1
+	fi
+fi
 # number of cluster nodes. make sure it's a number, and within some limits
 if [[ "$cluster_nodes" ]]; then case "$cluster_nodes" in
 	# Between 0 and 200
@@ -310,6 +338,73 @@ fi
 if [[ "$cluster_nodes" ]]; then
 	ansible_args+=( -e '{ "compute_nodes": '"$((cluster_nodes - 1))"'}')
 fi
+# If platform and region are specified, try to look up the AMI.
+if [[ "$platform" == "aws" ]]; then
+	# If we don't have a region, try to look it up
+	if ! [[ "$region" ]]; then
+		if configured_region=$(aws configure get region 2>/dev/null); then
+			region="$configured_region"
+		fi
+	fi
+	# If we now have a region, but no AMI setting, try to look it up
+	if [[ "$region" ]] && ! [[ "$ami" ]]; then
+		ansible_args+=( -e region="$region" )
+		case "$distro" in
+			ubuntu)
+				# AMI info is in https://cloud-images.ubuntu.com/query/$release/server/released.current.txt 
+				if ! ami_info=$(curl -f -s -S "https://cloud-images.ubuntu.com/query/$release/server/released.current.txt" 2>&1); then
+					echo "Error getting AMI info for $distro / $release"
+					exit 1
+				fi
+				# Parse file. Match region, storage type and virtualization type to get the AMI.
+				while IFS=$'\t' read -ra line; do
+					# Filter for ebs-ssd / hvm entries. Always 9 items
+					if (( ${#line[@]} != 9 )); then
+						continue
+					fi
+					if [[ "${line[6]}" != "$region" ]]; then
+						continue
+					fi
+					if [[ "${line[4]}" != "ebs-ssd" ]]; then
+						continue
+					fi
+					if [[ "${line[8]}" != "hvm" ]]; then
+						continue
+					fi
+					ami="${line[7]}"
+					break
+				done <<< "$ami_info"
+				if ! [[ "$ami" ]]; then
+					echo "AMI not found for $distro / $release / $region"
+					exit 1
+				fi
+				;;
+			centos)
+				# AMI lookup is via aws describe-images command
+				aws_args=(
+					--region "$region"
+					ec2 describe-images
+					--owners aws-marketplace
+					--filters 
+					    Name=product-code,Values=aw0evgkw8e5c1q413zgy5pjce
+					    Name=state,Values=available
+					    Name=virtualization-type,Values=hvm
+					--query 'Images[*].ImageId'
+					--output text
+				)
+				ami_id=$(aws "${aws_args[@]}")
+				if ! [[ "$ami_id" ]]; then
+					echo "AMI not found for $distro / $release / $region"
+					exit 1
+				fi
+				ami="$ami_id"
+				;;
+		esac
+	fi
+	if [[ "$ami" ]]; then
+		ansible_args+=( -e '{ "ami_info": { "'"$distro"'": { "'"$release"'": "'"$ami"'" } } }' )
+	fi
+fi
 
 # Change install source
 if [[ "$core_source" ]]; then
@@ -370,7 +465,7 @@ case "$platform" in
 				fi
 				if (( verbose )); then
 					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml -vvv
-					[[ -f "${stack_data_dir}/inventory" ]] && cat "${stack_data_dir}/inventory" | grep ssh_host
+					[[ -f "${stack_data_dir}/inventory" ]] && grep ssh_host "${stack_data_dir}/inventory"
 					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
 				else
 					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&

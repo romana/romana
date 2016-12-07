@@ -1,4 +1,5 @@
 ec2_keypair: ""
+region: us-west-1
 instance_type:
   controller:
     devstack: "t2.large"
@@ -11,19 +12,24 @@ instance_type:
     kubernetes: "t2.small"
     nostack: "t2.small"
 
+# These AMIs are for reference and only apply to region us-west-1.
+# Normally the romana-setup script will do a lookup and use the discovered
+# AMI ID. You might need to use one listed below if overriding that lookup.
+ami_info:
+  "ubuntu":
+    "trusty": "ami-93d798f3" # Ubuntu 14.04.5 LTS
+    "xenial": "ami-6e165d0e" # Ubuntu 16.04 LTS (20161020)
+  "centos":
+    "7": "ami-af4333cf" # CentOS Linux 7 x86_64 HVM EBS 1602
+
 distro_info:
   "ubuntu":
-    ami:
-      "trusty": "ami-93d798f3" # Ubuntu 14.04.5 LTS
-      "xenial": "ami-6e165d0e" # Ubuntu 16.04 LTS (20161020)
     user: "ubuntu"
     bootstrap:
       - apt-get update
       - apt-get install -y python python-apt aptitude
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/ubuntu/.ssh/authorized_keys
   "centos":
-    ami:
-      "7": "ami-af4333cf" # CentOS Linux 7 x86_64 HVM EBS 1602
     user: "centos"
     bootstrap:
       - printf '%s\n' '{{ lookup("file", romana_ssh_key + ".pub") }}' >> /home/centos/.ssh/authorized_keys
