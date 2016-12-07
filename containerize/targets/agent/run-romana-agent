@@ -35,6 +35,7 @@ nat=
 nat_interface=
 cluster_ip_cidr=
 pod_to_host=
+cni_image="quay.io/romana/cni"
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -67,6 +68,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--pod-to-host)
 		pod_to_host="$2"
+		shift 2
+		;;
+	--cni-image)
+		cni_image="$2"
 		shift 2
 		;;
 	*)
@@ -483,7 +488,9 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	cp /var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
+	replacements=( -e 's|cni-image|'"$cni_image"'|g' )
+	sed "${replacements[@]}" /var/lib/romana/cni-installation/romana-cni-wrapper > /host/opt/cni/bin/romana
+	chmod --reference=/var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
 	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
