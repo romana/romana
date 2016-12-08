@@ -71,6 +71,7 @@ spec:
         args:
         - --romana-root=http://10.99.99.99:9600
         - --cluster-ip-cidr=10.96.0.0/12
+        - --cni-image=quay.io/romana/cni:v0.9.3.6
         securityContext:
           privileged: true
         volumeMounts:
