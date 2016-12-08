@@ -2,10 +2,10 @@
 nodaemon=true
 
 [program:agent]
-command=/usr/local/bin/agent -rootURL romana-root
+command=/usr/local/bin/agent -rootURL <romana-root>
 
 [program:policy-agent]
 command=/usr/local/bin/agent.py
 
 [program:host-route-monitor]
-command=/usr/local/bin/host-route-monitor --romana-root romana-root
+command=/usr/local/bin/host-route-monitor --romana-root <romana-root> --interface <interface>

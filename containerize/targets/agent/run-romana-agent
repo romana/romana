@@ -480,7 +480,10 @@ printf "Creating database for agent\n"
 /usr/local/bin/agent -rootURL "$romana_root" -createSchema
 	
 # Generate romana-agent.conf for supervisord
-replacements=( -e 's|romana-root$|'"$romana_root"'|g' )
+replacements=(
+	-e 's|<romana-root>|'"$romana_root"'|g'
+	-e 's|<interface>|'"$interface"'|g'
+)
 sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
 
 # Install CNI
