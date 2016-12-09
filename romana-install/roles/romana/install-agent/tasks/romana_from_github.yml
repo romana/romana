@@ -26,3 +26,10 @@
   become: true
   become_user: root
   command: install -o root -g root -m 0755 "/var/tmp/cni/romana" "/opt/cni/bin/romana"
+
+- name: Install rlog configuration files
+  become: true
+  become_user: root
+  copy: src="rlog_detailed.conf" dest="{{ rlog_etc_dir }}/{{ item }}.conf"
+  with_items:
+    - agent

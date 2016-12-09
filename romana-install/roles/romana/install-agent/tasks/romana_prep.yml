@@ -7,3 +7,4 @@
     - "{{ romana_etc_dir }}"
     - "{{ romana_log_dir }}"
     - "{{ romana_db_dir }}"
+    - "{{ rlog_etc_dir }}"

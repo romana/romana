@@ -58,3 +58,15 @@
           PATH="$PATH:/usr/local/go/bin"
       fi
   when: ansible_distribution|lower == "centos"
+
+- name: Install rlog configuration files
+  become: true
+  become_user: root
+  copy: src="rlog_detailed.conf" dest="{{ rlog_etc_dir }}/{{ item }}.conf"
+  with_items:
+    - ipam
+    - root
+    - tenant
+    - topology
+    - romana
+    - policy

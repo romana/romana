@@ -33,3 +33,10 @@
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
   when: inventory_hostname not in groups.controller
+
+- name: Install rlog configuration files
+  become: true
+  become_user: root
+  copy: src="rlog_simple.conf" dest="{{ rlog_etc_dir }}/{{ item }}.conf"
+  with_items:
+    - agent

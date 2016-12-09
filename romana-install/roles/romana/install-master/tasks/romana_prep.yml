@@ -6,6 +6,7 @@
     - "{{ romana_lib_dir }}"
     - "{{ romana_etc_dir }}"
     - "{{ romana_log_dir }}"
+    - "{{ rlog_etc_dir }}"
 
 - name: Install config file
   template: src="config/romana.conf.yml" dest="{{ romana_etc_dir }}/romana.conf.yml" mode=0644
