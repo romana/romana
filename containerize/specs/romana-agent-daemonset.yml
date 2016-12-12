@@ -44,4 +44,4 @@ spec:
           path: /etc/cni/net.d
       - name: log-path
         hostPath:
-          path: /var/log/romanat
+          path: /var/log/romana
