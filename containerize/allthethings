@@ -231,14 +231,17 @@ build() {
 			build=yes
 			return 0
 		fi
-		if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "quay.io/romana/services:$tag") != "quay.io/romana/services:$tag" ]]; then
-			build=yes
-			return 0
-		fi
-		if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "quay.io/romana/agent:$tag") != "quay.io/romana/agent:$tag" ]]; then
-			build=yes
-			return 0
-		fi
+		for n in "${namespaces[@]}"; do
+			for i in services agent cni; do
+				if ! image_name=$(image_name "$n" "$i"); then
+					fatal "build(): error from image_name()"
+				fi
+				if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "$image_name") != "$image_name" ]]; then
+					build=yes
+					return 0
+				fi
+			done
+		done
 		build=no
 		return 42
 	esac
@@ -388,7 +391,7 @@ push() {
 		fi
 		;;
 	esac
-	if ! (( ${#namespaces[@]}  )); then
+	if ! (( ${#namespaces[@]} )); then
 		log push skipping no targets available
 		return
 	fi
@@ -412,7 +415,7 @@ push() {
 		fi
 		for i in services agent cni; do
 			log push ... pushing "$i"
-			if ! echo docker push "$(image_name "$n" "$i")"; then
+			if ! docker push "$(image_name "$n" "$i")"; then
 				fatal error pushing "$i" to "$registry"
 			fi
 			log push ... "$i" pushed
