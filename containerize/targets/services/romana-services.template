@@ -3,21 +3,42 @@ nodaemon=true
 
 [program:root]
 command=/usr/local/bin/root -c /etc/romana/romana.conf.yml
+redirect_stderr=true
+stdout_logfile=/var/log/romana/root.log
+stdout_logfile_backups=0
 
 [program:topology]
 command=/usr/local/bin/topology -rootURL http://romana-master-address:9600
+redirect_stderr=true
+stdout_logfile=/var/log/romana/topology.log
+stdout_logfile_backups=0
 
 [program:tenant]
 command=/usr/local/bin/tenant -rootURL http://romana-master-address:9600
+redirect_stderr=true
+stdout_logfile=/var/log/romana/tenant.log
+stdout_logfile_backups=0
 
 [program:ipam]
 command=/usr/local/bin/ipam -rootURL http://romana-master-address:9600
+redirect_stderr=true
+stdout_logfile=/var/log/romana/ipam.log
+stdout_logfile_backups=0
 
 [program:policy]
 command=/usr/local/bin/policy -rootURL http://romana-master-address:9600
+redirect_stderr=true
+stdout_logfile=/var/log/romana/policy.log
+stdout_logfile_backups=0
 
 [program:listener]
 command=/usr/local/bin/listener -rootURL http://romana-master-address:9600
+redirect_stderr=true
+stdout_logfile=/var/log/romana/listener.log
+stdout_logfile_backups=0
 
 [program:kube-cni-proxy]
 command=/usr/local/bin/kube-cni-proxy -port 9609 -target http://romana-master-address:9601
+redirect_stderr=true
+stdout_logfile=/var/log/romana/kube-cni-proxy.log
+stdout_logfile_backups=0

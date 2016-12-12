@@ -27,6 +27,8 @@ spec:
           mountPath: /host/opt/cni/bin
         - name: host-cni-net-d
           mountPath: /host/etc/cni/net.d
+        - name: host-var-log-romana
+          mountPath: /host/var/log/romana
       volumes:
       - name: host-usr-local-bin
         hostPath:
@@ -40,3 +42,6 @@ spec:
       - name: host-cni-net-d
         hostPath:
           path: /etc/cni/net.d
+      - name: host-var-log-romana
+        hostPath:
+          path: /var/log/romanat
