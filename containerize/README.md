@@ -2,25 +2,6 @@
 
 ![containerize all the things](https://cdn.meme.am/instances/500x/65415534.jpg)
 
-A script to containerize the Romana applications and example Kubernetes Manifest and DaemonSet for installation.
-
-# Requirements
-
-Linux, Docker, internet connection. It was developed on Ubuntu 16.04.
-
-The user running the script should be part of the `docker` group.
-
-# Usage
-
-```bash
-# Clone the repository
-git clone https://github.com/romana/romana
-# Run the script (uses master)
-romana/containerize/allthethings
-# Build a tagged release
-romana/containerize/allthethings --tag=v0.9.3
-```
-
 # Installation
 
 ## Using kubeadm
@@ -120,7 +101,33 @@ Example: `--romana-root=http://100.64.99.99:9600`
 - `--cluster-ip-cidr`: The CIDR for cluster IPs that are excluded from NAT. Default: 100.64.0.0/12
 - `--pod-to-host`: Permit communication between pods and the host they are scheduled on. Required for some services and healthchecks. Default: true
 
-# TODO
+# Developer Information
 
-* By default, the script will try to push containers to `quay.io/romana`. Disable that with `--push=no`. An option for specifying a different user/org should be added.
+## Requirements for building your own containers
 
+Linux, Docker, internet connection, and a Docker repository. It was developed on Ubuntu 16.04.
+
+The user running the script should be part of the `docker` group.
+
+## Usage
+
+```bash
+# Clone the repository
+git clone https://github.com/romana/romana
+# See the list of options available
+romana/containerize/allthethings --help
+# Run the script (uses master)
+romana/containerize/allthethings
+# Build a tagged release
+romana/containerize/allthethings --tag=v0.9.3
+# Push containers to Docker repositories
+romana/containerize/allthethings --tag=v0.9.3 --namespace=quay.io/romana --namespace=otherrepo/romana-
+```
+
+## Options
+
+-  `-t (or --tag)`: The git tag to use for `romana/core`. This is also used as the tag for the image. Default is `master` with tag `latest`.
+-  `-c (or --compile)`: Compile the binaries from `romana/core`. Default is to compile if they don't exist.
+-  `-b (or --build)`: Build the images. Default is to build them if they don't exist.
+-  `-p (or --push)`: Push the images. Default is to push them to the namespaces listed.
+-  `-n (or --namespace)`: A namespace prefix to use when building images. No default. Can be specified multiple times.
