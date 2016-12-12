@@ -32,4 +32,4 @@ spec:
       path: /var/lib/romana/db
   - name: log-path
     hostPath:
-      path: /var/log/romanat
+      path: /var/log/romana
