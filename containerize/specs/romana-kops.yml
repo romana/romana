@@ -31,13 +31,13 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           value: romana
         volumeMounts:
-        - name: host-var-log-romana
-          mountPath: /host/var/log/romana
+        - name: log-path
+          mountPath: /var/log/romana
       volumes:
       - name: db-path
         hostPath:
           path: /var/lib/romana/db
-      - name: host-var-log-romana
+      - name: log-path
         hostPath:
           path: /var/log/romana
 ---
@@ -88,8 +88,8 @@ spec:
           mountPath: /host/opt/cni/bin
         - name: host-cni-net-d
           mountPath: /host/etc/cni/net.d
-        - name: host-var-log-romana
-          mountPath: /host/var/log/romana
+        - name: log-path
+          mountPath: /var/log/romana
       volumes:
       - name: host-usr-local-bin
         hostPath:
@@ -103,6 +103,6 @@ spec:
       - name: host-cni-net-d
         hostPath:
           path: /etc/cni/net.d
-      - name: host-var-log-romana
+      - name: log-path
         hostPath:
           path: /var/log/romana
