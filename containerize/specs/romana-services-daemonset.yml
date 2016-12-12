@@ -36,12 +36,12 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           value: romana
         volumeMounts:
-        - name: host-var-log-romana
-          mountPath: /host/var/log/romana
+        - name: log-path
+          mountPath: /var/log/romana
       volumes:
       - name: db-path
         hostPath:
           path: /var/lib/romana/db
-      - name: host-var-log-romana
+      - name: log-path
         hostPath:
           path: /var/log/romana
