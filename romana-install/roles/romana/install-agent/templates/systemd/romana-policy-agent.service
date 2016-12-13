@@ -5,7 +5,8 @@ Documentation=https://github.com/romana/core
 [Service]
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/agent
-ExecStart={{ romana_bin_dir }}/agent.py
+ExecStart=/bin/bash -c '{{ romana_bin_dir }}/agent.py &>> {{ romana_log_dir }}/policy-agent.log'
+KillMode=control-group
 Restart=on-failure
 StartLimitInterval=180s
 StartLimitBurst=10
