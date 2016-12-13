@@ -289,6 +289,11 @@ replacements=()
 replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
 
+# Configure kubectl
+kubectl config set-cluster romana-cni-cluster --server="$api_server"
+kubectl config set-context romana-cni-context --cluster=romana-cni-cluster
+kubectl config use-context romana-cni-context
+
 # Run things via supervisord
 printf "Launching Romana services via supervisord\n"
 exec supervisord
