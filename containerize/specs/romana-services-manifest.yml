@@ -23,7 +23,13 @@ spec:
     env:
     - name: MYSQL_ROOT_PASSWORD
       value: romana 
+    volumeMounts:
+    - name: log-path
+      mountPath: /var/log/romana
   volumes:
   - name: db-path
     hostPath:
       path: /var/lib/romana/db
+  - name: log-path
+    hostPath:
+      path: /var/log/romana

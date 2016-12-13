@@ -21,7 +21,7 @@ cni_version=0.2.0
 supported_versions=( 0.1.0 0.2.0 )
 
 log() {
-	printf "$(date +"%Y-%m-%d %H:%M:%S") %s:%s%s\n" "$pod_namespace" "$pod_name" "$(printf " %s" "$@")" >> /var/log/romana-cni.log
+	printf "$(date +"%Y-%m-%d %H:%M:%S") %s:%s%s\n" "$pod_namespace" "$pod_name" "$(printf " %s" "$@")" >> /var/log/romana/cni.log
 }
 
 # Handle VERSION command before getting too complicated
