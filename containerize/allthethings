@@ -30,10 +30,11 @@ usage() {
 	echo "allthethings: consistent build for docker containers"
 	echo ""
 	echo "usage: allthethings [options]"
-	echo " -t (or --tag):      container tag. also used for github build tags"
-	echo " -c (or --compile):  yes or no"
-	echo " -b (or --build):    yes or no"
-	echo " -p (or --push):     yes or no"
+	echo " -t (or --tag):         container tag. also used for github build tags"
+	echo " -c (or --compile):     yes or no"
+	echo " -b (or --build):       yes or no"
+	echo " -p (or --push):        yes or no"
+	echo " -n (or --namespace):   namespace for containers, eg: quay.io/romana/"
 }
 
 error() {
@@ -82,6 +83,7 @@ gittag=master
 compile=maybe
 build=maybe
 push=maybe
+namespaces=()
 
 acceptable_tag() {
 	if (($# != 1)); then
@@ -162,6 +164,14 @@ while [[ $1 == -* ]]; do
 		push="$2"
 		shift 2
 		;;
+	-n|--namespace)
+		if ! [[ $2 ]]; then
+			usage "$1: '$2' is not valid"
+			exit 1
+		fi
+		namespaces+=( "$2" )
+		shift 2
+		;;
 	*)
 		usage "Unrecognized option '$1'"
 		exit 1
@@ -221,14 +231,17 @@ build() {
 			build=yes
 			return 0
 		fi
-		if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "quay.io/romana/services:$tag") != "quay.io/romana/services:$tag" ]]; then
-			build=yes
-			return 0
-		fi
-		if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "quay.io/romana/agent:$tag") != "quay.io/romana/agent:$tag" ]]; then
-			build=yes
-			return 0
-		fi
+		for n in "${namespaces[@]}"; do
+			for i in services agent cni; do
+				if ! image_name=$(image_name "$n" "$i"); then
+					fatal "build(): error from image_name()"
+				fi
+				if [[ $(docker images --format '{{ .Repository }}:{{ .Tag }}' "$image_name") != "$image_name" ]]; then
+					build=yes
+					return 0
+				fi
+			done
+		done
 		build=no
 		return 42
 	esac
@@ -236,7 +249,7 @@ build() {
 
 # Copy allthethings to allthecontainers
 copy() {
-	if ! build;then
+	if ! build; then
 		log copy skipping
 		return
 	fi
@@ -282,41 +295,85 @@ copy() {
 	log copy end
 }
 
+image_name() {
+	if (($# != 2)); then
+		fatal "image_name(): expected 2 parameter, got $#"
+	fi
+	local n="$1" c="$2" name
+	case "${n: -1}" in
+	[-/])
+		name="$n$c:$tag"
+		;;
+	*)
+		name="$n/$c:$tag"
+		;;
+	esac
+	printf "%s" "$name"
+}
+
+docker_build() {
+	if (($# != 2)); then
+		fatal "build_flags(): expected 2 parameter, got $#"
+	fi
+	local c="$1" p="$2" flags=()
+	for n in "${namespaces[@]}"; do
+		if ! image_name=$(image_name "$n" "$c"); then
+			fatal "build_flags: error from image_name"
+		fi
+		flags+=( -t "$image_name" )
+	done
+	docker build "${flags[@]}" "$p"
+}
+
 # Build services container
 build_services() {
-	if ! build;then
+	if ! build; then
 		log services skipping
 		return
 	fi
 	log services start building container for romana service components
-	if ! docker build -t "romana/services:$tag" -t "quay.io/romana/services:$tag" targets/services; then
+	if ! docker_build services targets/services; then
 		fatal error building services container
 	fi
 	log services end
 }
 
 build_agent() {
-	if ! build;then
+	if ! build; then
 		log agent skipping
 		return
 	fi
 	log agent start building container for romana agent components
-	if ! docker build -t "romana/agent:$tag" -t "quay.io/romana/agent:$tag" targets/agent; then
+	if ! docker_build agent targets/agent; then
 		fatal error building agent container
 	fi
 	log agent end
 }
 
 build_cni() {
-	if ! build;then
+	if ! build; then
 		log cni skipping
 		return
 	fi
 	log cni start building container for romana cni component
-	if ! docker build -t "romana/cni:$tag" -t "quay.io/romana/cni:$tag" targets/cni; then
+	if ! docker_build cni targets/cni; then
 		fatal error building cni container
 	fi
 	log cni end
+}
+
+registry() {
+	if (($# != 1)); then
+		fatal "registry(): expected 1 parameter, got $#"
+	fi
+	local n="$1"
+	IFS=/ read -r prefix _ <<< "$n"
+	if [[ "$prefix" == *.* ]]; then
+		registry="$prefix"
+	else
+		registry="https://index.docker.io/v1/"
+	fi
+	printf "%s" "$registry"
 }
 
 push() {
@@ -334,23 +391,36 @@ push() {
 		fi
 		;;
 	esac
-	log push start pushing containers to quay.io
-	logged_in=0
-	if [[ -f ~/.docker/config.json ]] && [[ "$(jq -r '.auths["quay.io"].auth // empty' < ~/.docker/config.json)" ]]; then
-		log push ... already logged in
-		logged_in=1
+	if ! (( ${#namespaces[@]} )); then
+		log push skipping no targets available
+		return
 	fi
-	if ! ((logged_in)); then
-	       	if ! docker login quay.io; then
-			fatal error logging into quay.io
+
+	for n in "${namespaces[@]}"; do
+		if ! registry=$(registry "$n"); then
+			log push error getting registry for "$n"
+			continue
 		fi
-	fi
-	for i in services agent cni; do
-		log push ... pushing "$i"
-		if ! docker push "quay.io/romana/$i:$tag"; then
-			fatal error pushing "$i" to quay.io
+
+		log push start pushing containers to "$registry"
+		logged_in=0
+		if [[ -f ~/.docker/config.json ]] && [[ "$(jq -r --arg registry "$registry" '.auths[$registry].auth // empty' < ~/.docker/config.json)" ]]; then
+			log push ... already logged in
+			logged_in=1
 		fi
-		log push ... "$i" pushed
+		if ! ((logged_in)); then
+			if ! docker login "$registry"; then
+				fatal error logging into "$registry"
+			fi
+		fi
+		for i in services agent cni; do
+			log push ... pushing "$i"
+			if ! docker push "$(image_name "$n" "$i")"; then
+				fatal error pushing "$i" to "$registry"
+			fi
+			log push ... "$i" pushed
+		done
+		log push end pushing containers to "$registry"
 	done
 	log push end
 }
