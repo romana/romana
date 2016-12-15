@@ -48,9 +48,11 @@
     service: name="romana-{{ item }}" state="restarted"
     with_items:
        - listener
+       - watchnodes
     when: stack_type == "kubernetes"
   - name: Re-run post-install script
     command: /var/tmp/romana-post-install.sh
+    when: stack_type in [ "devstack", "openstack" ]
 
 - hosts: stack_nodes
   tasks:

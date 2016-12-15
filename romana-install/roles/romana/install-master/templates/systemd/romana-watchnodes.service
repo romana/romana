@@ -5,9 +5,9 @@ After=romana-topology.service
 Wants=romana-topology.service
 
 [Service]
-User=ubuntu
+#User=...
 EnvironmentFile=-{{ romana_etc_dir }}/watchnodes
-ExecStart=/bin/bash -c '{{ romana_bin_dir }}/watchnodes &>> {{ romana_log_dir }}/watchnodes.log'
+ExecStart=/bin/bash -c '{{ romana_bin_dir }}/watchnodes -romanaconfig /home/{{ ansible_ssh_user }}/.romana.yaml -kubeconfig /home/{{ ansible_ssh_user }}/.kube/config  &>> {{ romana_log_dir }}/watchnodes.log'
 KillMode=control-group
 Restart=on-failure
 StartLimitInterval=180s
