@@ -96,3 +96,8 @@ services:
       host: romana-master-address
       port: 9609
     config:
+  - service: romana-aws
+    api:
+      host: romana-master-address
+      port: 9660
+    config:
