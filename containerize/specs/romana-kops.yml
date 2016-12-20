@@ -27,6 +27,7 @@ spec:
         imagePullPolicy: Always
         args:
         - --cidr=10.192.0.0/10
+        - --cloud=aws
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: romana
@@ -77,6 +78,7 @@ spec:
         args:
         - --romana-root=http://100.64.99.99:9600
         - --cni-image=quay.io/romana/cni:v0.9.3.6
+        - --cloud=aws
         securityContext:
           privileged: true
         volumeMounts:
