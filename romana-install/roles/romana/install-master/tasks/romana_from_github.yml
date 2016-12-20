@@ -31,7 +31,6 @@
     - topology
     - romana
     - policy
-    - watchnodes
     - listener
  
 - name: Install romana command line config file
