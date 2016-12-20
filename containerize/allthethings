@@ -210,7 +210,7 @@ compile() {
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
 		-v "$PWD/volumes/romana_src_dir":/go/src/github.com/romana/core
 		-v "$PWD/volumes/romana_kube":/kube
-		-v "$PWD/targets/compile/src/kube-cni-proxy":/go/src/kube-cni-proxy
+		-v "$PWD/targets/compile/src":/go/src
 	)
 	if ! docker run --rm "${volume_flags[@]}" romana/compile "$gittag"; then
 		fatal error running compile container
@@ -255,7 +255,7 @@ copy() {
 	fi
 	log copy start
 	log copy ... copying required files for services target
-	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy; do
+	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy romana-aws; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
 			fatal error copying "$f"
 		fi
@@ -264,7 +264,7 @@ copy() {
 		fatal error downloading kubectl
 	fi
 	log copy ... copying required files for agent target
-	for f in agent romana; do
+	for f in agent romana fix-ec2-srcdestcheck; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
 			fatal error copying "$f"
 		fi
