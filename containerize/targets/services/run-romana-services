@@ -314,7 +314,7 @@ kubectl config use-context romana-cni-context
 case "$cloud" in
 aws)
 	# No values to substitute, just use "template" as-is
-	cp /var/lib/romana/templates/romana-aws.template > /etc/supervisor/conf.d/romana-aws.conf
+	cp /var/lib/romana/templates/romana-aws.template /etc/supervisor/conf.d/romana-aws.conf
 	;;
 none)
 ;;

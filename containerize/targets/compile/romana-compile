@@ -38,7 +38,7 @@ git -C /go/src/github.com/romana/core submodule update --init --recursive
 go get -d github.com/romana/core/...
 while IFS= read -r p; do pkgs+=("$p"); done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}' github.com/romana/core/... | grep -v /vendor/)
 go install "${pkgs[@]}"
-go get github.com/aws/aws-sdk-go/...
+go get -d kube-cni-proxy fix-ec2-srcdestcheck romana-aws
 go install kube-cni-proxy fix-ec2-srcdestcheck romana-aws
 
 if ! [[ -d "/kube/.git" ]]; then

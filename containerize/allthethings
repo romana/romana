@@ -210,7 +210,6 @@ compile() {
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
 		-v "$PWD/volumes/romana_src_dir":/go/src/github.com/romana/core
 		-v "$PWD/volumes/romana_kube":/kube
-		-v "$PWD/targets/compile/src":/go/src
 	)
 	if ! docker run --rm "${volume_flags[@]}" romana/compile "$gittag"; then
 		fatal error running compile container
