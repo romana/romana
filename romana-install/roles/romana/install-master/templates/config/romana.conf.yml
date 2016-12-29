@@ -68,6 +68,8 @@ services:
             output: /var/log/dhcp-release-hook.log
 {% endif %}
     config:
+      cache_tick_time: 5
+      policy_refresh_seconds: 2
       lease_file : "/etc/ethers"
       firewall_provider : "save-restore"
       wait_for_iface_try: 6
@@ -79,6 +81,7 @@ services:
       host: {{ romana_master_ip }}
       port: 9605
     config:
+      disable_distribute_policy: true
       store: 
         type: mysql
         host: 127.0.0.1
