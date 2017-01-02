@@ -78,7 +78,6 @@
     service: name="{{ item }}" state="restarted"
     with_items:
       - romana-agent
-      - romana-policy-agent
 
 - hosts: controller
   tasks:

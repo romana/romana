@@ -9,4 +9,3 @@
   template: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
   with_items:
     - romana-agent.conf
-    - romana-policy-agent.conf
