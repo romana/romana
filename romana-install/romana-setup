@@ -24,7 +24,7 @@ usage() {
 	echo "Cluster Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
-	echo "Stack Types:   devstack (default), openstack, kubernetes"
+	echo "Stack Types:   devstack (default), openstack, kubernetes, kubeadm"
 	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall, test"
 	echo ""
@@ -143,6 +143,10 @@ if (( $# > 0 )); then
 						;;
 					kubernetes|k8s)
 						stack_type="kubernetes"
+						shift 2
+						;;
+					kubeadm)
+						stack_type="kubeadm"
 						shift 2
 						;;
 					none|nostack)
@@ -284,7 +288,7 @@ if [[ "$platform" != "static" ]]; then
 	case "$distro" in
 		ubuntu)
 			case "$stack_type" in
-				kubernetes|nostack)
+				kubernetes|kubeadm|nostack)
 					release=xenial
 					;;
 				devstack|openstack)

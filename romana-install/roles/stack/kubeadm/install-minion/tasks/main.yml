@@ -1,0 +1,5 @@
+---
+- name: kubeadm join
+  become: true
+  become_user: root
+  command: kubeadm join --token "{{ kubeadm_token }}" "{{ hostvars[groups.kubeadm_master[0]].lan_ip }}"

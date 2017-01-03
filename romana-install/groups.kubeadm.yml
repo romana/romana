@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  tasks:
+    - add_host: name="{{ item }}" groups="kubeadm_nodes,kubeadm_master"
+      with_items: "{{ groups.controller }}"
+    - add_host: name="{{ item }}" groups="kubeadm_nodes,kubeadm_minions"
+      with_items: "{{ groups.computes }}"
