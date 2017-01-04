@@ -269,9 +269,6 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
-	if ! cp -p "$PWD/volumes/romana_src_dir/pkg/util/policy/agent/agent.py" "targets/agent/agent.py"; then
-		fatal error copying agent.py
-	fi
 	#if ! cp -p "$PWD/volumes/romana_kube/CNI/romana" "targets/agent/cni-romana"; then
 	#	fatal error copying cni-romana
 	#fi
@@ -288,7 +285,7 @@ copy() {
 	for f in "${files_to_chmod[@]}"; do
 		chmod +x "targets/services/$f"
 	done
-	files_to_chmod=( agent.py kubectl agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh )
+	files_to_chmod=( kubectl agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh )
 	for f in "${files_to_chmod[@]}"; do
 		chmod +x "targets/agent/$f"
 	done

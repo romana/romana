@@ -7,12 +7,6 @@ redirect_stderr=true
 stdout_logfile=/var/log/romana/agent.log
 stdout_logfile_backups=0
 
-[program:policy-agent]
-command=/usr/local/bin/agent.py
-redirect_stderr=true
-stdout_logfile=/var/log/romana/policy-agent.log
-stdout_logfile_backups=0
-
 [program:host-route-monitor]
 command=/usr/local/bin/host-route-monitor --romana-root <romana-root> --interface <interface>
 redirect_stderr=true
