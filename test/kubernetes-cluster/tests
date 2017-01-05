@@ -14,7 +14,7 @@ description: Check that Kubernetes services are running on minion
 labels: kube-minion, services
 
 command: services_running
-args: romana-agent romana-policy-agent
+args: romana-agent
 description: Check that Romana services are running on minion
 labels: romana-agent, services
 
