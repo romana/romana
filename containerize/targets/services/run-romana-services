@@ -26,6 +26,7 @@ usage() {
 	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 256)"
 	echo " --namespaces: The number of namespaces that will be created. Used for internal Romana configuration (default: 16)"
 	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 16)"
+	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
 
 # Parse command-line options
@@ -36,6 +37,7 @@ cidr=
 nodes=256
 namespaces=16
 segments=16
+cloud=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -74,6 +76,10 @@ while [[ $1 == -* ]]; do
 		segments="$2"
 		shift 2
 		;;
+	--cloud)
+		cloud="$2"
+		shift 2
+		;;
 	*)
 		echo "Unknown option '$1'"
 		usage
@@ -95,6 +101,16 @@ internal_error() {
 	echo "Internal Error:" "$@"
 	exit 2
 }
+
+# Validate options provided
+case "$cloud" in
+none|aws)
+	# OK
+	;;
+*)
+	usage_error "Invalid value for --cloud: $cloud"
+	;;
+esac
 
 # If IP address wasn't provided, try to look it up
 if ! [[ "$ip_address" ]]; then
@@ -293,6 +309,16 @@ sed "${replacements[@]}" /var/lib/romana/templates/romana-services.template > /e
 kubectl config set-cluster romana-cni-cluster --server="$api_server"
 kubectl config set-context romana-cni-context --cluster=romana-cni-cluster
 kubectl config use-context romana-cni-context
+
+# Enable cloud integrations
+case "$cloud" in
+aws)
+	# No values to substitute, just use "template" as-is
+	cp /var/lib/romana/templates/romana-aws.template /etc/supervisor/conf.d/romana-aws.conf
+	;;
+none)
+;;
+esac
 
 # Run things via supervisord
 printf "Launching Romana services via supervisord\n"

@@ -68,6 +68,7 @@ Example: `--cidr=10.192.0.0/12`
 - `--nodes`: The number of nodes in the cluster. Default: 256
 - `--namespaces`: The number of namespaces in the cluster. Default: 16
 - `--segments`: The number of segments permitted per namespace: Default: 16
+- `--cloud`: Enable cloud integration. No default. Permitted values: none, aws
 
 ### romana-root service
 
@@ -100,6 +101,7 @@ Example: `--romana-root=http://100.64.99.99:9600`
 - `--nat-interface`: The interface traffic will route through when NAT is required. Defaults to `--interface` if specified, or eth0 if unspecified
 - `--cluster-ip-cidr`: The CIDR for cluster IPs that are excluded from NAT. Default: 100.64.0.0/12
 - `--pod-to-host`: Permit communication between pods and the host they are scheduled on. Required for some services and healthchecks. Default: true
+- `--cloud`: Enable cloud integration. No default. Permitted values: none, aws
 
 # Developer Information
 

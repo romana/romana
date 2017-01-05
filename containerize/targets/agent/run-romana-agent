@@ -25,10 +25,10 @@ usage() {
 	echo " --nat-interface: Interface that NATs traffic, instead of eth0 or --interface setting."
 	echo " --cluster-ip-cidr: CIDR for cluster IPs. Excluded from NAT rule."
 	echo " --pod-to-host: Permit pods to connect to the host server"
+	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
 
 # Parse command-line options
-usage=0
 romana_root=
 interface=
 nat=
@@ -36,6 +36,7 @@ nat_interface=
 cluster_ip_cidr=
 pod_to_host=
 cni_image="quay.io/romana/cni"
+cloud=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -74,6 +75,10 @@ while [[ $1 == -* ]]; do
 		cni_image="$2"
 		shift 2
 		;;
+	--cloud)
+		cloud="$2"
+		shift 2
+		;;
 	*)
 		echo "Unknown option '$1'"
 		usage
@@ -96,11 +101,15 @@ internal_error() {
 	exit 2
 }
 
-# If usage was requested, call usage function
-if ((usage)); then
-	usage
-	exit 0
-fi
+# Validate options provided
+case "$cloud" in
+none|aws)
+	# OK
+	;;
+*)
+	usage_error "Invalid value for --cloud: $cloud"
+	;;
+esac
 
 # Romana Root URL must be provided
 if ! [[ "$romana_root" ]]; then
@@ -570,6 +579,38 @@ if [[ "$num_policies" ]] && (( num_policies )); then
 	wait "$pa_svc"
 	printf "OK\n"
 fi
+
+# Run any required cloud integration agents
+case "$cloud" in
+aws)
+	echo "Executing cloud integration stages for AWS"
+	disable_srcdestcheck() {
+		# Run fix-ec2-srcdestcheck. Ignore errors
+		romana_aws_path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="romana-aws-config") | .href')
+		if ! [[ "$romana_aws_path" ]]; then
+			echo "empty result attempting to resolve romana-aws-config"
+			return 1
+		fi
+		romana_aws_config=$(curl -s "$romana_root$romana_aws_path")
+
+		romana_aws_host=$(jq -r '.common.api.host // empty' <<< "$romana_aws_config" )
+		romana_aws_port=$(jq -r '.common.api.port // empty' <<< "$romana_aws_config" )
+		if ! [[ "$romana_aws_host" ]]; then
+			echo "invalid value for romana-aws host"
+			return 1
+		fi
+		if ! [[ "$romana_aws_port" ]]; then
+			echo "invalid value for romana-aws port"
+			return 1
+		fi
+		romana_aws_url=$(printf "http://%s:%s" "$romana_aws_host" "$romana_aws_port")
+		if /usr/local/bin/fix-ec2-srcdestcheck --romana-aws="$romana_aws_url"; then
+			echo "EC2 SourceDestCheck disabled for instance"
+		fi
+	}
+	disable_srcdestcheck
+	;;
+esac
 
 # Run things via supervisord
 printf "Launching Romana services via supervisord\n"

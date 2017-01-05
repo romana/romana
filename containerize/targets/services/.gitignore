@@ -6,4 +6,5 @@ root
 tenant
 topology
 kube-cni-proxy
+romana-aws
 kubectl
