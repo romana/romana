@@ -70,6 +70,10 @@ func main() {
 		return
 	}
 
+	// TODO: create own http.ServeMux that logs requests and response statuses
+	// instead of using DefaultServeMux. Register handler's / handlefuncs
+	// on that mux.
+
 	// Initialize handlers
 	http.HandleFunc("/ec2/instanceAttributes", ec2InstanceAttributesHandler)
 
@@ -115,7 +119,8 @@ type instanceAttributes struct {
 	SourceDestCheck *bool  `json:"sourceDestCheck"`
 }
 
-// Handler for EC2 instance attributes requests.
+// ec2InstanceAttributesHandler is invoked for HTTP requests to /ec2/instanceAttributes
+// and dispatches to the GET/POST function based on request method.
 // GET requires region and instanceID parameters
 // POST requires JSON body containing region, instanceID and sourceDestCheck
 func ec2InstanceAttributesHandler(w http.ResponseWriter, r *http.Request) {
