@@ -1,0 +1,12 @@
+---
+- hosts: kubeadm_nodes
+  roles:
+    - stack/kubeadm/prep
+
+- hosts: kubeadm_master
+  roles:
+    - stack/kubeadm/install-master
+
+- hosts: kubeadm_minions
+  roles:
+    - stack/kubeadm/install-minion
