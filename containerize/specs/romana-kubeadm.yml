@@ -23,7 +23,7 @@ spec:
         - name: db-path
           mountPath: /var/lib/mysql
       - name: romana-services
-        image: quay.io/romana/services:v0.9.3.6
+        image: quay.io/romana/services:v0.9.3.7
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
@@ -72,12 +72,12 @@ spec:
       hostNetwork: true
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v0.9.3.6
+        image: quay.io/romana/agent:v0.9.3.7
         imagePullPolicy: Always
         args:
         - --romana-root=http://10.99.99.99:9600
         - --cluster-ip-cidr=10.96.0.0/12
-        - --cni-image=quay.io/romana/cni:v0.9.3.6
+        - --cni-image=quay.io/romana/cni:v0.9.3.7
         securityContext:
           privileged: true
         volumeMounts:
