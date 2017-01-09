@@ -11,22 +11,14 @@
   become: true
   become_user: root
 
-- include: "{{ file }}"
-  with_first_found:
-    - files: 
-      - "start_mysql_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
-      - "start_mysql_{{ ansible_distribution|lower }}.yml"
-      - "start_mysql_{{ ansible_os_family|lower }}.yml"
-      skip: true
-  loop_control:
-    loop_var: file
+- include: kubernetes.yml
+  become: true
+  become_user: root
+
+- include: datastores.yml
   become: true
   become_user: root
 
 - include: mysql.yml
-  become: true
-  become_user: root
-
-- include: kubernetes.yml
   become: true
   become_user: root
