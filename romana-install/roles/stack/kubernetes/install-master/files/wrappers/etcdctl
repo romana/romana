@@ -1,0 +1,19 @@
+#!/bin/bash
+if ! result=$(kubectl -n kube-system get pod --selector=component=romana-etcd,tier=control-plane -o json 2>&1); then
+	echo "Error invoking kubectl: $result" >&2
+	exit 1
+fi
+n=$(jq '.items | length' <<< "$result")
+if (( n == 0 )); then
+	echo "Unable to find romana-etcd pod" >&2
+	exit 1
+fi
+if (( n > 1 )); then
+	echo "Multiple pods found for romana-etcd." >&2
+fi
+pod=$(jq -r '.items[0].metadata.name // empty' <<< "$result")
+if ! [[ "$pod" ]]; then
+	echo "Pod name for romana-etcd not found" >&2
+	exit 1
+fi
+exec kubectl -n kube-system exec -it "$pod" -- etcdctl "$@"

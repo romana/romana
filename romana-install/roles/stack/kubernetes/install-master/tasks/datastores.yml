@@ -13,3 +13,8 @@
   wait_for: host="127.0.0.1" port="3306" state=started
   delegate_to: "{{ inventory_hostname }}"
 
+- name: Install wrapper scripts
+  copy: src="wrappers/{{ item }}" dest="/usr/local/bin/{{ item }}" mode=0755
+  with_items:
+    - etcdctl
+    - mysql
