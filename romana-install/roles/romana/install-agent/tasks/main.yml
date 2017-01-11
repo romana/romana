@@ -4,10 +4,6 @@
   become_user: root
   include: "romana_prep.yml"
 
-- include: network.yml
-  become: true
-  become_user: root
-
 - include: "romana_from_{{ romana_core_source }}.yml"
 - include: "policy_agent.yml"
 
