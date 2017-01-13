@@ -36,11 +36,10 @@ services:
       port: 9603
     config:
       store: 
-        type: mysql
-        host: 127.0.0.1
-        username: root
-        password: {{ stack_password }}
-        database: topology
+        type: etcd
+        host: localhost
+        port: 2379
+        database: /romana
       datacenter: 
         ip_version: 4
         cidr: {{ romana_cidr }}
