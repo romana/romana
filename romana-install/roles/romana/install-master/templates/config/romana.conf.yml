@@ -3,6 +3,10 @@ services:
     api:
       host: {{ romana_master_ip }}
       port: 9600
+    config:
+      store:
+        type: sqlite3
+        database: /var/lib/romana/auth.db
   - service: ipam
     api:
       host: {{ romana_master_ip }}
