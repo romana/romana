@@ -16,4 +16,8 @@ if ! [[ "$pod" ]]; then
 	echo "Pod name for romana-etcd not found" >&2
 	exit 1
 fi
-exec kubectl -n kube-system exec -it "$pod" -- etcdctl "$@"
+exec_opt="-i"
+if [[ -t 1 ]]; then
+	exec_opt="-it"
+fi
+exec kubectl -n kube-system exec "$exec_opt" "$pod" -- etcdctl "$@"
