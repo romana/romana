@@ -11,9 +11,13 @@ fi
 if (( n > 1 )); then
 	echo "Multiple pods found for romana-mysql." >&2
 fi
-container=$(jq -r '.items[0].status.containerStatuses[0].containerID // empty' <<< "$result")
-if ! [[ "$container" ]]; then
-	echo "Container ID for romana-mysql not found" >&2
+pod=$(jq -r '.items[0].metadata.name // empty' <<< "$result")
+if ! [[ "$pod" ]]; then
+	echo "Pod name for romana-mysql not found" >&2
 	exit 1
 fi
-exec sudo docker exec -it "${container#docker://}" mysql "$@"
+exec_opt="-i"
+if [[ -t 1 ]]; then
+	exec_opt="-it"
+fi
+exec kubectl -n kube-system exec "$exec_opt" "$pod" -- mysql "$@"
