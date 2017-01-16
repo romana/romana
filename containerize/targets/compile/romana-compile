@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Copyright (c) 2016 Pani Networks
 # All Rights Reserved.
@@ -15,43 +15,72 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (($# != 1)); then
-	echo "expected 1 parameter (branch/tag to build)"
+usage() {
+	echo "usage: romana-compile [options]"
+	echo " --github-key:          private key to access github repositories"
+	echo " --core-repo:           git@ or https:// address of core repo"
+	echo " --core-branch:         git branch/tag/sha of core to build"
+	echo " --romana-repo:         git@ or https:// address of romana repo"
+	echo " --romana-branch:       git branch/tag/sha of romana to build"
+}
+
+core_repo=
+core_branch=
+while [[ $1 == -* ]]; do
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--github-key)
+		export GIT_SSH=/var/tmp/git-ssh
+		shift 2
+		;;
+	--core-repo)
+		core_repo="$2"
+		shift 2
+		;;
+	--core-branch)
+		core_branch="$2"
+		shift 2
+		;;
+	*)
+		usage "Unrecognized option '$1'"
+		exit 1
+		;;
+esac; done
+
+if ! git clone "$core_repo" /go/src/github.com/romana/core; then
+	echo "failed to clone '$core_repo'"
 	exit 1
-fi
-if ! [[ -d "/go/src/github.com/romana/core/.git" ]]; then
-	git clone https://github.com/romana/core /go/src/github.com/romana/core
 fi
 if ! git -C /go/src/github.com/romana/core fetch; then
 	echo "failed to fetch"
 	exit 1
 fi
-if ! git -C /go/src/github.com/romana/core checkout "$1"; then
-	echo "failed to checkout '$1'"
+if ! git -C /go/src/github.com/romana/core checkout "$core_branch"; then
+	echo "failed to checkout '$core_branch'"
 	exit 1
 fi
 if [[ "$(git -C /go/src/github.com/romana/core symbolic-ref --short -q HEAD)" ]] && ! git -C /go/src/github.com/romana/core pull; then
 	echo "failed to pull"
 	exit 1
 fi
-git -C /go/src/github.com/romana/core submodule update --init --recursive
-go get -d github.com/romana/core/...
+if ! git -C /go/src/github.com/romana/core submodule update --init --recursive; then
+	echo "failed to submodule update"
+	exit 1
+fi
 while IFS= read -r p; do pkgs+=("$p"); done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}' github.com/romana/core/... | grep -v /vendor/)
-go install "${pkgs[@]}"
-go install kube-cni-proxy
 
-if ! [[ -d "/kube/.git" ]]; then
-	git clone https://github.com/romana/kube /kube
+if (( ${#pkgs[@]} == 0)); then
+	echo "failed to list main packages"
 fi
-if ! git -C /kube checkout "$1"; then
-	echo "failed to checkout '$1'"
-	exit 1
+if ! go install "${pkgs[@]}"; then
+	echo "failed to compile core packages"
 fi
-
-if ! [[ -d "/romana/.git" ]]; then
-	git clone https://github.com/romana/romana /romana
-fi
-if ! git -C /romana checkout "$1"; then
-	echo "failed to checkout '$1'"
-	exit 1
+if ! go install kube-cni-proxy; then
+	echo "failed to compile additional packages"
 fi

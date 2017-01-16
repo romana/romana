@@ -30,10 +30,15 @@ usage() {
 	echo "allthethings: consistent build for docker containers"
 	echo ""
 	echo "usage: allthethings [options]"
-	echo " -t (or --tag):         container tag. also used for github build tags"
-	echo " -c (or --compile):     yes or no"
-	echo " -b (or --build):       yes or no"
-	echo " -p (or --push):        yes or no"
+	echo " -t (or --tag):         container tag"
+	echo " -c (or --compile):     compile things. yes or no"
+	echo " --github-key:          private key to access github repositories"
+	echo " --core-repo:           git@ or https:// address of core repo"
+	echo " --core-branch:         git branch/tag/sha of core to build"
+	echo " --romana-repo:         git@ or https:// address of romana repo"
+	echo " --romana-branch:       git branch/tag/sha of romana to build"
+	echo " -b (or --build):       build containers. yes or no"
+	echo " -p (or --push):        push containers to namespaces. yes or no"
 	echo " -n (or --namespace):   namespace for containers, eg: quay.io/romana/"
 }
 
@@ -78,9 +83,11 @@ fi
 shopt -s nullglob
 
 # Parse command-line options
-tag=latest
-gittag=master
+tag=unspecified
 compile=maybe
+github_key=/dev/null
+core_repo=https://github.com/romana/core
+core_branch=master
 build=maybe
 push=maybe
 namespaces=()
@@ -122,7 +129,6 @@ yes_no_maybe() {
 }
 
 while [[ $1 == -* ]]; do
-	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
 		set -- "${1%%=*}" "${1#*=}" "${@:2}"
 	fi
@@ -132,12 +138,7 @@ while [[ $1 == -* ]]; do
 		exit 0
 		;;
 	-t|--tag)
-		if ! result=$(acceptable_tag "$2"); then
-			usage "tag '$2' was not valid: $result"
-			exit 1
-		fi
 		tag="$2"
-		gittag="$2"
 		shift 2
 		;;
 	-c|--compile)
@@ -146,6 +147,22 @@ while [[ $1 == -* ]]; do
 			exit 1
 		fi
 		compile="$2"
+		shift 2
+		;;
+	--github-key)
+		if ! [[ -e "$2" ]]; then
+			usage "$1: $2 not found"
+			exit 1
+		fi
+		github_key="$(readlink -f "$2")"
+		shift 2
+		;;
+	--core-repo)
+		core_repo="$2"
+		shift 2
+		;;
+	--core-branch)
+		core_branch="$2"
 		shift 2
 		;;
 	-b|--build)
@@ -201,19 +218,29 @@ compile() {
 	esac
 
 	log compile start building container for compiling
+	if [[ "$github_key" ]]; then
+		cp -p "$github_key" targets/compile/github_id_rsa
+	else
+		> targets/compile/github_id_rsa
+	fi
 	if ! docker build -t romana/compile targets/compile; then
 		fatal error building compile container
 	fi
 	log compile ... running compile stage
 	volume_flags=(
-		-v "$PWD/volumes/romana_romana":/romana
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
-		-v "$PWD/volumes/romana_src_dir":/go/src/github.com/romana/core
-		-v "$PWD/volumes/romana_kube":/kube
 		-v "$PWD/targets/compile/src/kube-cni-proxy":/go/src/kube-cni-proxy
 	)
-	if ! docker run --rm "${volume_flags[@]}" romana/compile "$gittag"; then
+	compile_flags=(
+		${github_key:+--github-key=/github_id_rsa}
+		--core-repo="$core_repo"
+		--core-branch="$core_branch"
+	
+	)
+	if ! docker run --rm "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
 		fatal error running compile container
+	elif [[ "$build" = maybe ]]; then
+		build=yes
 	fi
 	log compile end
 }
@@ -227,10 +254,6 @@ build() {
 		return 42
 		;;
 	maybe)
-		if compile; then
-			build=yes
-			return 0
-		fi
 		for n in "${namespaces[@]}"; do
 			for i in services agent cni; do
 				if ! image_name=$(image_name "$n" "$i"); then
