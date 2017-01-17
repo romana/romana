@@ -16,5 +16,8 @@ if ! [[ "$pod" ]]; then
 	echo "Pod name for romana-mysql not found" >&2
 	exit 1
 fi
-exec kubectl -n kube-system exec -it "$pod" -- mysql "$@"
-
+exec_opt="-i"
+if [[ -t 0 ]] && [[ -t 1 ]]; then
+	exec_opt="-it"
+fi
+exec kubectl -n kube-system exec "$exec_opt" "$pod" -- mysql "$@"

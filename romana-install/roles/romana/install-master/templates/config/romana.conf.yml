@@ -3,6 +3,10 @@ services:
     api:
       host: {{ romana_master_ip }}
       port: 9600
+    config:
+      store:
+        type: sqlite3
+        database: /var/lib/romana/auth.db
   - service: ipam
     api:
       host: {{ romana_master_ip }}
@@ -32,11 +36,10 @@ services:
       port: 9603
     config:
       store: 
-        type: mysql
-        host: 127.0.0.1
-        username: root
-        password: {{ stack_password }}
-        database: topology
+        type: etcd
+        host: localhost
+        port: 2379
+        database: /romana
       datacenter: 
         ip_version: 4
         cidr: {{ romana_cidr }}
