@@ -281,7 +281,7 @@ func cniDeleteRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to create request to target", http.StatusInternalServerError)
 		return
 	}
-	ipamReq.URL.Path = path.Join(ipamReq.URL.Path, "/IPAMEndpoints", ipamData.IP)
+	ipamReq.URL.Path = path.Join(ipamReq.URL.Path, "/endpoints", ipamData.IP)
 
 	ipamRes, err := http.DefaultClient.Do(ipamReq)
 	if err != nil {
