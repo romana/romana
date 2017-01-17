@@ -17,7 +17,7 @@ if ! [[ "$pod" ]]; then
 	exit 1
 fi
 exec_opt="-i"
-if [[ -t 1 ]]; then
+if [[ -t 0 ]] && [[ -t 1 ]]; then
 	exec_opt="-it"
 fi
 exec kubectl -n kube-system exec "$exec_opt" "$pod" -- etcdctl "$@"
