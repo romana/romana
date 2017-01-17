@@ -8,6 +8,6 @@ RUN mkdir -p /var/lib/romana/cni-installation /var/lib/romana/templates /var/lib
 COPY romana-cni-wrapper 10-romana.conf /var/lib/romana/cni-installation/
 COPY dot-romana.template romana-agent.template /var/lib/romana/templates/
 COPY permit-all-pod-to-host.json permit-all-host-to-pod.json /var/lib/romana/policies/
-COPY run-romana-agent host-route-monitor /usr/local/bin/
+COPY run-romana-agent /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/run-romana-agent"]
