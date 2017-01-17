@@ -53,7 +53,9 @@ while [[ $1 == -* ]]; do
 		;;
 esac; done
 
-if ! git clone "$core_repo" /go/src/github.com/romana/core; then
+if [[ -d /go/src/github.com/romana/core ]] && [[ "$(git -C /go/src/github.com/romana/core config remote.origin.url)" = "$core_repo" ]]; then
+	echo "using existing repo"
+elif ! git clone "$core_repo" /go/src/github.com/romana/core; then
 	echo "failed to clone '$core_repo'"
 	exit 1
 fi
@@ -75,7 +77,7 @@ if ! git -C /go/src/github.com/romana/core submodule update --init --recursive; 
 fi
 while IFS= read -r p; do pkgs+=("$p"); done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}' github.com/romana/core/... | grep -v /vendor/)
 
-if (( ${#pkgs[@]} == 0)); then
+if (( ${#pkgs[@]} == 0 )); then
 	echo "failed to list main packages"
 fi
 if ! go install "${pkgs[@]}"; then

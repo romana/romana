@@ -51,24 +51,9 @@ services:
     api:
       host: 0.0.0.0
       port: 9604
-      hooks:
-          - executable: /usr/local/bin/agent_proxy_add_policy.sh
-            pattern: /policies
-            method: POST
-            when: before
-            output: /var/log/policies-hook.log
-          - executable: /usr/local/bin/agent_proxy_delete_policy.sh
-            pattern: /policies
-            method: DELETE
-            when: before
-            output: /var/log/policies-hook.log
-          - executable: /usr/local/bin/agent_dhcp_release.sh
-            pattern: /vm
-            method: DELETE
-            when: before
-            output: /var/log/dhcp-release-hook.log
     config:
       lease_file : "/etc/ethers"
+      firewall_provider : "save-restore"
       wait_for_iface_try: 6
       store:
         type: sqlite3
@@ -89,11 +74,13 @@ services:
       host: 0.0.0.0
       port: 9606
     config:
-      kubernetes_url : "kubernetes-apiserver"
+      kubernetes_url: "kubernetes-apiserver"
+      kubernetes_config: /dev/null
       namespace_notification_path: "api/v1/namespaces"
-      policy_notification_path_prefix : "apis/extensions/v1beta1/namespaces"
-      policy_notification_path_postfix : "networkpolicies"
+      policy_notification_path_prefix: "apis/extensions/v1beta1/namespaces"
+      policy_notification_path_postfix: "networkpolicies"
       segment_label_name: "romanaSegment"
+      tenant_label_name: "{{ romana_tenant_label_name }}"
   - service: kube-cni-proxy
     api:
       host: romana-master-address

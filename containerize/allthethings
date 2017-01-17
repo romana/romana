@@ -229,6 +229,7 @@ compile() {
 	log compile ... running compile stage
 	volume_flags=(
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
+		-v "$PWD/volumes/romana_src_dir_$tag":/go/src/github.com/romana/core
 		-v "$PWD/targets/compile/src/kube-cni-proxy":/go/src/kube-cni-proxy
 	)
 	compile_flags=(
@@ -292,25 +293,10 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
-	#if ! cp -p "$PWD/volumes/romana_kube/CNI/romana" "targets/agent/cni-romana"; then
-	#	fatal error copying cni-romana
-	#fi
-	# if ! cp -p "$PWD/volumes/romana_kube/CNI/net.d/10-romana.conf" "targets/agent/10-romana.conf"; then
-	# 	fatal error copying 10-romana.conf
-	# fi
-	for f in agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh; do
-		if ! cp -p "$PWD/volumes/romana_romana/romana-install/roles/romana/install-agent/files/$f" "targets/agent/$f"; then
-			fatal error copying "$f"
-		fi
-	done
 	# Hack permission fixes here.
 	files_to_chmod=( kubectl )
 	for f in "${files_to_chmod[@]}"; do
 		chmod +x "targets/services/$f"
-	done
-	files_to_chmod=( kubectl agent_proxy_add_policy.sh agent_proxy_delete_policy.sh agent_dhcp_release.sh )
-	for f in "${files_to_chmod[@]}"; do
-		chmod +x "targets/agent/$f"
 	done
 	log copy end
 }
