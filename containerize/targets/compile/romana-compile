@@ -83,6 +83,12 @@ fi
 if ! go install "${pkgs[@]}"; then
 	echo "failed to compile core packages"
 fi
+additional_packages=(
+	kube-cni-proxy
+	fix-ec2-srcdestcheck
+	romana-aws
+)
+go get -d "${additional_packages[@]}"
 if ! go install kube-cni-proxy fix-ec2-srcdestcheck romana-aws; then
 	echo "failed to compile additional packages"
 fi
