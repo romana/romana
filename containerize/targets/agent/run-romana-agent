@@ -151,59 +151,7 @@ else
 	pod_to_host=true
 fi
 
-# Generate .romana.yml for romana cli tool
-replacements=( -e 's|romana-root|'"$romana_root"'|g' )
-sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
-
-# Check that we can reach root service
-if ! romana host list &>/dev/null; then
-	usage_error "Unable to fetch list of hosts using '$romana_root'"
-fi
-
-# Check if this host is already configured
-# Note: 'romana host show' returns empty list for this query.
-if ! host_info=$(romana host show "$HOSTNAME" -f json 2>/dev/null); then
-	internal_error "romana host show command failed."
-fi
-romana_address=
-case "$(jq -r 'length' <<< "$host_info")" in
-1)
-	# Already exists. Extract Romana address
-	romana_address=$(jq -r '.[0].romana_ip // empty' <<< "$host_info")
-	if ! [[ "$romana_address" ]]; then
-		internal_error "Unable to find romana_ip for '$HOSTNAME'"
-	fi
-	;;
-0)
-	internal_error "Host '$HOSTNAME' not registered"
-	;;
-*)
-	internal_error "Bad response for host list for '$HOSTNAME'"
-	;;
-esac
-
-# Networking functions
-interface_address() {
-	if (($# != 1)); then
-		internal_error "interface_address(): expected 1 parameter, got $#"
-		return $?
-	fi
-	if ! ip link show "$1" &>/dev/null; then
-		return 1
-	fi
-	local found=0 first second
-	while read -r first second _; do
-		if [[ "$first" = "inet" ]]; then
-			found=1
-			break
-		fi
-	done < <(ip addr show "$1")
-	if ! ((found)); then
-		return 1
-	fi
-	printf "%s" "$second"
-}
-
+# Validation functions
 valid_number() {
 	if (($# != 1)); then
 		internal_error "valid_number(): expected 1 parameter, got $#"
@@ -253,6 +201,77 @@ valid_cidr() {
 	return 0
 }
 
+# Networking functions
+interface_address() {
+	if (($# != 1)); then
+		internal_error "interface_address(): expected 1 parameter, got $#"
+		return $?
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		return 1
+	fi
+	local found=0 first second
+	while read -r first second _; do
+		if [[ "$first" = "inet" ]]; then
+			found=1
+			break
+		fi
+	done < <(ip addr show "$1")
+	if ! ((found)); then
+		return 1
+	fi
+	printf "%s" "$second"
+}
+
+cidr_addr() {
+	if (($# != 1)); then
+		internal_error "cidr_addr(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_addr(): '$1' is not a valid CIDR."
+	fi
+	local a
+	IFS='/' read -r a _ <<< "$1"
+	printf "%s" "$a"
+}
+
+# Use eth0 as interface name if not provided
+if ! [[ "$interface" ]]; then
+	interface=eth0
+fi
+# Look up host IP
+host_address=$(interface_address "$interface")
+if ! [[ "$host_address" ]]; then
+	internal_error "No address found for interface $interface"
+fi
+host_ip=$(cidr_addr "$host_address")
+if ! [[ "$host_ip" ]]; then
+	internal_error "Error extracting address from $host_address"
+fi
+
+# Generate .romana.yml for romana cli tool
+replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
+
+# Check that we can reach root service
+if ! romana host list &>/dev/null; then
+	usage_error "Unable to fetch list of hosts using '$romana_root'"
+fi
+
+# Check if this host is already configured
+if ! host_info=$(romana host list -f json 2>/dev/null); then
+	internal_error "romana host show command failed."
+fi
+if ! (( $(jq -r 'length' <<< "$host_info") )); then
+	internal_error "no host information found"
+fi
+
+# Look up romana address using host ip
+romana_address=$(romana host list -f json | jq -r --arg ip "$host_ip" '.[] | select(.ip==$ip) | .ip // empty')
+if ! [[ "$romana_address" ]]; then
+	internal_error "Unable to find romana_ip for '$host_ip'"
+fi
+
 # Get the topology config. Used for allocation and/or NAT
 topology_path=$(curl -s "$romana_root" | jq -r '.links[] | select(.rel=="topology-config") | .href')
 if ! [[ "$topology_path" ]]; then
@@ -264,10 +283,6 @@ if ! valid_cidr "$romana_cidr"; then
 	internal_error "invalid result attempting to get cidr configuration for topology"
 fi
 
-# Use eth0 as interface name if not provided
-if ! [[ "$interface" ]]; then
-	interface=eth0
-fi
 # Use interface as default for nat_interface
 if ! [[ "$nat_interface" ]]; then
 	nat_interface="$interface"
