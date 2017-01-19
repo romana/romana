@@ -7,7 +7,8 @@ Wants=romana-tenant.service
 [Service]
 #User=...
 EnvironmentFile=-{{ romana_etc_dir }}/policy
-ExecStart={{ romana_bin_dir }}/policy -rootURL http://{{ romana_master_ip }}:9600
+ExecStart=/bin/bash -c '{{ romana_bin_dir }}/policy -rootURL http://{{ romana_master_ip }}:9600 &>> {{ romana_log_dir }}/policy.log'
+KillMode=control-group
 Restart=on-failure
 StartLimitInterval=180s
 StartLimitBurst=10

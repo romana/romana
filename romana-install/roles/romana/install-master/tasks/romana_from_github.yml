@@ -14,10 +14,10 @@
 - name: Clone romana core repo into GOPATH
   git: repo="{{ romana_core_repo }}" version="{{ romana_core_branch }}" dest="/var/tmp/gopath/src/github.com/romana/core" key_file="{{ github_key is defined | ternary('~/.ssh/github_id_rsa', omit) }}" ssh_opts={{ git_ssh_options }}
 
-- name: Copy a build script
+- name: Copy a build core script
   copy: src="build_romana_core" dest="/var/tmp/build_romana_core" mode=0755
 
-- name: Run the build script
+- name: Run the build core script
   shell: /var/tmp/build_romana_core
 
 - name: Install files
@@ -31,6 +31,7 @@
     - topology
     - romana
     - policy
+    - listener
  
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
@@ -56,3 +57,15 @@
           PATH="$PATH:/usr/local/go/bin"
       fi
   when: ansible_distribution|lower == "centos"
+
+- name: Install rlog configuration files
+  become: true
+  become_user: root
+  copy: src="rlog_detailed.conf" dest="{{ rlog_etc_dir }}/{{ item }}.conf"
+  with_items:
+    - ipam
+    - root
+    - tenant
+    - topology
+    - romana
+    - policy

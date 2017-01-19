@@ -1,7 +1,3 @@
 agent
-agent_dhcp_release.sh
-agent_proxy_add_policy.sh
-agent_proxy_delete_policy.sh
-agent.py
 romana
 fix-ec2-srcdestcheck

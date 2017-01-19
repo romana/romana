@@ -4,6 +4,7 @@
   "kube_master_ip": "{{ romana_master_ip }}",
   "romana_cli_config": "/home/{{ ansible_ssh_user }}/.romana.yaml",
   "segment_label_name": "{{ romana_segment_label_name }}",
+  "tenant_label_name": "{{ romana_tenant_label_name }}",
   "ipam": {
       "type": "romana-ipam"
   }

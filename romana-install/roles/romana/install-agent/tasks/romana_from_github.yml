@@ -4,8 +4,11 @@
     - agent
     - romana
 
-- name: Copy policy agent from master
-  command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/src/github.com/romana/core/pkg/util/policy/agent/agent.py" "/var/tmp/agent.py"
+- name: CNI plugin tmp directory
+  file: path="/var/tmp/cni" state="directory"
+
+- name: Download CNI plugin executable from master
+  command: rsync -az "{{ romana_master_ip }}:/var/tmp/gopath/src/github.com/romana/core/pkg/cni/romana" "/var/tmp/cni/romana"
 
 - name: Install files
   become: true
@@ -14,4 +17,15 @@
   with_items:
     - agent
     - romana
-    - agent.py
+
+- name: Install CNI plugin executable
+  become: true
+  become_user: root
+  command: install -o root -g root -m 0755 "/var/tmp/cni/romana" "/opt/cni/bin/romana"
+
+- name: Install rlog configuration files
+  become: true
+  become_user: root
+  copy: src="rlog_detailed.conf" dest="{{ rlog_etc_dir }}/{{ item }}.conf"
+  with_items:
+    - agent

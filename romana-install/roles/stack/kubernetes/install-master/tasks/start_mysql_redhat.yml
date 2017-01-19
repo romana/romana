@@ -1,3 +1,0 @@
----
-- name: Make sure DB has started
-  service: name="mariadb" state="started"
