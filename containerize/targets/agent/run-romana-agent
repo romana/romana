@@ -267,7 +267,7 @@ if ! (( $(jq -r 'length' <<< "$host_info") )); then
 fi
 
 # Look up romana address using host ip
-romana_address=$(romana host list -f json | jq -r --arg ip "$host_ip" '.[] | select(.ip==$ip) | .ip // empty')
+romana_address=$(romana host list -f json | jq -r --arg ip "$host_ip" '.[] | select(.ip==$ip) | .romana_ip // empty')
 if ! [[ "$romana_address" ]]; then
 	internal_error "Unable to find romana_ip for '$host_ip'"
 fi
