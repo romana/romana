@@ -102,9 +102,13 @@ if ((usage)); then
 	exit 0
 fi
 
-# Romana Root URL must be provided
+# Romana Root is required. Use value from command-line, or look for environment variables from Kubernetes
 if ! [[ "$romana_root" ]]; then
-	usage_error "Romana Root URL must be provided."
+	if [[ "$ROMANA_ROOT_SERVICE_HOST" ]] && [[ "$ROMANA_ROOT_SERVICE_PORT_ROOT" ]]; then
+		romana_root="http://$ROMANA_ROOT_SERVICE_HOST:$ROMANA_ROOT_SERVICE_PORT_ROOT"
+	else
+		usage_error "Romana Root URL must be provided."
+	fi
 fi
 
 valid_bool() {

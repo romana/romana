@@ -12,10 +12,11 @@ spec:
       hostNetwork: true
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v0.9.3.6
+        image: quay.io/romana/agent:unspecified
+        imagePullPolicy: Always
         args:
-        # This IP must match the cluster IP of the romana-root service
-        - --romana-root=http://100.64.99.99:9600
+        - --cluster-ip-cidr=10.96.0.0/12
+        - --cni-image=quay.io/romana/cni:unspecified
         securityContext:
           privileged: true
         volumeMounts:
