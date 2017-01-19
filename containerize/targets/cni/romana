@@ -79,7 +79,7 @@ if ! [[ "$cfg_name" ]] || [[ "$cfg_name" != "$expected_name" ]]; then
 	cni_error 101 "cni-name-error" "CNI name is '$cfg_name', expected '$expected_name'"
 fi
 if ! [[ "$cfg_type" ]] || [[ "$cfg_type" != "$expected_type" ]]; then
-	cni_error 102 "cni-type-error" "CNI type is '$cfg_name', expected '$expected_name'"
+	cni_error 102 "cni-type-error" "CNI type is '$cfg_type', expected '$expected_type'"
 fi
 if ! [[ "$cfg_ipam_type" ]] || [[ "$cfg_ipam_type" != "$expected_ipam_type" ]]; then
 	cni_error 103 "cni-ipam-type-error" "CNI ipam type is '$cfg_ipam_type', expected '$expected_ipam_type'"
@@ -272,9 +272,9 @@ configure_address() {
 		cni_error 203 "execution-error" "ip ro add default failed"
 	fi
 	if ! ip link set "veth0-${nspid}" up; then
-		cni_error 203 "execution-error" "ip link set netns failed"
+		cni_error 203 "execution-error" "ip link set veth0 up failed"
 	fi
-	log "configure_address: configured address $allocated_address"
+	log "configure_address: configured address $allocated_address for veth0-${nspid}"
 }
 
 namespace_isolation() {
