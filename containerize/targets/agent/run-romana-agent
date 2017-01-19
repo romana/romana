@@ -284,24 +284,6 @@ if ! [[ "$romana_address" ]]; then
 	fi
 fi
 
-# Create romana-gw interface if not present.
-if ! ip link show romana-gw &>/dev/null; then
-	if ! ip link add romana-gw type dummy; then
-		internal_error "Error attempting to add romana-gw device. Ensure the container is launched with host privileges"
-	fi
-fi
-# Force link up
-ip link set romana-gw up
-# Assign address if not already set
-if ! interface_address romana_gw; then
-	ip addr add "$romana_address" dev romana-gw
-fi
-
-# Check that our address is set correctly
-if [[ "$(interface_address romana-gw)" != "$romana_address" ]]; then
-	internal_error "romana-gw address does not match expected address '$romana_address'"
-fi
-
 case "$nat" in
 true)
 	# Create chain
