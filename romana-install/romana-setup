@@ -24,7 +24,7 @@ usage() {
 	echo "Cluster Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
-	echo "Stack Types:   devstack (default), openstack, kubernetes, kubeadm"
+	echo "Stack Types:   kubernetes, none, kubeadm"
 	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall, test"
 	echo ""
@@ -59,11 +59,12 @@ platform="aws"
 region=""
 ami=""
 inventory=""
-stack_type="devstack"
+stack_type=""
 cluster_nodes=""
 required=( ansible ansible-playbook )
 
 verbose=0
+force=0
 core_source=
 core_branch=
 networking_branch=
@@ -164,6 +165,10 @@ if (( $# > 0 )); then
 				shift 2
 				;;
 # Options for core developers. Not for general users, so excluded from usage/documentation
+			--force)
+				force=1
+				shift
+				;;
 			--source)
 				core_source="github"
 				shift
@@ -201,6 +206,30 @@ if (( $# > 0 )); then
 		esac
 	done
 fi
+
+# Stack type must be specified
+if ! [[ "$stack_type" ]]; then
+	echo "Stack type (-s) must be specified"
+	exit 1
+fi
+
+# Only do devstack or openstack installs if force is set.
+# Otherwise print out a suggestion to use a different branch.
+case "$stack_type" in
+devstack|openstack)
+	if ! (( force )); then
+		echo "The latest Romana features have not yet been implemented for $stack_type."
+		echo "To create a $stack_type cluster, please use the most recent supported Romana version"
+		echo "for this type of cluster. The command below switches to that version."
+		echo ""
+		echo "  git checkout release-v0.9.3"
+		echo ""
+		echo "Also please register your interest in Romana support for $stack_type by contacting us"
+		echo "or opening an issue on GitHub. ( https://github.com/romana/romana/issues/new )"
+		exit 1
+	fi
+	;;
+esac
 
 # Process action
 action=install
