@@ -5,10 +5,6 @@
     - agent
   when: inventory_hostname in groups.controller
 
-- name: Copy policy-agent from github
-  get_url: url=https://raw.githubusercontent.com/romana/core/{{ romana_core_branch }}/pkg/util/policy/agent/agent.py dest={{ romana_dl_dir }}/agent.py mode=0755
-  when: inventory_hostname in groups.controller
-
 - name: Create download path
   file: path="{{ romana_dl_dir }}" state="directory"
   when: inventory_hostname not in groups.controller
@@ -18,7 +14,6 @@
   with_items:
     - agent
     - romana
-    - agent.py
   when: inventory_hostname not in groups.controller
 
 - name: Install files
@@ -28,8 +23,14 @@
   with_items:
     - agent
     - romana
-    - agent.py
 
 - name: Install romana command line config file
   template: src="config/romana.yaml" dest="/home/{{ ansible_ssh_user }}/.romana.yaml" mode=0644
   when: inventory_hostname not in groups.controller
+
+- name: Install rlog configuration files
+  become: true
+  become_user: root
+  copy: src="rlog_simple.conf" dest="{{ rlog_etc_dir }}/{{ item }}.conf"
+  with_items:
+    - agent

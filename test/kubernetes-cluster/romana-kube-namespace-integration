@@ -52,9 +52,8 @@ intervals=(1 1 2 5 8)
 tenant_found=0
 for i in "${intervals[@]}"; do
 
-	if ! result=$(romana tenant list -f json 2>&1); then
+	if ! result=$(romana tenant list -f json); then
 		log_message "romana tenant list failed"
-		log_verbose "$result"
 		delete_namespace "$1"
 		exit 1
 	fi

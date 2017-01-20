@@ -3,6 +3,10 @@ services:
     api:
       host: {{ romana_master_ip }}
       port: 9600
+    config:
+      store:
+        type: sqlite3
+        database: /var/lib/romana/auth.db
   - service: ipam
     api:
       host: {{ romana_master_ip }}
@@ -32,11 +36,10 @@ services:
       port: 9603
     config:
       store: 
-        type: mysql
-        host: 127.0.0.1
-        username: root
-        password: {{ stack_password }}
-        database: topology
+        type: etcd
+        host: localhost
+        port: 2379
+        database: /romana
       datacenter: 
         ip_version: 4
         cidr: {{ romana_cidr }}
@@ -91,9 +94,11 @@ services:
       host: 0.0.0.0
       port: 9606
     config:
+      kubernetes_config: /home/ubuntu/.kube/config
       kubernetes_url : "http://{{ romana_master_ip }}:8080"
       namespace_notification_path: "api/v1/namespaces"
       policy_notification_path_prefix : "apis/extensions/v1beta1/namespaces"
       policy_notification_path_postfix : "networkpolicies"
       segment_label_name: "{{ romana_segment_label_name }}"
+      tenant_label_name: "{{ romana_tenant_label_name }}"
 {% endif %}

@@ -1,5 +1,5 @@
 ---
 - name: restart kubernetes listener
-  command: service romana-kube-listener restart
+  command: service romana-listener restart
   become: true
   become_user: root

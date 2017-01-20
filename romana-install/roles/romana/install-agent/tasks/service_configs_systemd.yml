@@ -9,4 +9,3 @@
   template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
   with_items:
     - romana-agent.service
-    - romana-policy-agent.service

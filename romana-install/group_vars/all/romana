@@ -1,14 +1,12 @@
 # Version
-romana_version: "v0.9.3.7"
+romana_version: "0.9.8.1"
 romana_core_branch: "{{ romana_version }}"
-romana_kube_branch: "{{ romana_version }}"
 romana_networking_branch: "{{ romana_version }}-stable/liberty"
 
 # Install from Github or S3 bucket
 romana_core_source: "s3"
 romana_repo_path:   "https://github.com/romana"
 romana_core_repo:   "{{ romana_repo_path }}/core"
-romana_kube_repo:   "{{ romana_repo_path }}/kube"
 romana_networking_repo:    "{{ romana_repo_path }}/networking-romana"
 
 # Paths
@@ -16,6 +14,7 @@ romana_dl_dir: "/var/tmp/romana"
 romana_bin_dir: "/usr/local/bin"
 romana_lib_dir: "/usr/local/lib"
 romana_etc_dir: "/etc/romana"
+romana_log_dir: "/var/log/romana"
 romana_db_dir: "/var/lib/romana"
 
 # Network

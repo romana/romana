@@ -1,0 +1,2 @@
+# Config files for rlog
+rlog_etc_dir: "/etc/rlog"

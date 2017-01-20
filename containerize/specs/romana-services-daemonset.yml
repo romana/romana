@@ -19,19 +19,37 @@ spec:
         placeholder-label: master
       hostNetwork: true
       containers:
+      - name: romana-etcd
+        image: gcr.io/google_containers/etcd-amd64:3.0.14-kubeadm
+        command:
+        - etcd
+        - "--listen-client-urls=http://127.0.0.1:12379"
+        - "--listen-peer-urls=http://127.0.0.1:12380"
+        - "--advertise-client-urls=http://127.0.0.1:12379"
+        - "--data-dir=/var/etcd/data"
+        volumeMounts:
+        - name: etcd-data
+          mountPath: "/var/etcd/data"
+        livenessProbe:
+          httpGet:
+            path: "/health"
+            port: 12379
+            host: 127.0.0.1
+          initialDelaySeconds: 15
+          timeoutSeconds: 15
       - name: romana-datastore
         image: mysql:5
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: romana
         volumeMounts:
-        - name: db-path
+        - name: mysql-data
           mountPath: /var/lib/mysql
       - name: romana-services
-        image: quay.io/romana/services:v0.9.3.7
+        image: quay.io/romana/services:v0.9.8.1
         imagePullPolicy: Always
         args:
-        # - --cidr=10.0.0.0/8
+        - --cidr=100.112.0.0/12
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: romana
@@ -39,9 +57,12 @@ spec:
         - name: log-path
           mountPath: /var/log/romana
       volumes:
-      - name: db-path
+      - name: etcd-data
         hostPath:
-          path: /var/lib/romana/db
+          path: "/var/lib/romana/etcd-db"
+      - name: mysql-data
+        hostPath:
+          path: "/var/lib/romana/mysql-db"
       - name: log-path
         hostPath:
           path: /var/log/romana
