@@ -57,7 +57,7 @@ function delete_tenant() {
     if [[ $TENANT_ID ]]; then
         sudo mysql -u root --password={{ stack_password }} tenant --execute='delete from tenants where id='$TENANT_ID
         sudo mysql -u root --password={{ stack_password }} tenant --execute='delete from segments where tenant_id='$TENANT_ID
-        sudo mysql -u root --password={{ stack_password }} ipam --execute='delete from endpoints where tenant_id='$TENANT_ID
+        sudo mysql -u root --password={{ stack_password }} ipam --execute='delete from ip_am_endpoints where tenant_id='$TENANT_ID
     fi
 }
 
