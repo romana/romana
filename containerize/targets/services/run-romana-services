@@ -233,6 +233,19 @@ replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
 replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
 
+# Check if etcd is running. Execute a version query
+printf "Checking if etcd is running..."
+if ! etcd_response=$(curl -s http://127.0.0.1:12379/version ); then
+	printf "error connecting to etcd\n"
+	exit 1
+fi
+etcd_version=$(jq -r '.etcdserver' <<< "$etcd_response")
+if ! [[ "$etcd_version" ]]; then
+	printf "error checking etcd version"
+	exit 1
+fi
+printf "ok. etcd version is %s\n" "$etcd_version"
+
 # Check if mysqladmin can connect to the database
 printf "Checking if database is running..."
 if ! mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
