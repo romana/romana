@@ -135,6 +135,14 @@ if ! [[ "$cidr" ]]; then
 	usage_error "Romana CIDR must be provided."
 fi
 
+# Check that we can connect to the apiserver
+printf "Checking connection to kubernetes api-server..."
+if ! kubectl_output=$(kubectl --server="$api_server" version 2>&1 | grep -v "^Client Version:"); then
+	printf "error: %s\n" "$kubectl_output"
+	exit 1
+fi
+printf "ok. %s\n" "$kubectl_output"
+
 valid_number() {
 	if (($# != 1)); then
 		internal_error "valid_number(): expected 1 parameter, got $#"
