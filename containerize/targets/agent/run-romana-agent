@@ -260,7 +260,7 @@ else
 fi
 
 # Check if the route for the cluster-ip-cidr uses the host interface
-if route_info=$(ip -o route get 10.96.0.0/12); then
+if route_info=$(ip -o route get "$cluster_ip_cidr"); then
 	# Look for the word 'dev'
 	read -ra tokens <<< "$route_info"
 	if (( ${#tokens[@]} )); then
