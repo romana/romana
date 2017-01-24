@@ -233,6 +233,19 @@ replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
 replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
 
+# Check if etcd is running. Execute a version query
+printf "Checking if etcd is running..."
+if ! etcd_response=$(curl -s http://127.0.0.1:12379/version ); then
+	printf "error connecting to etcd\n"
+	exit 1
+fi
+etcd_version=$(jq -r '.etcdserver' <<< "$etcd_response")
+if ! [[ "$etcd_version" ]]; then
+	printf "error checking etcd version"
+	exit 1
+fi
+printf "ok. etcd version is %s\n" "$etcd_version"
+
 # Check if mysqladmin can connect to the database
 printf "Checking if database is running..."
 if ! mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
@@ -242,8 +255,8 @@ fi
 printf "OK.\n"
 
 # Check if databases already exist
-services=( tenant topology ipam policy )
-databases=( tenant topology ipam policy )
+services=( tenant ipam policy )
+databases=( tenant ipam policy )
 printf "Checking if databases already exist:\n"
 for i in "${!databases[@]}"; do
 	if mysql ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 "${databases[i]}" &>/dev/null; then
@@ -255,8 +268,13 @@ for i in "${!databases[@]}"; do
 	fi
 done
 
+# Add topology service
+# TODO: Improve this in the future when we know the paths that should exist
+#       if installation has already been performed
+services+=( topology )
+
 # Create any missing databases
-if (( ${#databases[@]} )); then
+if (( ${#services[@]} )); then
 	# Start the root service (temporarily)
 	printf "Launching root service..."
 	/usr/local/bin/root -c /etc/romana/romana.conf.yml &>/dev/null &
