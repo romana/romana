@@ -141,7 +141,7 @@ if ! kubectl_output=$(kubectl --server="$api_server" version 2>&1); then
 	printf "error: %s\n" "$(grep -v "^Client Version:" <<< "$kubectl_output")"
 	exit 1
 fi
-printf "ok."
+printf "ok.\n"
 
 valid_number() {
 	if (($# != 1)); then
@@ -230,6 +230,16 @@ node_bits=$(bits "$nodes")
 namespace_bits=$(bits "$namespaces")
 segment_bits=$(bits "$segments")
 endpoint_bits=$((32 - cidr_bits - node_bits - namespace_bits - segment_bits))
+if (( endpoint_bits < 3 )); then
+	# TODO: make this value smaller when IP addresses are allocated from .0 instead of .3
+	echo "Insufficient space for allocating addresses. Please assess your configuration."
+	echo "CIDR $cidr uses $cidr_bits bits."
+	echo "$nodes nodes uses $node_bits bits."
+	echo "$namespaces namespaces uses $namespace_bits bits."
+	echo "$segments segments uses $segment_bits bits."
+	usage_error "$endpoint_bits bits remaining for endpoints. A minimum of 3 bits is required."
+fi
+
 replacements=()
 replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
 replacements+=( -e 's|mysql-root-password|'"$MYSQL_ROOT_PASSWORD"'|g' )
