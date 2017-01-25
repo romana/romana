@@ -1,5 +1,5 @@
 # Version
-romana_version: "0.9.8.1"
+romana_version: "v0.9.8.1"
 romana_core_branch: "{{ romana_version }}"
 romana_networking_branch: "{{ romana_version }}-stable/liberty"
 
