@@ -9,6 +9,11 @@
   become_user: root
   copy: src="kubernetes.list" dest="/etc/apt/sources.list.d/kubernetes.list"
 
+- include: prep_local_registry.yml
+  become: true
+  become_user: root
+  when: romana_core_source == "github"
+
 - name: Install kubeadm packages
   become: true
   become_user: root
@@ -18,3 +23,8 @@
     - kubelet
     - kubeadm
     - kubernetes-cni
+
+- name: Add user to docker group (for convenience, so user can run docker commands)
+  become: true
+  become_user: root
+  user: name="{{ ansible_ssh_user }}" append=yes groups="docker"

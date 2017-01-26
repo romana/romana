@@ -1,0 +1,20 @@
+---
+- name: Launch a docker registry
+  shell: |
+         if [ -z "$(docker ps --quiet --filter name=/localregistry$)" ]; then
+             docker run -d -p 5000:5000 --restart=always --name localregistry registry:2
+         fi
+
+- name: Copy romana-containers script to host
+  become: true
+  become_user: root
+  template: src="containers" dest="/usr/local/bin/containers" mode=0755
+
+- name: Run the prep stage
+  command: containers prep
+
+- name: Run the build stage
+  command: containers build
+
+- name: Copy romana-kubeadm.yml to host
+  copy: src="../../../../../containerize/specs/romana-kubeadm.yml" dest="/home/{{ ansible_ssh_user }}/romana-kubeadm.yml" mode=0644

@@ -229,6 +229,7 @@ compile() {
 	log compile ... running compile stage
 	volume_flags=(
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
+		-v "$PWD/volumes/romana_pkg_dir_$tag":/go/pkg
 		-v "$PWD/volumes/romana_src_dir_$tag":/go/src/github.com/romana/core
 		-v "$PWD/targets/compile/src":/go/src
 	)
@@ -374,12 +375,25 @@ registry() {
 	fi
 	local n="$1"
 	IFS=/ read -r prefix _ <<< "$n"
-	if [[ "$prefix" == *.* ]]; then
+	if [[ "$prefix" == *.* ]] || [[ "$prefix" == *:* ]]; then
 		registry="$prefix"
 	else
 		registry="https://index.docker.io/v1/"
 	fi
 	printf "%s" "$registry"
+}
+
+login_not_required() {
+	if (($# != 1)); then
+		fatal "login_not_required(): expected 1 parameter, got $#"
+	fi
+	local n="$1"
+	IFS=/ read -r prefix _ <<< "$n"
+	if [[ "$prefix" == *:* ]]; then
+		# Assume login not required for registries specifying ports
+		return 0
+	fi
+	return 1
 }
 
 push() {
@@ -412,6 +426,10 @@ push() {
 		logged_in=0
 		if [[ -f ~/.docker/config.json ]] && [[ "$(jq -r --arg registry "$registry" '.auths[$registry].auth // empty' < ~/.docker/config.json)" ]]; then
 			log push ... already logged in
+			logged_in=1
+		fi
+		if login_not_required "$registry"; then
+			log push ... login not required
 			logged_in=1
 		fi
 		if ! ((logged_in)); then

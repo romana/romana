@@ -1,0 +1,6 @@
+---
+- name: Create path
+  file: path="/etc/docker" state="directory" mode=0755
+
+- name: Install daemon.json
+  template: src="daemon.json" dest="/etc/docker/daemon.json" mode=0644
