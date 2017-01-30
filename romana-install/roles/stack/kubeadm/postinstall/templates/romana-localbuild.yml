@@ -41,7 +41,7 @@ spec:
         - name: mysql-data
           mountPath: /var/lib/mysql
       - name: romana-services
-        image: {{ }} /romana/services:local
+        image: {{ hostvars[groups.kubeadm_master[0]].ansible_hostname }}:5000/romana/services:local
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
@@ -92,11 +92,11 @@ spec:
       hostNetwork: true
       containers:
       - name: romana-agent
-        image: {{ }}/romana/agent:local
+        image: {{ hostvars[groups.kubeadm_master[0]].ansible_hostname }}:5000/romana/agent:local
         imagePullPolicy: Always
         args:
         - --cluster-ip-cidr=10.96.0.0/12
-        - --cni-image={{ }}/romana/cni:local
+        - --cni-image={{ hostvars[groups.kubeadm_master[0]].ansible_hostname }}:5000/romana/cni:local
         securityContext:
           privileged: true
         volumeMounts:

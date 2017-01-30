@@ -20,6 +20,8 @@ for i in "$@"; do case "$i" in
 prep)
 	if [[ ! -d /var/tmp/romana ]]; then
 		GIT_SSH_COMMAND='ssh -i ~/.ssh/github_id_rsa -o StrictHostKeyChecking=no' git clone "{{ romana_repo_path }}/romana" /var/tmp/romana
+		# TODO: Remove this before merging
+		git -C /var/tmp/romana checkout kubeadm-for-developers
 	fi
 	;;
 build|rebuild)

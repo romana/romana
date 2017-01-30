@@ -17,4 +17,4 @@
   command: containers build
 
 - name: Copy romana-kubeadm.yml to host
-  copy: src="../../../../../containerize/specs/romana-kubeadm.yml" dest="/home/{{ ansible_ssh_user }}/romana-kubeadm.yml" mode=0644
+  template: src="romana-localbuild.yml" dest="/home/{{ ansible_ssh_user }}/romana-kubeadm.yml" mode=0644
