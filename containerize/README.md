@@ -98,7 +98,7 @@ Example:
 
 #### Optional settings
 
-- `--romana-root`: The full HTTP address of the root service. Default: none, address discovered from service environment variables"
+- `--romana-root`: The full HTTP address of the root service. Default: none, address discovered from service environment variables
 - `--interface`: The interface to use for detecting the host's address. Default: eth0
 - `--nat`: Permit pods to reach other networks with NAT (Network Address Translation). Default: true
 - `--nat-interface`: The interface traffic will route through when NAT is required. Defaults to `--interface` if specified, or eth0 if unspecified
