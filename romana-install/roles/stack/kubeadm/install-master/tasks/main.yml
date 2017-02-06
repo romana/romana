@@ -2,7 +2,10 @@
 - name: kubeadm init
   become: true
   become_user: root
-  command: kubeadm init --token "{{ kubeadm_token }}"
+  shell: |
+         if ! [ -d /var/tmp/kubeadm-init ]; then
+             kubeadm init --token "{{ kubeadm_token }}" && mkdir /var/tmp/kubeadm-init
+         fi
 
 - name: Install kubectl
   become: true
