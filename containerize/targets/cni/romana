@@ -172,7 +172,7 @@ address_allocation() {
 		exit 1
 	fi
 	host="$result"
-	post_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$HOSTNAME" "$pod_namespace" "$pod_name")
+	post_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$(hostname --fqdn)" "$pod_namespace" "$pod_name")
 	if ! result=$(curl -f -s -S -X POST -H "Content-Type: application/json" --data "$post_body" "$host/endpoints" 2>&1); then
 		cni_error 202 "service-error" "address_allocation: error allocating address: $result"
 	fi
@@ -189,7 +189,7 @@ address_deallocation() {
 		exit 1
 	fi
 	host="$result"
-	delete_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$HOSTNAME" "$pod_namespace" "$pod_name")
+	delete_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$(hostname --fqdn)" "$pod_namespace" "$pod_name")
 	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "$host/endpoints" 2>&1); then
 		cni_error 202 "service-error" "address_deallocation: error deallocating address: $result"
 	fi

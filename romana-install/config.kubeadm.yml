@@ -3,6 +3,11 @@
   roles:
     - stack/kubeadm/prep
 
+- hosts: localhost
+  tasks:
+    - name: Remove persistent connection sockets, force new connection
+      shell: rm -f {{ ansible_user_dir }}/.ansible/cp/ansible-ssh-* &>/dev/null
+
 - hosts: kubeadm_master
   roles:
     - stack/kubeadm/install-master
@@ -10,3 +15,8 @@
 - hosts: kubeadm_minions
   roles:
     - stack/kubeadm/install-minion
+
+- hosts: kubeadm_master
+  roles:
+    - stack/kubeadm/postinstall
+

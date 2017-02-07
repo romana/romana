@@ -1,0 +1,62 @@
+#!/bin/bash
+
+usage() {
+	echo "containers - helper script for Romana containers"
+	echo "usage: containers <subcommand> [subcommand...}"
+	echo "       containers --help"
+	echo "subcommands:"
+	echo "       prep     - perform preparation, acquire required components"
+	echo "       build    - initial build of containers"
+	echo "       rebuild  - rebuild the containers"
+	echo "       redeploy - reinstall via kubectl"
+}
+
+if ! (( $# )); then
+	usage
+	exit 0
+fi
+
+for i in "$@"; do case "$i" in
+prep)
+	if [[ ! -d /var/tmp/romana ]]; then
+		GIT_SSH_COMMAND='ssh -i ~/.ssh/github_id_rsa -o StrictHostKeyChecking=no' git clone "{{ romana_repo_path }}/romana" /var/tmp/romana
+		# TODO: Remove this before merging
+		git -C /var/tmp/romana checkout kubeadm-for-developers
+	fi
+	;;
+build|rebuild)
+	args=(
+		--tag=local
+		--compile=yes
+		--build=yes
+		--github-key ~/.ssh/github_id_rsa
+		--core-repo "{{ romana_core_repo }}"
+		--core-branch "{{ romana_core_branch }}"
+		--push=yes
+		--namespace "{{ hostvars[groups.kubeadm_master[0]].ansible_hostname }}:5000/romana/"
+	)
+	/var/tmp/romana/containerize/allthethings "${args[@]}"
+	if [[ "$i" == "build" ]] && [[ -d /var/tmp/romana/containerize/volumes/romana_src_dir_local ]]; then
+		# Files would be owned by root. Change owner to user running the script.
+		u=$(id -un)
+		g=$(id -gn)
+		if [[ "$u" ]] && [[ "$g" ]]; then
+			sudo chown -R "$u:$g" /var/tmp/romana/containerize/volumes/romana_src_dir_local
+		fi
+	fi
+	;;
+redeploy)
+	kubectl delete -f ~/romana-kubeadm.yml
+	sleep 3
+	kubectl apply -f ~/romana-kubeadm.yml
+	;;
+--help)
+	usage
+	exit 0
+	;;
+*)
+	echo "Unknown command '$i'"
+	usage
+	exit 1
+	;;
+esac; done

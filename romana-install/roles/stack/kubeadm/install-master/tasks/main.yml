@@ -2,7 +2,11 @@
 - name: kubeadm init
   become: true
   become_user: root
-  command: kubeadm init --token "{{ kubeadm_token }}" --api-advertise-addresses="{{ hostvars[groups.kubeadm_master[0]].lan_ip }}"
+
+  shell: |
+         if ! [ -d /var/tmp/kubeadm-init ]; then
+             kubeadm init --token "{{ kubeadm_token }}" --api-advertise-addresses="{{ hostvars[groups.kubeadm_master[0]].lan_ip }}" && mkdir /var/tmp/kubeadm-init
+         fi
 
 - name: Install kubectl
   become: true

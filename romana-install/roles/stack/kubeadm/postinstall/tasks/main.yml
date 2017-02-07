@@ -1,0 +1,9 @@
+---
+- include: public_containers.yml
+  when: romana_core_source != "github"
+
+- include: local_containers.yml
+  when: romana_core_source == "github"
+
+- name: Install romana-kubeadm.yml
+  command: kubectl apply -f romana-kubeadm.yml

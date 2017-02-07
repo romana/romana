@@ -1,0 +1,3 @@
+---
+- name: Copy romana-kubeadm.yml to host
+  copy: src="romana-kubeadm.yml" dest="/home/{{ ansible_ssh_user }}/romana-kubeadm.yml" mode=0644

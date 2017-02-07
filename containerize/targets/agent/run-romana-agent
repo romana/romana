@@ -292,10 +292,23 @@ fi
 replacements=( -e 's|romana-root|'"$romana_root"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
 
-# Check that we can reach root service
-if ! romana host list &>/dev/null; then
-	usage_error "Unable to fetch list of hosts using '$romana_root'"
+# Check that we can reach root service. Keep trying for approximately 60s
+intervals=(0 1 1 1 1 1 5 5 5 5 5 10 10 10)
+succeeded=0
+printf "Checking topology service is available from romana"
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if romana host list &>/dev/null; then
+		succeeded=1
+		break
+	else
+		printf "."
+	fi
+done
+if ! (( succeeded )); then
+	usage_error "Unable to fetch list of hosts using '$romana_root' as root service"
 fi
+printf "ok\n"
 
 # Check if this host is already configured
 if ! host_info=$(romana host list -f json 2>/dev/null); then
@@ -306,7 +319,20 @@ if ! (( $(jq -r 'length' <<< "$host_info") )); then
 fi
 
 # Look up romana address using host ip
-romana_address=$(romana host list -f json | jq -r --arg ip "$host_ip" '.[] | select(.ip==$ip) | .romana_ip // empty')
+romana_host_info=$(romana host list -f json | jq -r --arg ip "$host_ip" '.[] | select(.ip==$ip) // empty')
+if ! [[ "$romana_host_info" ]]; then
+	internal_error "Unable to find host information for '$host_ip'"
+fi
+num_hosts=$(jq -s 'length' <<< "$romana_host_info")
+if ! (( num_hosts )); then
+	internal_error "Unable to find host information for '$host_ip'"
+fi
+if (( num_hosts != 1 )); then
+	internal_error "Host information for '$host_ip' had $num_hosts results"
+fi
+
+# Extract romana address from host information
+romana_address=$(jq -r '.romana_ip // empty' <<< "$romana_host_info")
 if ! [[ "$romana_address" ]]; then
 	internal_error "Unable to find romana_ip for '$host_ip'"
 fi

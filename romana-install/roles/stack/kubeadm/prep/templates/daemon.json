@@ -1,0 +1,1 @@
+{"insecure-registries":["{{ hostvars[groups.kubeadm_master[0]].ansible_hostname }}:5000"]}
