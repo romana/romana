@@ -90,16 +90,18 @@ This is installed using `kubectl apply -f romana-agent-daemonset.yml`
 
 #### Mandatory settings
 
-The `--romana-root` option must be specified.
-This is the full HTTP address of the root service.
-Example: `--romana-root=http://100.64.99.99:9600`
+The `--cluster-ip-cidr` must be specified. This should match the kubernetes apiserver setting for `--service-cluster-ip-range`
+
+Example:
+- (kops): `--cluster-ip-cidr=100.64.0.0/12`
+- (kubeadm): `--cluster-ip-cidr=10.96.0.0/12`
 
 #### Optional settings
 
+- `--romana-root`: The full HTTP address of the root service. Default: none, address discovered from service environment variables
 - `--interface`: The interface to use for detecting the host's address. Default: eth0
 - `--nat`: Permit pods to reach other networks with NAT (Network Address Translation). Default: true
 - `--nat-interface`: The interface traffic will route through when NAT is required. Defaults to `--interface` if specified, or eth0 if unspecified
-- `--cluster-ip-cidr`: The CIDR for cluster IPs that are excluded from NAT. Default: 100.64.0.0/12
 - `--pod-to-host`: Permit communication between pods and the host they are scheduled on. Required for some services and healthchecks. Default: true
 - `--cloud`: Enable cloud integration. No default. Permitted values: none, aws
 

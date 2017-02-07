@@ -4,11 +4,13 @@ ram_size:
     openstack: 4096
     kubernetes: 2048
     nostack: 2048
+    kubeadm: 2048
   compute:
     devstack: 1024
     openstack: 1024
     kubernetes: 2048
     nostack: 2048
+    kubeadm: 2048
 
 distro_info:
   "ubuntu":

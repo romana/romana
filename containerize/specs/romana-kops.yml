@@ -96,6 +96,7 @@ spec:
         image: quay.io/romana/agent:v0.9.8.1
         imagePullPolicy: Always
         args:
+        - --cluster-ip-cidr=100.64.0.0/12
         - --cni-image=quay.io/romana/cni:v0.9.8.1
         - --cloud=aws
         securityContext:

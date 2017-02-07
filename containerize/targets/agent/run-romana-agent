@@ -239,6 +239,7 @@ cidr_addr() {
 if ! [[ "$interface" ]]; then
 	interface=eth0
 fi
+
 # Look up host IP
 host_address=$(interface_address "$interface")
 if ! [[ "$host_address" ]]; then
@@ -247,6 +248,44 @@ fi
 host_ip=$(cidr_addr "$host_address")
 if ! [[ "$host_ip" ]]; then
 	internal_error "Error extracting address from $host_address"
+fi
+
+# Check Cluster IP CIDR is valid
+if [[ "$cluster_ip_cidr" ]]; then
+	if ! valid_cidr "$cluster_ip_cidr"; then
+		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
+	fi
+else
+	usage_error "The cluster-ip-cidr option must be specified and match the kubernetes configuration."
+fi
+
+# Check if the route for the cluster-ip-cidr uses the host interface
+if route_info=$(ip -o route get "$cluster_ip_cidr"); then
+	# Look for the word 'dev'
+	read -ra tokens <<< "$route_info"
+	if (( ${#tokens[@]} )); then
+		device_found=0
+		for ((i=1; i < ${#tokens[@]} - 1; i++)); do
+			if [[ "${tokens[i]}" = dev ]]; then
+				device_found=1
+				# If it'd route via a different interface, try to add
+				# the correct route
+				if [[ "${tokens[i+1]}" != "$interface" ]]; then
+					if ip route add "$cluster_ip_cidr" dev "$interface"; then
+						echo "Route added for $cluster_ip_cidr using device $interface"
+					else
+						echo "Failed to add route for $cluster_ip_cidr using device $interface"
+					fi
+				fi
+				break
+			fi
+		done
+		if ! (( device_found )); then
+			echo "Failed to find device in route information for $cluster_ip_cidr"
+		fi
+	fi
+else
+	echo "Unable to look up route information for cluster-ip-cidr '$cluster_ip_cidr'"
 fi
 
 # Generate .romana.yml for romana cli tool
@@ -312,14 +351,6 @@ fi
 # Use interface as default for nat_interface
 if ! [[ "$nat_interface" ]]; then
 	nat_interface="$interface"
-fi
-# Check Cluster IP CIDR is valid
-if [[ "$cluster_ip_cidr" ]]; then
-	if ! valid_cidr "$cluster_ip_cidr"; then
-		usage_error "Expected valid CIDR for --cluster-ip-cidr. ('$cluster_ip_cidr')"
-	fi
-else
-	cluster_ip_cidr="100.64.0.0/12"
 fi
 
 case "$nat" in
