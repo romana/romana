@@ -6,3 +6,4 @@ command=/usr/local/bin/agent -rootURL <romana-root>
 redirect_stderr=true
 stdout_logfile=/var/log/romana/agent.log
 stdout_logfile_backups=0
+environment=<agent-environment>
