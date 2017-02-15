@@ -20,8 +20,6 @@ usage() {
 	echo " --github-key:          private key to access github repositories"
 	echo " --core-repo:           git@ or https:// address of core repo"
 	echo " --core-branch:         git branch/tag/sha of core to build"
-	echo " --romana-repo:         git@ or https:// address of romana repo"
-	echo " --romana-branch:       git branch/tag/sha of romana to build"
 }
 
 core_repo=
@@ -63,7 +61,7 @@ if ! git -C /go/src/github.com/romana/core fetch; then
 	echo "failed to fetch"
 	exit 1
 fi
-if ! git -C /go/src/github.com/romana/core checkout "$core_branch"; then
+if [[ "$core_branch" ]] && ! git -C /go/src/github.com/romana/core checkout "$core_branch"; then
 	echo "failed to checkout '$core_branch'"
 	exit 1
 fi

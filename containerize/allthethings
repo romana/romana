@@ -87,7 +87,7 @@ tag=unspecified
 compile=maybe
 github_key=/dev/null
 core_repo=https://github.com/romana/core
-core_branch=master
+core_branch=
 build=maybe
 push=maybe
 namespaces=()
@@ -236,9 +236,10 @@ compile() {
 	compile_flags=(
 		${github_key:+--github-key=/github_id_rsa}
 		--core-repo="$core_repo"
-		--core-branch="$core_branch"
-	
 	)
+	if [[ "$core_branch" ]]; then
+		compile_flags+=( --core-branch="$core_branch" )
+	fi
 	if ! docker run --rm "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
 		fatal error running compile container
 	elif [[ "$build" = maybe ]]; then
