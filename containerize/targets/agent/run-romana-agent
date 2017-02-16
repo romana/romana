@@ -247,7 +247,7 @@ if ! [[ "$host_address" ]]; then
 fi
 host_ip=$(cidr_addr "$host_address")
 if ! [[ "$host_ip" ]]; then
-	internal_error "Error extracting address from $host_address"
+	internal_error "Error extracting host IP from $host_address"
 fi
 
 # Check Cluster IP CIDR is valid
@@ -348,57 +348,32 @@ if ! valid_cidr "$romana_cidr"; then
 	internal_error "invalid result attempting to get cidr configuration for topology"
 fi
 
-# Use interface as default for nat_interface
-if ! [[ "$nat_interface" ]]; then
+if [[ "$nat_interface" ]]; then
+	nat_address=$(interface_address "$nat_interface")
+	if ! [[ "$nat_address" ]]; then
+		internal_error "No address found for NAT interface $nat_interface"
+	fi
+	nat_ip=$(cidr_addr "$nat_address")
+	if ! [[ "$nat_ip" ]]; then
+		internal_error "Error extracting NAT IP from $nat_address"
+	fi
+else
+	# Use interface as default for nat_interface
 	nat_interface="$interface"
+	nat_ip="$host_ip"
 fi
 
 case "$nat" in
 true)
-	# Create chain
-	if ! iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
-		if ! iptables -t nat -N ROMANA-MASQ; then
-			internal_error "Error creating chain for NAT rule"
-		fi
-	fi
-	# Flush rules from chain
-	if ! iptables -t nat -F ROMANA-MASQ; then
-		internal_error "Error flushing chain for NAT rule"
-	fi
-	# Add items to chain
-	if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
-		internal_error "Error adding exclusion for $romana_cidr"
-	fi
-	if ! iptables -t nat -A ROMANA-MASQ -d "$cluster_ip_cidr" -j RETURN; then
-		internal_error "Error adding exclusion for $cluster_ip_cidr"
-	fi
-	if ! iptables -t nat -A ROMANA-MASQ -o "$nat_interface" -j MASQUERADE; then
-		internal_error "Error adding NAT for $nat_interface"
-	fi
-	# Activate chain
-	if ! iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
-		if ! iptables -t nat -A POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
-			internal_error "Error adding $romana_address POSTROUTING rule"
-		fi
-	fi
+	# Generate value for config option in supervisor template
+	snat_exclusions="$romana_cidr,$cluster_ip_cidr"
+	agent_environment='ROMANA_FEATURE_SNAT="enable",'
+	agent_environment+='ROMANA_FEATURE_SNAT_NATIF="'"$nat_interface"'",'
+	agent_environment+='ROMANA_FEATURE_SNAT_NATIP="'"$nat_ip"'",'
+	agent_environment+='ROMANA_FEATURE_SNAT_EXCLUDE="'"$snat_exclusions"'"'
 	;;
 false)
-	# If chain is active, delete the rule
-	if iptables -t nat -C POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
-		if ! iptables -t nat -D POSTROUTING -s "$romana_address" -j ROMANA-MASQ; then
-			internal_error "Error removing $romana_address POSTROUTING rule"
-		fi
-	fi
-
-	# If chain exists, flush and remove it
-	if iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
-		if ! iptables -t nat -F ROMANA-MASQ; then
-			internal_error "Error flushing chain for NAT rule"
-		fi
-		if ! iptables -t nat -X ROMANA-MASQ; then
-			internal_error "Error removing chain for NAT rule"
-		fi
-	fi
+	agent_environment=""
 	;;
 *)
 	internal_error "nat variable was not true or false: '$nat'"
@@ -447,6 +422,7 @@ printf "Creating database for agent\n"
 replacements=(
 	-e 's|<romana-root>|'"$romana_root"'|g'
 	-e 's|<interface>|'"$interface"'|g'
+	-e 's|<agent-environment>|'"$agent_environment"'|g'
 )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
 
