@@ -98,6 +98,7 @@ spec:
         args:
         - --cluster-ip-cidr=100.64.0.0/12
         - --cni-image=quay.io/romana/cni:v0.9.8.1
+        - --node-name=fqdn
         - --cloud=aws
         securityContext:
           privileged: true

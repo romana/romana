@@ -103,6 +103,7 @@ Example:
 - `--nat`: Permit pods to reach other networks with NAT (Network Address Translation). Default: true
 - `--nat-interface`: The interface traffic will route through when NAT is required. Defaults to `--interface` if specified, or eth0 if unspecified
 - `--pod-to-host`: Permit communication between pods and the host they are scheduled on. Required for some services and healthchecks. Default: true
+- `--node-name`: The name used for nodes in the cluster. Default: hostname. Permitted values: hostname, fqdn
 - `--cloud`: Enable cloud integration. No default. Permitted values: none, aws
 
 # Developer Information

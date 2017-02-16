@@ -25,6 +25,7 @@ usage() {
 	echo " --nat-interface: Interface that NATs traffic, instead of eth0 or --interface setting."
 	echo " --cluster-ip-cidr: CIDR for cluster IPs. Excluded from NAT rule."
 	echo " --pod-to-host: Permit pods to connect to the host server"
+	echo " --node-name: Name used for nodes in the cluster. (default: hostname. valid values: hostname, fqdn)"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
 
@@ -36,6 +37,7 @@ nat_interface=
 cluster_ip_cidr=
 pod_to_host=
 cni_image="quay.io/romana/cni"
+node_name=hostname
 cloud=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
@@ -75,6 +77,10 @@ while [[ $1 == -* ]]; do
 		cni_image="$2"
 		shift 2
 		;;
+	--node-name)
+		node_name="$2"
+		shift 2
+		;;
 	--cloud)
 		cloud="$2"
 		shift 2
@@ -102,6 +108,15 @@ internal_error() {
 }
 
 # Validate options provided
+case "$node_name" in
+hostname|fqdn)
+	# OK
+	;;
+*)
+	usage_error "Invalid value for --node-name: $node_name"
+	;;
+esac
+
 case "$cloud" in
 none|aws)
 	# OK
@@ -455,7 +470,10 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	replacements=( -e 's|cni-image|'"$cni_image"'|g' )
+	replacements=(
+		-e 's|cni-image|'"$cni_image"'|g'
+		-e 's|node-name|'"$node_name"'|g'
+	)
 	sed "${replacements[@]}" /var/lib/romana/cni-installation/romana-cni-wrapper > /host/opt/cni/bin/romana
 	chmod --reference=/var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
 fi
