@@ -9,5 +9,6 @@ COPY romana-cni-wrapper 10-romana.conf /var/lib/romana/cni-installation/
 COPY dot-romana.template romana-agent.template /var/lib/romana/templates/
 COPY permit-all-pod-to-host.json permit-all-host-to-pod.json /var/lib/romana/policies/
 COPY run-romana-agent /usr/local/bin/
+COPY ipv6-tw-sysctl.conf /etc/
 
 ENTRYPOINT ["/usr/local/bin/run-romana-agent"]
