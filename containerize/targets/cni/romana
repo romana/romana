@@ -71,6 +71,12 @@ cfg_cni_version=$(jq -r '.cniVersion // empty' <<< "$network_config")
 cfg_name=$(jq -r '.name // empty' <<< "$network_config")
 cfg_type=$(jq -r '.type // empty' <<< "$network_config")
 cfg_ipam_type=$(jq -r '.ipam.type // empty' <<< "$network_config")
+
+# Extract ipv6_tw feature
+cfg_ipv6_dual_stack_tw=$(jq -r '.ipv6_dual_stack_tw // empty' <<< "$network_config")
+cfg_ipv6_dual_stack_tw_prefix=$(jq -r '.ipv6_dual_stack_tw_prefix // empty' <<< "$network_config")
+cfg_ipv6_dual_stack_tw_gate=$(jq -r '.ipv6_dual_stack_tw_gate // empty' <<< "$network_config")
+
 # Not adding version check.
 expected_name="romana-k8s-network"
 expected_type="romana"
@@ -277,6 +283,36 @@ configure_address() {
 	log "configure_address: configured address $allocated_address for veth0-${nspid}"
 }
 
+configure_ipv6_ds_tw() {
+	case "$cfg_ipv6_dual_stack_tw" in
+	prefix|address)
+		log "Enabling dualstack ipv6"
+		;;
+	*)
+		return
+		;;
+	esac
+
+	address="${cfg_ipv6_dual_stack_tw_prefix}${allocated_address}/128"
+	log "configure_ipv6_ds_tw: constructed address $address for the pod"
+
+        if ! nsenter -t ${nspid} -n ip -6 addr add $address dev eth0; then
+		cni_error 203 "execution-error" "ip addr add failed"
+	fi
+        if ! nsenter -t ${nspid} -n ip -6 ro add ${cfg_ipv6_dual_stack_tw_gate}/128 dev eth0; then
+		cni_error 203 "execution-error" "ip ro add failed"
+	fi
+        if ! nsenter -t ${nspid} -n ip -6 ro add default via ${cfg_ipv6_dual_stack_tw_gate} dev eth0; then
+		cni_error 203 "execution-error" "ip ro add default failed"
+	fi
+	if ! ip -6 ro add $address dev "veth0-${nspid}"; then
+		cni_error 203 "execution-error" "ip ro add failed"
+	fi
+        if ! ip -6 n a proxy ${cfg_ipv6_dual_stack_tw_gate} dev "veth0-${nspid}"; then
+		cni_error 203 "execution-error" "ip neighbor add proxy failed"
+	fi
+}
+
 namespace_isolation() {
 	namespace_isolation="off"
 	if ! result=$(service_address kube-cni-proxy); then
@@ -325,6 +361,7 @@ case "$CNI_COMMAND" in
 		parse_cni_args
 		address_allocation
 		configure_address
+		configure_ipv6_ds_tw
 		namespace_isolation
 		agent_post_pod
 		cni_success
