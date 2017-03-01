@@ -18,6 +18,7 @@
 image="cni-image"
 volumes=(
   -v /var/log/romana:/var/log/romana
+  -v /var/lib/romana:/var/lib/romana
 )
 env=(
   -e CNI_ARGS="$CNI_ARGS"
