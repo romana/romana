@@ -20,6 +20,7 @@ volumes=(
   -v /var/log/romana:/var/log/romana
 )
 env=(
+  -e ROMANA_NODENAME="node-name"
   -e CNI_ARGS="$CNI_ARGS"
   -e CNI_COMMAND="$CNI_COMMAND"
   -e CNI_IFNAME="$CNI_IFNAME"
