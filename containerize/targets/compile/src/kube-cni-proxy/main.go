@@ -36,7 +36,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path"
-	"path/filepath"
 	"sync"
 	"time"
 )
@@ -46,8 +45,6 @@ var (
 	target  = flag.String("target", "", "Target for the proxied HTTP requests. Must be a valid URL.")
 	timeout = flag.String("timeout", "5s", "Duration before timing out a proxied request. Must be valid for Go's time.ParseDuration()")
 	label   = flag.String("label", "romanaSegment", "Label to extract and use for romana segment")
-
-	allocatedAddressDir = "/var/run/romana/ip-allocations"
 
 	allocSegmentMutex = sync.Mutex{}
 )
@@ -104,13 +101,6 @@ func main() {
 	http.HandleFunc("/endpoints", endpointsHandler)
 	http.HandleFunc("/namespaces", namespacesHandler)
 
-	// Initialize allocatedAddressDir
-	err = os.MkdirAll(allocatedAddressDir, 0700)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating '%s': %s\n", allocatedAddressDir, err)
-		return
-	}
-
 	// Set up server
 	server := http.Server{Addr: fmt.Sprintf(":%d", *port)}
 	server.SetKeepAlivesEnabled(false)
@@ -147,10 +137,8 @@ func endpointsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		cniPostRequest(w, r)
-	case "DELETE":
-		cniDeleteRequest(w, r)
 	default:
-		http.Error(w, "Only POST and DELETE supported", http.StatusMethodNotAllowed)
+		http.Error(w, "Only POST supported", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -221,85 +209,8 @@ func cniPostRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ipamRes.Body.Close()
 
-	// Create a file that will hold the data received from IPAM
-	f, err := os.Create(filepath.Join(allocatedAddressDir, reqData.Namespace+":"+reqData.PodName))
-	if err != nil {
-		// Not sure what to do about this
-	}
-
-	// Copy the data through
-	w.WriteHeader(ipamRes.StatusCode)
-	if f != nil {
-		io.Copy(io.MultiWriter(w, f), ipamRes.Body)
-		f.Close()
-	} else {
-		io.Copy(w, ipamRes.Body)
-	}
-}
-
-func cniDeleteRequest(w http.ResponseWriter, r *http.Request) {
-	// Decode request body
-	reqData := romanaCNIRequest{Method: r.Method}
-	err := json.NewDecoder(&io.LimitedReader{R: r.Body, N: 1 << 16}).Decode(&reqData)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error decoding request: %s", err), 422) // http.StatusUnprocessableEntity
-		return
-	}
-	if reqData.Incomplete() {
-		http.Error(w, "romanaCNIRequest incomplete", 422) // http.StatusUnprocessableEntity
-		return
-	}
-	// Look for a file containing state information
-	filename := filepath.Join(allocatedAddressDir, reqData.Namespace+":"+reqData.PodName)
-	f, err := os.Open(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			http.Error(w, fmt.Sprintf("allocation info for address for '%s:%s' not found", reqData.Namespace, reqData.PodName), http.StatusNotFound)
-			return
-		}
-		http.Error(w, fmt.Sprintf("Failed to open: %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Load IP address from file
-	ipamData := struct {
-		IP string `json:"ip"`
-	}{}
-	err = json.NewDecoder(f).Decode(&ipamData)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to extract stored IP address for '%s:%s':%s", reqData.Namespace, reqData.PodName, err), http.StatusInternalServerError)
-		return
-	}
-	if ipamData.IP == "" {
-		http.Error(w, fmt.Sprintf("empty IP address for '%s:%s':%s", reqData.Namespace, reqData.PodName, err), http.StatusInternalServerError)
-		return
-	}
-
-	// Submit DELETE request to IPAM
-	ipamReq, err := http.NewRequest("DELETE", *target, nil)
-	if err != nil {
-		http.Error(w, "Unable to create request to target", http.StatusInternalServerError)
-		return
-	}
-	ipamReq.URL.Path = path.Join(ipamReq.URL.Path, "/endpoints", ipamData.IP)
-
-	ipamRes, err := http.DefaultClient.Do(ipamReq)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error from request: %s", err), http.StatusBadGateway)
-		return
-	}
-	defer ipamRes.Body.Close()
-
-	// Copy the data through
 	w.WriteHeader(ipamRes.StatusCode)
 	io.Copy(w, ipamRes.Body)
-
-	if ipamRes.StatusCode >= 200 && ipamRes.StatusCode < 300 {
-		err = os.Remove(filename)
-		if err != nil {
-			// Still not sure what to do about this
-		}
-	}
 }
 
 func namespacesHandler(w http.ResponseWriter, r *http.Request) {

@@ -191,11 +191,16 @@ address_allocation() {
 	if ! [[ "$allocated_address" ]]; then
 		cni_error 202 "service-error" "address_allocation: missing IP address"
 	fi
+	if ! [[ -d /var/lib/romana/ip-allocations ]]; then
+		mkdir -p /var/lib/romana/ip-allocations
+	fi
+	printf "%s" "$result" >> "/var/lib/romana/ip-allocations/$pod_namespace:$pod_name"
 	log "address_allocation: Address is $allocated_address"
 }
 
 address_deallocation() {
-	if ! result=$(service_address kube-cni-proxy); then
+	allocated_address=$(jq -r '.ip' < "/var/lib/romana/ip-allocations/$pod_namespace:$pod_name")
+	if ! result=$(service_address ipam); then
 		printf "%s\n" "$result"
 		exit 1
 	fi
@@ -213,6 +218,7 @@ address_deallocation() {
 	if ! [[ "$deallocated_address" ]]; then
 		cni_error 202 "service-error" "address_deallocation: missing IP address"
 	fi
+	rm "/var/lib/romana/ip-allocations/$pod_namespace:$pod_name"
 	log "address_deallocation completed"
 }
 
