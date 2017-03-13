@@ -199,19 +199,14 @@ address_allocation() {
 }
 
 address_deallocation() {
-	allocated_address=$(jq -r '.ip' < "/var/lib/romana/ip-allocations/$pod_namespace:$pod_name")
+	pod_address=$(jq -r '.ip' < "/var/lib/romana/ip-allocations/$pod_namespace:$pod_name")
+	log "address_deallocation cached address is $pod_address"
 	if ! result=$(service_address ipam); then
 		printf "%s\n" "$result"
 		exit 1
 	fi
 	host="$result"
-	if [[ "$ROMANA_NODENAME" = "fqdn" ]]; then
-		nodename="$(hostname --fqdn)"
-	else
-		nodename="$(hostname)"
-	fi
-	delete_body=$(printf '{ "host": "%s", "namespace": "%s", "podName": "%s" }' "$nodename" "$pod_namespace" "$pod_name")
-	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "$host/endpoints" 2>&1); then
+	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" "$host/endpoints/$pod_address" 2>&1); then
 		cni_error 202 "service-error" "address_deallocation: error deallocating address: $result"
 	fi
 	deallocated_address=$(jq -r '.ip' <<< "$result")
