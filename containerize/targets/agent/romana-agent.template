@@ -3,6 +3,7 @@ nodaemon=true
 
 [program:agent]
 command=/usr/local/bin/agent -rootURL <romana-root>
+exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/agent.log
 stdout_logfile_backups=0
