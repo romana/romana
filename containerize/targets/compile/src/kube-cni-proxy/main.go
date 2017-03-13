@@ -199,7 +199,7 @@ func cniPostRequest(w http.ResponseWriter, r *http.Request) {
 	query.Set("hostName", reqData.Host)
 	query.Set("tenantName", reqData.Namespace)
 	query.Set("segmentName", segment)
-	query.Set("instanceName", reqData.PodName)
+	query.Set("instanceName", fmt.Sprintf("%s:%s", reqData.Namespace, reqData.PodName))
 	ipamReq.URL.RawQuery = query.Encode()
 
 	ipamRes, err := http.DefaultClient.Do(ipamReq)
