@@ -26,6 +26,7 @@ usage() {
 	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 256)"
 	echo " --namespaces: The number of namespaces that will be created. Used for internal Romana configuration (default: 16)"
 	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 16)"
+	echo " --policies: Enable network policy features (default: true)"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
 
@@ -37,6 +38,7 @@ cidr=
 nodes=256
 namespaces=16
 segments=16
+policies=
 cloud=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
@@ -74,6 +76,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--segments)
 		segments="$2"
+		shift 2
+		;;
+	--policies)
+		policies="$2"
 		shift 2
 		;;
 	--cloud)
@@ -143,6 +149,20 @@ if ! kubectl_output=$(kubectl --server="$api_server" version 2>&1); then
 fi
 printf "ok.\n"
 
+valid_bool() {
+	if (($# != 1)); then
+		internal_error "valid_bool(): expected 1 parameter, got $#"
+	fi
+	case "$1" in
+	true|false)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
 valid_number() {
 	if (($# != 1)); then
 		internal_error "valid_number(): expected 1 parameter, got $#"
@@ -192,6 +212,15 @@ valid_cidr() {
 	return 0
 }
 	
+# Check policies option is valid. Defaults to true if not specified
+if [[ "$policies" ]]; then
+	if ! valid_bool "$policies"; then
+		usage_error "Expected 'true' or 'false' for --policies option. ('$policies')"
+	fi
+else
+	policies=true
+fi
+
 if ! valid_cidr "$cidr"; then
 	usage_error "CIDR '$cidr' is not valid."
 fi
@@ -249,6 +278,7 @@ replacements+=( -e 's|host-bits|'"$node_bits"'|g' )
 replacements+=( -e 's|tenant-bits|'"$namespace_bits"'|g' )
 replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
 replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
+replacements+=( -e 's|policies-enabled|'"$policies"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
 
 # Check if etcd is running. Execute a version query
