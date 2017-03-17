@@ -286,8 +286,14 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
-	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/v1.4.5/bin/linux/amd64/kubectl"; then
+	kubectl_version="v1.5.4"
+	kubectl_sha256="1d9be6531f9830798b94d2a3ba6d07592ac664b8e12a8ddf201dd815719b9563"
+	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"; then
 		fatal error downloading kubectl
+	fi
+	read -r shasum _ < <(shasum -a 256 targets/services/kubectl)
+	if [[ "$shasum" != "$kubectl_sha256" ]]; then
+		fatal error matching checksum for kubectl: "$shasum" differs from "$kubectl_sha256"
 	fi
 	log copy ... copying required files for agent target
 	for f in agent romana fix-ec2-srcdestcheck; do
