@@ -17,12 +17,22 @@
 - name: Install kubeadm packages
   become: true
   become_user: root
-  apt: update_cache="yes" pkg="{{ item }}"
+  apt: update_cache="yes" pkg="{{ item }}" force="yes"
   with_items:
     - docker.io=1.12.6-0ubuntu1~16.04.1
     - kubelet=1.5.6-00
     - kubeadm=1.5.6-00
     - kubernetes-cni=0.5.1-00
+
+- name: Install bodge for kubeadm / kubelet / systemd config
+  become: true
+  become_user: root
+  copy: src="11-kubeadm-bodge.conf" dest="/etc/systemd/system/kubelet.service.d/11-kubeadm-bodge.conf"
+
+- name: Refresh systemd configuration
+  become: true
+  become_user: root
+  command: systemctl daemon-reload
 
 - name: Add user to docker group (for convenience, so user can run docker commands)
   become: true
