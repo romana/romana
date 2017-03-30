@@ -19,10 +19,10 @@
   become_user: root
   apt: update_cache="yes" pkg="{{ item }}"
   with_items:
-    - docker.io
-    - kubelet
-    - kubeadm
-    - kubernetes-cni
+    - docker.io=1.12.6-0ubuntu1~16.04.1
+    - kubelet=1.5.6-00
+    - kubeadm=1.5.6-00
+    - kubernetes-cni=0.5.1-00
 
 - name: Add user to docker group (for convenience, so user can run docker commands)
   become: true
