@@ -286,6 +286,7 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
+	# TODO: Bump these versions when updating Romana to deliver newer releases of kubernetes.
 	kubectl_version="v1.5.4"
 	kubectl_sha256="1d9be6531f9830798b94d2a3ba6d07592ac664b8e12a8ddf201dd815719b9563"
 	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"; then
