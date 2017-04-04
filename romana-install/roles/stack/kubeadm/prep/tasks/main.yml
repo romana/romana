@@ -24,16 +24,6 @@
     - kubeadm
     - kubernetes-cni
 
-- name: Install bodge for kubeadm / kubelet / systemd config
-  become: true
-  become_user: root
-  copy: src="11-kubeadm-bodge.conf" dest="/etc/systemd/system/kubelet.service.d/11-kubeadm-bodge.conf"
-
-- name: Refresh systemd configuration
-  become: true
-  become_user: root
-  command: systemctl daemon-reload
-
 - name: Add user to docker group (for convenience, so user can run docker commands)
   become: true
   become_user: root
