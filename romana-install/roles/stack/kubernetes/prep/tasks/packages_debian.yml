@@ -8,11 +8,7 @@
 - name: Install additional packages
   apt: update_cache="yes" pkg="{{ item }}"
   with_items:
-    - docker.io
+    - docker-engine
     - kubelet
-    - kubeadm
     - kubectl
     - kubernetes-cni
-    - python-simplejson
-    - python-requests
-    - python-netaddr

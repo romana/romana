@@ -1,20 +1,23 @@
 ---
-- name: Install kubelet.conf
-  template: src="kubelet.conf" dest="/etc/kubernetes/kubelet.conf" mode=0600
+- name: Create PKI directory
+  file: path="/etc/kubernetes/pki" state="directory" mode="0700"
+  register: pki
 
-- name: Start docker and kubelet
-  service: name="{{ item }}" state="started"
-  with_items:
-    - docker
-    - kubelet
+- name: Generate service account keypair
+  command: openssl genrsa -out /etc/kubernetes/pki/sa.key 2048
+  when: pki.changed
+
+- name: Extract service account public key
+  command: openssl rsa -in /etc/kubernetes/pki/sa.key -pubout -out /etc/kubernetes/pki/sa.pub
+  when: pki.changed
 
 - name: Install manifests for kubernetes services
   copy: src="manifests/{{ item }}" dest="/etc/kubernetes/manifests/{{ item }}" mode=0600
   with_items:
-    - etcd.json
-    - kube-apiserver.json
-    - kube-scheduler.json
-    - kube-controller-manager.json
+    - etcd.yaml
+    - kube-apiserver.yaml
+    - kube-scheduler.yaml
+    - kube-controller-manager.yaml
 
 - name: Wait for etcd to be running
   wait_for: host="127.0.0.1" port="2379" state=started

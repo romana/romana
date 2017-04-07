@@ -33,7 +33,7 @@ spec:
         - /usr/local/bin/kube-proxy
         - --v=4
         - --kubeconfig=/run/kubeconfig
-        image: gcr.io/google_containers/kube-proxy-amd64:v1.4.0
+        image: gcr.io/google_containers/kube-proxy-amd64:v1.6.1
         imagePullPolicy: IfNotPresent
         name: kube-proxy
         resources: {}

@@ -9,10 +9,6 @@
 
 - hosts: kube_minions
   roles:
-    - stack/kubernetes/install-minion
-
-- hosts: kube_minions
-  roles:
     - stack/kubernetes/postinstall
 
 - include: config.romana.yml

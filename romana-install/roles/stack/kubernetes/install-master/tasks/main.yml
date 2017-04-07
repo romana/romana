@@ -1,16 +1,4 @@
 ---
-- include: "{{ file }}"
-  with_first_found:
-    - files: 
-      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
-      - "packages_{{ ansible_distribution|lower }}.yml"
-      - "packages_{{ ansible_os_family|lower }}.yml"
-      skip: true
-  loop_control:
-    loop_var: file
-  become: true
-  become_user: root
-
 - include: kubernetes.yml
   become: true
   become_user: root
