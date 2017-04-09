@@ -16,6 +16,5 @@
   with_items:
     - docker
     - kubelet
-    - kubeadm
     - kubectl
     - kubernetes-cni

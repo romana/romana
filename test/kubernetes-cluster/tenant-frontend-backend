@@ -146,6 +146,19 @@ delete_deployment() {
 	if ! kubectl --namespace="$tenant_name" delete deployment "$name"; then
 		return 1
 	fi
+	local intervals=(0 1 1 2 5 5 5 5 5)
+	local remaining=0
+	for i in "${intervals[@]}"; do
+		remaining=$(kubectl --namespace="$tenant_name" get pods --selector=run="$name" -o json | jq '.items | length')
+		if ! (( remaining )); then
+			break
+		fi
+		sleep "$i"
+	done
+	if (( remaining )); then
+		log_message "delete_deployment: $remaining pods still running for $name"
+		return 1
+	fi
 }
 
 test_frontend_backend() {
@@ -182,12 +195,12 @@ test_frontend_backend() {
 	else
 		result="failed"
 	fi
-
-	if ! (delete_deployment backend && delete_deployment frontend); then
-		return 1
-	fi
 	if [[ "$result" != "$expected_result" ]]; then
 		log_message "Result was $result, expected $expected_result"
+		return 1
+	fi
+
+	if ! (delete_deployment backend && delete_deployment frontend); then
 		return 1
 	fi
 	log_verbose "Test succeeded"
@@ -205,6 +218,8 @@ if ! kubectl annotate --overwrite namespaces "$tenant_name" 'net.beta.kubernetes
 	log_message "Failed to annotate namespace"
 	exit 1
 fi
+# Arbitrary delay
+sleep 3
 
 # Isolation enabled, connection should fail
 log_verbose "Testing frontend-to-backend, expecting they cannot communicate"
@@ -219,6 +234,8 @@ if ! kubectl --namespace="$tenant_name" create -f frontend-to-backend.yml; then
 	exit 1
 fi
 defer kubectl --namespace="$tenant_name" delete networkpolicy pol1
+# Arbitrary delay
+sleep 3
 
 log_verbose "Testing frontend-to-backend, expecting they can communicate"
 if ! test_frontend_backend "connected"; then

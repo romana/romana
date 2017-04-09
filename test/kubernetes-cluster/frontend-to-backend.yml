@@ -12,5 +12,5 @@ spec:
       matchLabels:
        romanaSegment: frontend
    ports:
-    - protocol: tcp
+    - protocol: TCP
       port: 80
