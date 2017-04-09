@@ -362,6 +362,26 @@ fi
 replacements=( -e 's|romana-root|'"$romana_root"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
 
+# Install CNI
+if [[ -d /host/usr/local/bin ]]; then
+	cp /usr/local/bin/romana /host/usr/local/bin/romana
+fi
+if [[ -d /host/opt/cni/bin ]]; then
+	replacements=(
+		-e 's|cni-image|'"$cni_image"'|g'
+		-e 's|node-name|'"$node_name"'|g'
+	)
+	sed "${replacements[@]}" /var/lib/romana/cni-installation/romana-cni-wrapper > /host/opt/cni/bin/romana
+	chmod --reference=/var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
+fi
+if [[ -d /host/etc/cni/net.d ]]; then
+	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+	sed "${replacements[@]}" /var/lib/romana/cni-installation/10-romana.conf > /host/etc/cni/net.d/10-romana.conf
+fi
+if [[ -d /host/etc/romana ]]; then
+	cp /root/.romana.yml /host/etc/romana/cli.yml
+fi
+
 # Check that we can reach root service. Keep trying for approximately 60s
 intervals=(0 1 1 1 1 1 5 5 5 5 5 10 10 10)
 succeeded=0
@@ -495,26 +515,6 @@ replacements=(
 	-e 's|<agent-environment>|'"$agent_environment"'|g'
 )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
-
-# Install CNI
-if [[ -d /host/usr/local/bin ]]; then
-	cp /usr/local/bin/romana /host/usr/local/bin/romana
-fi
-if [[ -d /host/opt/cni/bin ]]; then
-	replacements=(
-		-e 's|cni-image|'"$cni_image"'|g'
-		-e 's|node-name|'"$node_name"'|g'
-	)
-	sed "${replacements[@]}" /var/lib/romana/cni-installation/romana-cni-wrapper > /host/opt/cni/bin/romana
-	chmod --reference=/var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
-fi
-if [[ -d /host/etc/cni/net.d ]]; then
-	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
-	sed "${replacements[@]}" /var/lib/romana/cni-installation/10-romana.conf > /host/etc/cni/net.d/10-romana.conf
-fi
-if [[ -d /host/etc/romana ]]; then
-	cp /root/.romana.yml /host/etc/romana/cli.yml
-fi
 
 # Run any required cloud integration agents
 case "$cloud" in

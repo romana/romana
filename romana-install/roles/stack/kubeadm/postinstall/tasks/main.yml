@@ -5,5 +5,13 @@
 - include: local_containers.yml
   when: romana_core_source == "github"
 
+- name: Create config directory
+  file: path="/home/{{ ansible_ssh_user }}/.kube/" mode=0775 state=directory
+
+- name: Copy admin.conf for default user
+  become: true
+  become_user: root
+  command: install --owner="{{ ansible_ssh_user }}" --mode=0600 /etc/kubernetes/admin.conf "/home/{{ ansible_ssh_user }}/.kube/config"
+
 - name: Install romana-kubeadm.yml
   command: kubectl apply -f romana-kubeadm.yml

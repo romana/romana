@@ -31,7 +31,7 @@ usage() {
 }
 
 # Parse command-line options
-api_server=http://127.0.0.1:8080
+api_server=
 ip_address=
 interface=
 cidr=
@@ -141,9 +141,32 @@ if ! [[ "$cidr" ]]; then
 	usage_error "Romana CIDR must be provided."
 fi
 
+# Use apiserver option if provided, otherwise look for environment variables
+# for the kubernetes.default service. Fail if these aren't provided.
+if ! [[ "$api_server" ]]; then
+	if [[ "$KUBERNETES_SERVICE_HOST" ]] && [[ "$KUBERNETES_SERVICE_PORT_HTTPS" ]]; then
+		api_server="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS"
+	fi
+fi
+if ! [[ "$api_server" ]]; then
+	usage_error "Unable to find apiserver via command-line option or default service. Use --apiserver to specify an address for kube-apiserver."
+fi
+
 # Check that we can connect to the apiserver
+if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" ]]; then
+	kubectl_cert="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+fi
+if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
+	kubectl_token="$(< /var/run/secrets/kubernetes.io/serviceaccount/token)"
+fi
+kubectl_options=(
+	--server="$api_server"
+	${kubectl_cert:+--certificate-authority="$kubectl_cert"}
+	${kubectl_token:+--token="$kubectl_token"}
+)
+
 printf "Checking connection to kubernetes api-server..."
-if ! kubectl_output=$(kubectl --server="$api_server" version 2>&1); then
+if ! kubectl_output=$(kubectl "${kubectl_options[@]}" version 2>&1); then
 	printf "error: %s\n" "$(grep -v "^Client Version:" <<< "$kubectl_output")"
 	exit 1
 fi
@@ -372,9 +395,12 @@ replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
 
 # Configure kubectl
-kubectl config set-cluster romana-cni-cluster --server="$api_server"
-kubectl config set-context romana-cni-context --cluster=romana-cni-cluster
-kubectl config use-context romana-cni-context
+kubectl config set-cluster kubernetes --embed-certs ${kubectl_cert:+--certificate-authority="$kubectl_cert"} --server="$api_server"
+if [[ "${kubectl_token}" ]]; then
+	kubectl config set-credentials romana-services --token="$kubectl_token"
+fi
+kubectl config set-context romana-services@kubernetes --user=romana-services --cluster=kubernetes
+kubectl config use-context romana-services@kubernetes
 
 # Enable cloud integrations
 case "$cloud" in

@@ -139,7 +139,9 @@ service_config() {
 parse_cni_args() {
 	IFS=/ read -r _ _ nspid _ <<< "$CNI_NETNS"
 	if ! [[ "$nspid" ]]; then
-		cni_error 199 "invocation-error" "unexpected CNI_NETNS value: '$CNI_NETNS'"
+		if [[ "$CNI_COMMAND" != "DEL" ]]; then
+			cni_error 199 "invocation-error" "unexpected CNI_NETNS value: '$CNI_NETNS'"
+		fi
 	fi
 	pod_namespace=
 	pod_name=
@@ -201,6 +203,10 @@ address_allocation() {
 address_deallocation() {
 	pod_address=$(jq -r '.ip' < "/var/lib/romana/ip-allocations/$pod_namespace:$pod_name")
 	log "address_deallocation cached address is $pod_address"
+	if ! [[ "$pod_address" ]]; then
+		log "address_deallocation: no address to deallocate. skipping"
+		return
+	fi
 	if ! result=$(service_address ipam); then
 		printf "%s\n" "$result"
 		exit 1
@@ -359,6 +365,10 @@ agent_post_pod() {
 }
 
 agent_delete_pod() {
+	if ! [[ "$nspid" ]]; then
+		log "agent_delete_pod: skipping"
+		return
+	fi
 	delete_body=$(printf '{ "net_if" : { "interface_name": "%s", "mac_address": "", "ip_address" : "%s" }, "options" : { "namespace_isolation" : "%s"} }' "veth0-${nspid}" "$deallocated_address" "$namespace_isolation")
 	if ! result=$(curl -f -s -S -X DELETE -H "Content-Type: application/json" --data "$delete_body" "http://localhost:9604/pod" 2>&1); then
 		cni_error 202 "service-error" "agent_delete_pod: error deleting from agent: $result"
