@@ -46,7 +46,7 @@ spec:
         - name: mysql-data
           mountPath: /var/lib/mysql
       - name: romana-services
-        image: quay.io/romana/services:v1.0.0
+        image: quay.io/romana/services:v1.0.1
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
