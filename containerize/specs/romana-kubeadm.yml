@@ -10,8 +10,11 @@ spec:
       labels:
         app: romana-services
     spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       nodeSelector:
-        kubeadm.alpha.kubernetes.io/role: master
+        node-role.kubernetes.io/master: ""
       hostNetwork: true
       containers:
       - name: romana-etcd
