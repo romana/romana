@@ -71,7 +71,7 @@ desc "We'll setup a frontend (client) and backend (server). Following Kubernetes
 desc "established patterns, the backend pods are behind a service."
 
 desc "Get a list of nodes in the environment."
-run "kubectl get nodes"
+run "kubectl get nodes -a -o wide"
 desc "Anybody here? let's see if we have a pod..."
 run "get_pods"
 
@@ -113,7 +113,7 @@ run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_service_ip '
 
 desc "This worked, because by default a Kubernetes namespace is non isolated (open for all traffic)."
 desc "So let's add isolation by annotating the namespace."
-run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.beta.kubernetes.io/networkpolicy={\"ingress\": {\"isolation\": \"DefaultDeny\"}}'"
+run "kubectl annotate --overwrite namespaces 'tenant-a' 'net.beta.kubernetes.io/networkpolicy={\"ingress\": {\"isolation\": \"DefaultDeny\"}}'; sleep 5"
 
 desc "Now loading data via the service will fail, since the backend pod is in a different segment."
 run "kubectl --namespace=tenant-a exec nginx-frontend -- curl $(get_service_ip 'tenant-a') --connect-timeout 5"
