@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+ name: pol1
+ namespace: tenant-a
+spec:
+ podSelector:
+  matchLabels:
+   romanaSegment: backend
+ ingress:
+ - from:
+   - podSelector:
+      matchLabels:
+       romanaSegment: frontend
+   ports:
+    - protocol: TCP
+      port: 80
