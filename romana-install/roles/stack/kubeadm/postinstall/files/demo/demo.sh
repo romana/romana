@@ -54,11 +54,12 @@ function get_pod_ip() {
 
 function delete_tenant() {
     ROMANA_POD_NAME=$(kubectl get pods -n kube-system -l "app=romana-services" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{end}')
-    TENANT_ID=$(kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -s --disable-column-names -u root --password={{ stack_password }} tenant --execute='select id from tenants where name="'"$1"'"' 2>&1 | grep -v "Using a password")
+    MYSQL_ROOT_PASSWORD=$(kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- /bin/sh -c 'echo -n "$MYSQL_ROOT_PASSWORD"')
+    TENANT_ID=$(kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -s --disable-column-names -u root --password=$MYSQL_ROOT_PASSWORD tenant --execute='select id from tenants where name="'"$1"'"' 2>&1 | grep -v "Using a password")
     if [[ $TENANT_ID ]]; then
-        kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -u root --password={{ stack_password }} tenant --execute='delete from tenants where id='$TENANT_ID 2>&1 | grep -v "Using a password"
-        kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -u root --password={{ stack_password }} tenant --execute='delete from segments where tenant_id='$TENANT_ID 2>&1 | grep -v "Using a password"
-        kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -u root --password={{ stack_password }} ipam --execute='delete from ip_am_endpoints where tenant_id='$TENANT_ID 2>&1 | grep -v "Using a password"
+        kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -u root --password=$MYSQL_ROOT_PASSWORD tenant --execute='delete from tenants where id='$TENANT_ID 2>&1 | grep -v "Using a password"
+        kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -u root --password=$MYSQL_ROOT_PASSWORD tenant --execute='delete from segments where tenant_id='$TENANT_ID 2>&1 | grep -v "Using a password"
+        kubectl exec -it -n kube-system $ROMANA_POD_NAME -c romana-datastore -- mysql -u root --password=$MYSQL_ROOT_PASSWORD ipam --execute='delete from ip_am_endpoints where tenant_id='$TENANT_ID 2>&1 | grep -v "Using a password"
     fi
 }
 

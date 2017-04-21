@@ -26,4 +26,4 @@
     - backend-service.yaml
 
 - name: Install and make demo script executable
-  template: src="demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755
+  copy: src="demo/demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755
