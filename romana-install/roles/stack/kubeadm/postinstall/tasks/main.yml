@@ -15,3 +15,5 @@
 
 - name: Install romana-kubeadm.yml
   command: kubectl apply -f romana-kubeadm.yml
+
+- include: "demo.yml"

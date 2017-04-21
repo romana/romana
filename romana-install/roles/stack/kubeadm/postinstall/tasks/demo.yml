@@ -1,0 +1,29 @@
+---
+- name: Create demo directory
+  file: path="/home/{{ ansible_ssh_user }}/demo/" mode=0775 state=directory
+
+- name: Install additional tools (required for demo script)
+  include: "{{ file }}"
+  with_first_found:
+    - files: 
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  loop_control:
+    loop_var: file
+  become: true
+  become_user: root
+
+- name: Copy examples and demo script to demo directory
+  copy: src="demo/{{ item }}" dest="/home/{{ ansible_ssh_user }}/demo/{{ item }}"
+  with_items:
+    - example-controller.yaml
+    - namespace-tenant-a.yaml
+    - pod-backend.yaml
+    - pod-frontend.yaml
+    - romana-np-frontend-to-backend.yml
+    - backend-service.yaml
+
+- name: Install and make demo script executable
+  copy: src="demo/demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755

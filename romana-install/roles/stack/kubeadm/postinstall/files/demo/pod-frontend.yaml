@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-frontend
+  namespace: tenant-a
+  labels:
+    app: nginx
+    romanaSegment: frontend
+spec:
+  containers:
+  - name: nginx
+    image: rstarmer/nginx-curl
+    ports:
+    - containerPort: 80
