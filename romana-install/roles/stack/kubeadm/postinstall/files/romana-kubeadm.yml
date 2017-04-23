@@ -10,10 +10,14 @@ rules:
   - pods
   - namespaces
   - nodes
+  - services
+  - endpoints
   verbs:
   - get
   - list
   - watch
+  - update
+  - create
 - apiGroups:
   - extensions
   resources:
