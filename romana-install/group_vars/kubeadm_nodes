@@ -1,1 +1,2 @@
 kubeadm_token: random.16charactertoken
+kubernetes_version: v1.6.2
