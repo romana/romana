@@ -5,7 +5,7 @@
 
   shell: |
          if ! [ -d /var/tmp/kubeadm-init ]; then
-             kubeadm init --token "{{ kubeadm_token }}" --apiserver-advertise-address="{{ hostvars[groups.kubeadm_master[0]].lan_ip }}" && mkdir /var/tmp/kubeadm-init
+             kubeadm init --kubernetes-version {{ kubernetes_version }} --token "{{ kubeadm_token }}" --apiserver-advertise-address="{{ hostvars[groups.kubeadm_master[0]].lan_ip }}" && mkdir /var/tmp/kubeadm-init
          fi
 
 - name: Install kubectl
