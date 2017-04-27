@@ -10,6 +10,7 @@ rules:
   - pods
   - namespaces
   - nodes
+  - endpoints
   verbs:
   - get
   - list
@@ -20,6 +21,14 @@ rules:
   - networkpolicies
   verbs:
   - get
+  - list
+  - watch
+- apiGroups:
+  - "*"
+  resources:
+  - services
+  verbs:
+  - update
   - list
   - watch
 ---
