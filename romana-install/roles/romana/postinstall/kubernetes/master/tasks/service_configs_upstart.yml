@@ -1,5 +1,0 @@
----
-- name: Install service configurations
-  template: src="upstart/{{ item }}" dest="/etc/init/{{ item }}"
-  with_items:
-    - romana-listener.conf

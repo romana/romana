@@ -1,5 +1,0 @@
----
-- name: Install service configurations
-  template: src="systemd/{{ item }}" dest="/etc/systemd/system/{{ item }}"
-  with_items:
-    - romana-listener.service

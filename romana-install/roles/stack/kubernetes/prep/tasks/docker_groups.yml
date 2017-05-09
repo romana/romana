@@ -1,6 +1,0 @@
----
-- name: Create a docker group, if necessary
-  group: name="docker" system=yes
-
-- name: Add user to docker group (for convenience, so user can run docker commands)
-  user: name="{{ ansible_ssh_user }}" append=yes groups="docker"
