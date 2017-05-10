@@ -455,6 +455,10 @@ fi
 if [[ "$github_key" ]]; then
 	ansible_args+=( -e github_key="$github_key" )
 fi
+# Check if verbose mode is on
+if (( verbose )); then
+    ansible_args+=( -vvv )
+fi
 
 case "$platform" in
 	aws|vagrant|static)
@@ -488,36 +492,22 @@ case "$platform" in
 				if [[ "$platform" == "static" ]]; then
 					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
 				fi
-				if (( verbose )); then
-					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml -vvv
-					[[ -f "${stack_data_dir}/inventory" ]] && grep ssh_host "${stack_data_dir}/inventory"
-					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
-				else
-					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
-						[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
-				fi
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml
+				[[ -f "${stack_data_dir}/inventory" ]] && grep ssh_host "${stack_data_dir}/inventory"
+				[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
 				;;
 			uninstall)
-				if (( verbose )); then
-				    ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml -vvv
-				    ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml -vvv
-				else
-				    ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
-				    ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
-				fi
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
+				ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
+
 				;;
 			test)
-				if (( verbose )); then
-				    verbose_arg="-vvv"
-                else
-				    verbose_arg=""
-				fi
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml $verbose_arg
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml
 				passed=0
-				if ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml $verbose_arg; then
+				if ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml; then
 					passed=1
 				fi
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-tests.yml $verbose_arg
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-tests.yml
 				[[ -f "${stack_data_dir}/clustertests.log" ]] && cat "${stack_data_dir}/clustertests.log"
 				if ! (( passed )); then
 					exit 1
