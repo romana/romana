@@ -1,0 +1,84 @@
+#!/bin/bash
+
+usage() {
+	echo "${0##*/}: Check if a list of named service pod are running"
+	echo "  ${0##*/} [-v|--verbose] [--status-command cmd] <service-name> [service-name...]"
+	echo "  ${0##*/} [-h|--help]"
+	echo "Options:"
+	echo "  -v (or --verbose): Enable verbose output."
+	echo "  --status-command:  Specify the command used to check service statuses."
+	echo "                     By default it will attempt to find the appropriate"
+	echo "                     systemctl or initctl command."
+	echo "  -h (or --help):    Display this usage message."
+	echo ""
+}
+
+log_message() {
+	printf "$(date +"%Y-%m-%d %H:%M:%S") (%s)%s\n" "${0##*/}" "$(printf " %s" "$@")"
+}
+
+log_verbose() {
+	if ((verbose)); then
+		log_message "$@"
+	fi
+}
+
+# Parse command-line arguments
+verbose=0
+status_command=()
+while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
+-v|--verbose)
+	verbose=1
+	shift 1
+	;;
+--status-command)
+	read -ra cmd <<< "$2"
+	if ! type -p "${cmd[0]}" &> /dev/null; then
+		log_message "Status command '$2' invalid"
+		exit 1
+	fi
+	status_command=( "${cmd[@]}" )
+	shift 2
+	;;
+-h|--help)
+	usage
+	exit 0
+	;;
+-*)
+	log_message "Unknown option '$1'"
+	exit 1
+	;;
+esac; done
+
+# Check if we have at least one service name
+if (( $# == 0 )); then
+	log_message "No services to check."
+	exit 1
+fi
+
+num_checked=0
+num_ok=0
+num_error=0
+for svc in "$@"; do
+	((num_checked++))
+	log_verbose "Checking status of '$svc'"
+	result=$(kubectl get pods -a --selector app=$svc -n kube-system -o jsonpath='{.items[0].status.phase}' 2>/dev/null | head -n 1 | cut -f 1 -d " ")
+	if [ $result = "Running" ]; then
+		((num_ok++))
+		log_verbose "Check passed."
+	else
+		((num_error++))
+		log_verbose "Check failed: $result"
+	fi
+done
+
+if (( num_error )); then
+	if (( num_checked == num_error )); then
+		log_message "Checked $num_checked services. All FAILED."
+	else
+		log_message "$num_ok/$num_checked services OK, $num_error FAILED."
+	fi
+	exit 1
+fi
+
+log_message "Checked $num_checked services. All OK."

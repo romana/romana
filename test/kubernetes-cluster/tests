@@ -1,10 +1,5 @@
-command: services_running
-args: romana-listener
-description: Check that Kubernetes services are running on master
-labels: kube-master, services
-
-command: services_running
-args: romana-root romana-tenant romana-topology romana-ipam romana-policy
+command: service_pod_running
+args: romana-services
 description: Check that Romana services are running on master
 labels: romana-master, services
 
@@ -13,7 +8,7 @@ args: kubelet
 description: Check that Kubernetes services are running on minion
 labels: kube-minion, services
 
-command: services_running
+command: service_pod_running
 args: romana-agent
 description: Check that Romana services are running on minion
 labels: romana-agent, services
