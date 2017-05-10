@@ -498,16 +498,26 @@ case "$platform" in
 				fi
 				;;
 			uninstall)
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
-				ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
+				if (( verbose )); then
+				    ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml -vvv
+				    ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml -vvv
+				else
+				    ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
+				    ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
+				fi
 				;;
 			test)
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml
+				if (( verbose )); then
+				    verbose_arg="-vvv"
+                else
+				    verbose_arg=""
+				fi
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml $verbose_arg
 				passed=0
-				if ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml; then
+				if ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" tests.yml $verbose_arg; then
 					passed=1
 				fi
-				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-tests.yml
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" post-tests.yml $verbose_arg
 				[[ -f "${stack_data_dir}/clustertests.log" ]] && cat "${stack_data_dir}/clustertests.log"
 				if ! (( passed )); then
 					exit 1
