@@ -24,7 +24,7 @@ usage() {
 	echo "Cluster Name:  user-defined stack name (default: $USER)"
 	echo "Platforms:     aws (default), vagrant, static"
 	echo "Distro:        ubuntu (default), centos"
-	echo "Stack Types:   kubernetes, none, kubeadm"
+	echo "Stack Types:   none, kubeadm"
 	echo "Number:        number of cluster nodes"
 	echo "Actions:       install (default), uninstall, test"
 	echo ""
@@ -32,14 +32,14 @@ usage() {
 	echo "    -r region-name"
 	echo "    -a ami-id"
 	echo ""
-	echo "Example 1: Romana with Kubernetes on AWS"
-	echo "./romana-setup -p aws -s kubernetes install"
-	echo "./romana-setup -p aws -s kubernetes test"
-	echo "./romana-setup -p aws -s kubernetes uninstall"
+	echo "Example 1: Romana with Kubernetes (kubeadm) on AWS"
+	echo "./romana-setup -p aws -s kubeadm install"
+	echo "./romana-setup -p aws -s kubeadm test"
+	echo "./romana-setup -p aws -s kubeadm uninstall"
 	echo "Example 2: Additional AWS cluster, using a different name"
-	echo "./romana-setup -n xyz -p aws -s kubernetes install"
-	echo "./romana-setup -n xyz -p aws -s kubernetes test"
-	echo "./romana-setup -n xyz -p aws -s kubernetes uninstall"
+	echo "./romana-setup -n xyz -p aws -s kubeadm install"
+	echo "./romana-setup -n xyz -p aws -s kubeadm test"
+	echo "./romana-setup -n xyz -p aws -s kubeadm uninstall"
 	echo "Example 3: Romana with Devstack on Vagrant"
 	echo "./romana-setup -p vagrant -s devstack install"
 	echo "./romana-setup -p vagrant -s devstack uninstall"
@@ -143,10 +143,6 @@ if (( $# > 0 )); then
 						;;
 					openstack)
 						stack_type="openstack"
-						shift 2
-						;;
-					kubernetes|k8s)
-						stack_type="kubernetes"
 						shift 2
 						;;
 					kubeadm)
@@ -316,7 +312,7 @@ if [[ "$platform" != "static" ]]; then
 	case "$distro" in
 		ubuntu)
 			case "$stack_type" in
-				kubernetes|kubeadm|nostack)
+				kubeadm|nostack)
 					release=xenial
 					;;
 				devstack|openstack)
@@ -326,7 +322,7 @@ if [[ "$platform" != "static" ]]; then
 			;;
 		centos)
 			case "$stack_type" in
-				kubernetes|devstack|openstack|nostack)
+				devstack|openstack|nostack)
 					release=7
 				;;
 			esac
@@ -459,6 +455,10 @@ fi
 if [[ "$github_key" ]]; then
 	ansible_args+=( -e github_key="$github_key" )
 fi
+# Check if verbose mode is on
+if (( verbose )); then
+    ansible_args+=( -vvv )
+fi
 
 case "$platform" in
 	aws|vagrant|static)
@@ -492,18 +492,14 @@ case "$platform" in
 				if [[ "$platform" == "static" ]]; then
 					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" install_python.yml
 				fi
-				if (( verbose )); then
-					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml -vvv
-					[[ -f "${stack_data_dir}/inventory" ]] && grep ssh_host "${stack_data_dir}/inventory"
-					[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
-				else
-					ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml &&
-						[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
-				fi
+				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" config.yml
+				[[ -f "${stack_data_dir}/inventory" ]] && grep ssh_host "${stack_data_dir}/inventory"
+				[[ -f "${stack_data_dir}/stackinfo" ]] && cat "${stack_data_dir}/stackinfo"
 				;;
 			uninstall)
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-delete.yml
 				ansible-playbook "$@" "${ansible_args[@]}" -i localhost delete_hosts.yml
+
 				;;
 			test)
 				ansible-playbook "$@" "${ansible_args[@]}" -i "${stack_data_dir}/inventory" pre-tests.yml

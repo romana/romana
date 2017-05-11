@@ -1,7 +1,0 @@
----
-- name: kubectl configuration
-  command: "{{ item }}"
-  with_items:
-    - kubectl config set-cluster romana-cni-cluster --server="http://{{ romana_master_ip }}:8080"
-    - kubectl config set-context romana-cni-context --cluster=romana-cni-cluster
-    - kubectl config use-context romana-cni-context

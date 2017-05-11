@@ -33,6 +33,7 @@
       - tenant
       - ipam
       - policy
+    when: stack_type in [ "devstack", "openstack" ]
   - name: Restart services
     become: true
     become_user: root
@@ -42,13 +43,7 @@
       - tenant
       - ipam
       - policy
-  - name: Restart services
-    become: true
-    become_user: root
-    service: name="romana-{{ item }}" state="restarted"
-    with_items:
-       - listener
-    when: stack_type == "kubernetes"
+    when: stack_type in [ "devstack", "openstack" ]
   - name: Re-run post-install script
     command: /var/tmp/romana-post-install.sh
     when: stack_type in [ "devstack", "openstack" ]
@@ -78,6 +73,7 @@
     service: name="{{ item }}" state="restarted"
     with_items:
       - romana-agent
+    when: stack_type in [ "devstack", "openstack" ]
 
 - hosts: controller
   tasks:

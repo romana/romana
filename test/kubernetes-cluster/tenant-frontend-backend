@@ -43,7 +43,7 @@ esac; done
 tenant_name="e2e-test-1"
 
 log_verbose "Looking up API server"
-kube_apiserver=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "romana-cni-cluster")].cluster.server}')
+kube_apiserver=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "kubernetes")].cluster.server}')
 if ! [[ "$kube_apiserver" ]]; then
 	log_verbose "Failed to find API server in kubectl config"
 	log_message "kubectl configuration missing expected items"

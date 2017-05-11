@@ -13,7 +13,6 @@
 
 - hosts: kube_master
   tasks:
-    - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-master -l services >> {{ test_logfile }}
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
 
 - hosts: kube_minions

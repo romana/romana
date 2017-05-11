@@ -1,3 +1,0 @@
----
-- name: Install my.cnf
-  template: src="mysql/my.cnf" dest="~/.my.cnf" mode=0600

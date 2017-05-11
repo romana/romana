@@ -1,6 +1,0 @@
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: tenant-a
-  labels:
-    name: tenant-a
