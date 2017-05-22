@@ -40,6 +40,7 @@ namespaces=16
 segments=16
 policies=
 cloud=none
+route_publisher=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -86,6 +87,10 @@ while [[ $1 == -* ]]; do
 		cloud="$2"
 		shift 2
 		;;
+	--x-route-publisher)
+		route_publisher="$2"
+		shift 2
+		;;
 	*)
 		echo "Unknown option '$1'"
 		usage
@@ -115,6 +120,15 @@ none|aws)
 	;;
 *)
 	usage_error "Invalid value for --cloud: $cloud"
+	;;
+esac
+
+case "$route_publisher" in
+none|bird)
+	# OK
+	;;
+*)
+	usage_error "Invalid value for --x-route-publisher: $route_publisher"
 	;;
 esac
 
@@ -302,7 +316,20 @@ replacements+=( -e 's|tenant-bits|'"$namespace_bits"'|g' )
 replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
 replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
 replacements+=( -e 's|policies-enabled|'"$policies"'|g' )
+case "$route_publisher" in
+bird)
+	replacements+=( -e '/publisher-config/r/var/lib/romana/templates/route-publisher-bird.template' )
+	;;
+*)
+	;;
+esac
+replacements+=( -e 's|route-publisher|'"$route_publisher"'|g' )
+replacements+=( -e 's|publisher-config||g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
+
+echo "==="
+cat /etc/romana/romana.conf.yml
+echo "==="
 
 # Check if etcd is running. Execute a version query
 printf "Checking if etcd is running..."

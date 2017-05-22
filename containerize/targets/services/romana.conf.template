@@ -59,6 +59,8 @@ services:
       store:
         type: sqlite3
         database: /var/lib/misc/romana-agent.db
+      route_publisher: route-publisher
+      route_publisher_config: publisher-config
   - service: policy
     api:
       host: romana-master-address
