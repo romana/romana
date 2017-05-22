@@ -1,0 +1,9 @@
+[supervisord]
+nodaemon=true
+
+[program:route-publisher-bird]
+command=/usr/sbin/bird -d -c /var/run/romana/bird/bird.conf -s /var/run/romana/bird/bird.ctl -P /var/run/romana/bird/bird.pid
+exitcodes=0
+redirect_stderr=true
+stdout_logfile=/var/log/romana/route-provider-bird.log
+stdout_logfile_backups=0
