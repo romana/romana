@@ -11,14 +11,17 @@
     - name: Copy test scripts to all kube nodes
       synchronize: src="../test/kubernetes-cluster/" dest="{{ test_dir }}/"
 
-- hosts: kube_master
-  tasks:
-    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
-
 - hosts: kube_minions
   tasks:
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-minion -l services >> {{ test_logfile }}
+
+- hosts: kube_master
+  tasks:
+    - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-master  -l services >> {{ test_logfile }}
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l romana-agent -l services >> {{ test_logfile }}
+
+- hosts: kube_minions
+  tasks:
     - shell: chdir="{{ test_dir }}" {{ test_script }} -l kube-minion -l docker >> {{ test_logfile }}
 
 - hosts: kube_master

@@ -41,16 +41,6 @@ while (( $# > 0 )) && [[ "$1" = -* ]]; do case "$1" in
 esac; done
 
 tenant_name="e2e-test-1"
-
-log_verbose "Looking up API server"
-kube_apiserver=$(kubectl config view -o jsonpath='{.clusters[?(@.name == "kubernetes")].cluster.server}')
-if ! [[ "$kube_apiserver" ]]; then
-	log_verbose "Failed to find API server in kubectl config"
-	log_message "kubectl configuration missing expected items"
-	exit 1
-fi
-log_verbose "API Server found: $kube_apiserver"
-
 log_verbose "Checking if tenant '$tenant_name' already exists"
 if result=$(kubectl get namespace "$tenant_name" -o json 2>/dev/null | jq -r '.status.phase // empty'); then
 	case "$result" in
@@ -113,8 +103,9 @@ create_deployment() {
 	local name="$1"
 	local image="$2"
 	local segment="$3"
+	local overrides='{ "apiVersion": "extensions/v1beta1", "spec": { "template": { "spec": { "terminationGracePeriodSeconds": 0 } } } }'
 
-	if ! kubectl run --namespace="$tenant_name" --image="$image" --labels="romanaSegment=$segment" "$name"; then
+	if ! kubectl run --namespace="$tenant_name" --image="$image" --labels="romanaSegment=$segment" --overrides="$overrides" "$name"; then
 		log_message "Deployment creation problem ($name)"
 		return 1
 	fi
