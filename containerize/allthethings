@@ -302,6 +302,12 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
+	log copy ... copying required files for cni target
+	for f in cni; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/cni/$f"; then
+			fatal error copying "$f"
+		fi
+	done
 	# Hack permission fixes here.
 	files_to_chmod=( kubectl )
 	for f in "${files_to_chmod[@]}"; do
