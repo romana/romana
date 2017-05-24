@@ -226,6 +226,19 @@ compile() {
 	if ! docker build -t romana/compile targets/compile; then
 		fatal error building compile container
 	fi
+	log compile ... creating volume paths
+	volume_paths=(
+		"$PWD/volumes/romana_bin_dir_$tag"
+		"$PWD/volumes/romana_pkg_dir_$tag"
+		"$PWD/volumes/romana_src_dir_$tag"
+	)
+	for p in "${volume_paths[@]}"; do
+		if ! [[ -d "$p" ]]; then
+			if ! mkdir "$p"; then
+				fatal error creating volume path "$p"
+			fi
+		fi
+	done
 	log compile ... running compile stage
 	volume_flags=(
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
@@ -258,7 +271,7 @@ build() {
 		;;
 	maybe)
 		for n in "${namespaces[@]}"; do
-			for i in services agent cni; do
+			for i in services agent; do
 				if ! image_name=$(image_name "$n" "$i"); then
 					fatal "build(): error from image_name()"
 				fi
@@ -280,39 +293,31 @@ copy() {
 		return
 	fi
 	log copy start
+	# TODO: Bump these versions when updating Romana to deliver newer releases of kubernetes.
+	kubectl_version="v1.6.4"
+	kubectl_sha256="a91c6b028bb3f737898ff003f7f3a3f2d242ea52e89ade1f6ca3ab99170119e5"
+	kubectl_filepath="$PWD/volumes/romana_bin_dir_$tag/kubectl"
+	if ! wget --continue --output-document="$kubectl_filepath" "https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"; then
+		fatal error downloading kubectl
+	fi
+	read -r shasum _ < <(shasum -a 256 "$kubectl_filepath")
+	if [[ "$shasum" != "$kubectl_sha256" ]]; then
+		fatal error matching checksum for kubectl: "$shasum" differs from "$kubectl_sha256"
+	fi
 	log copy ... copying required files for services target
-	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy romana-aws; do
+	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy kubectl romana-aws; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
 			fatal error copying "$f"
 		fi
 	done
-	# TODO: Bump these versions when updating Romana to deliver newer releases of kubernetes.
-	kubectl_version="v1.5.4"
-	kubectl_sha256="1d9be6531f9830798b94d2a3ba6d07592ac664b8e12a8ddf201dd815719b9563"
-	if ! wget --continue --output-document="targets/services/kubectl" "https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"; then
-		fatal error downloading kubectl
-	fi
-	read -r shasum _ < <(shasum -a 256 targets/services/kubectl)
-	if [[ "$shasum" != "$kubectl_sha256" ]]; then
-		fatal error matching checksum for kubectl: "$shasum" differs from "$kubectl_sha256"
-	fi
 	log copy ... copying required files for agent target
-	for f in agent romana fix-ec2-srcdestcheck; do
+	for f in agent cni romana kubectl fix-ec2-srcdestcheck; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
 			fatal error copying "$f"
 		fi
 	done
-	log copy ... copying required files for cni target
-	for f in cni; do
-		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/cni/$f"; then
-			fatal error copying "$f"
-		fi
-	done
 	# Hack permission fixes here.
-	files_to_chmod=( kubectl )
-	for f in "${files_to_chmod[@]}"; do
-		chmod +x "targets/services/$f"
-	done
+	chmod +x "targets/services/kubectl" "targets/agent/kubectl"
 	log copy end
 }
 
