@@ -304,6 +304,9 @@ copy() {
 	if [[ "$shasum" != "$kubectl_sha256" ]]; then
 		fatal error matching checksum for kubectl: "$shasum" differs from "$kubectl_sha256"
 	fi
+	# permission hack
+	chmod +x "$kubectl_filepath"
+
 	log copy ... copying required files for services target
 	for f in romana root tenant topology ipam ipam policy listener kube-cni-proxy kubectl romana-aws; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
@@ -316,8 +319,6 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
-	# Hack permission fixes here.
-	chmod +x "targets/services/kubectl" "targets/agent/kubectl"
 	log copy end
 }
 
