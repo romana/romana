@@ -51,6 +51,37 @@ subjects:
   name: romana-services
   namespace: kube-system
 ---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-agent
+rules:
+- apiGroups:
+  - "*"
+  resources:
+  - pods
+  verbs:
+  - get
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: romana-agent
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: romana-agent
+subjects:
+- kind: ServiceAccount
+  name: romana-agent
+  namespace: kube-system
+---
 apiVersion: v1
 kind: Secret
 type: Opaque
@@ -162,6 +193,7 @@ spec:
         app: romana-agent
     spec:
       hostNetwork: true
+      serviceAccountName: romana-agent
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
@@ -171,7 +203,11 @@ spec:
         imagePullPolicy: Always
         args:
         - --cluster-ip-cidr=10.96.0.0/12
-        - --cni-image=quay.io/romana/cni:v1.0.1
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         securityContext:
           privileged: true
         volumeMounts:
@@ -183,6 +219,8 @@ spec:
           mountPath: /host/opt/cni/bin
         - name: host-cni-net-d
           mountPath: /host/etc/cni/net.d
+        - name: run-path
+          mountPath: /var/run/romana
         - name: log-path
           mountPath: /var/log/romana
       volumes:
@@ -198,6 +236,9 @@ spec:
       - name: host-cni-net-d
         hostPath:
           path: /etc/cni/net.d
+      - name: run-path
+        hostPath:
+          path: /var/run/romana
       - name: log-path
         hostPath:
           path: /var/log/romana
