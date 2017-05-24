@@ -46,7 +46,6 @@ ipv6_tw_prefix=
 ipv6_tw_address=
 cluster_ip_cidr=
 pod_to_host=
-cni_image="quay.io/romana/cni"
 node_name=hostname
 cloud=none
 while [[ $1 == -* ]]; do
@@ -104,7 +103,7 @@ while [[ $1 == -* ]]; do
 		shift 2
 		;;
 	--cni-image)
-		cni_image="$2"
+		echo "This option is deprecated: --cni-image"
 		shift 2
 		;;
 	--node-name)
@@ -395,13 +394,7 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	replacements=(
-		-e 's|cni-image|'"$cni_image"'|g'
-		-e 's|node-name|'"$node_name"'|g'
-	)
-	sed "${replacements[@]}" /var/lib/romana/cni-installation/romana-cni-wrapper > /host/opt/cni/bin/romana
-	chmod --reference=/var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
-	cp /var/lib/romana/cni-installation/cni /host/opt/cni/bin/romana-cni
+	cp /var/lib/romana/cni-installation/cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
 	replacements=(

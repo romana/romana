@@ -377,18 +377,6 @@ build_agent() {
 	log agent end
 }
 
-build_cni() {
-	if ! build; then
-		log cni skipping
-		return
-	fi
-	log cni start building container for romana cni component
-	if ! docker_build cni targets/cni; then
-		fatal error building cni container
-	fi
-	log cni end
-}
-
 registry() {
 	if (($# != 1)); then
 		fatal "registry(): expected 1 parameter, got $#"
@@ -457,7 +445,7 @@ push() {
 				fatal error logging into "$registry"
 			fi
 		fi
-		for i in services agent cni; do
+		for i in services agent; do
 			log push ... pushing "$i"
 			if ! docker push "$(image_name "$n" "$i")"; then
 				fatal error pushing "$i" to "$registry"
@@ -474,5 +462,4 @@ compile
 copy
 build_services
 build_agent
-build_cni
 push
