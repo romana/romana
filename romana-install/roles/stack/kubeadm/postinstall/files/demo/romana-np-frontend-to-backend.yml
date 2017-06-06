@@ -6,12 +6,12 @@ metadata:
 spec:
  podSelector:
   matchLabels:
-   romanaSegment: backend
+   romana.io/segment: backend
  ingress:
  - from:
    - podSelector:
       matchLabels:
-       romanaSegment: frontend
+       romana.io/segment: frontend
    ports:
     - protocol: TCP
       port: 80

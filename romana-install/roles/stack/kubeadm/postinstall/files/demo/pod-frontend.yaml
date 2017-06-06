@@ -5,7 +5,7 @@ metadata:
   namespace: tenant-a
   labels:
     app: nginx
-    romanaSegment: frontend
+    romana.io/segment: frontend
 spec:
   containers:
   - name: nginx
