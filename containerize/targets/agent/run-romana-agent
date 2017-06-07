@@ -16,9 +16,10 @@
 # under the License.
 
 usage() {
-	echo "${0##*/}: entrypoint for romana services container."
+	echo "${0##*/}: entrypoint for romana agent container."
 	echo "Options:"
 	echo " -h or --help: print usage"
+	echo " --kubeconfig: Path to use for kubernetes config file"
 	echo " --romana-root: URL for Romana Root service, eg: http://127.0.0.1:9600"
 	echo " --interface: Interface for IP Address lookup, instead of eth0"
 	echo " --nat: Add NAT rule for traffic coming from pods"
@@ -34,6 +35,7 @@ usage() {
 }
 
 # Parse command-line options
+kube_config=
 romana_root=
 interface=
 nat=
@@ -44,7 +46,6 @@ ipv6_tw_prefix=
 ipv6_tw_address=
 cluster_ip_cidr=
 pod_to_host=
-cni_image="quay.io/romana/cni"
 node_name=hostname
 cloud=none
 while [[ $1 == -* ]]; do
@@ -56,6 +57,10 @@ while [[ $1 == -* ]]; do
 	-h|--help)
 		usage
 		exit 0
+		;;
+	--kubeconfig)
+		kube_config="$2"
+		shift 2
 		;;
 	--romana-root)
 		romana_root="$2"
@@ -98,7 +103,7 @@ while [[ $1 == -* ]]; do
 		shift 2
 		;;
 	--cni-image)
-		cni_image="$2"
+		echo "This option is deprecated: --cni-image"
 		shift 2
 		;;
 	--node-name)
@@ -179,6 +184,28 @@ if [[ "$ipv6_tw" != "disabled" ]]; then
 			usage_error "ipv6_tw feature is enabled but required parameters are missing, expecting --ipv6-tw-address and --ipv6-tw-prefix."
 		fi
 	fi
+fi
+
+# kubeconfig is required. Use value from the command-line, or
+# look for environment variables from Kubernetes and generate it.
+if [[ "$kube_config" ]]; then
+	if ! cp "$kube_config" /var/run/romana/kubeconfig; then
+		usage_error "Error copying $kube_config. Please check the value of --kubeconfig"
+	fi
+elif [[ "$KUBERNETES_SERVICE_HOST" ]] && [[ "$KUBERNETES_SERVICE_PORT_HTTPS" ]]; then
+	kube_config=/var/run/romana/kubeconfig
+	api_server="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS"
+	if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" ]]; then
+		kubectl_cert="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+	fi
+	kubectl --kubeconfig="$kube_config" config set-cluster kubernetes --embed-certs ${kubectl_cert:+--certificate-authority="$kubectl_cert"} --server="$api_server"
+	if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
+		kubectl --kubeconfig="$kube_config" config set-credentials romana-agent --token="$(< /var/run/secrets/kubernetes.io/serviceaccount/token)"
+	fi
+	kubectl --kubeconfig="$kube_config" config set-context romana-agent@kubernetes --user=romana-agent --cluster=kubernetes
+	kubectl --kubeconfig="$kube_config" config use-context romana-agent@kubernetes
+else
+	usage_error "Kubernetes config must be provided via --kubeconfig or service environment variables and service account"
 fi
 
 # Romana Root is required. Use value from command-line, or look for environment variables from Kubernetes
@@ -367,15 +394,15 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	replacements=(
-		-e 's|cni-image|'"$cni_image"'|g'
-		-e 's|node-name|'"$node_name"'|g'
-	)
-	sed "${replacements[@]}" /var/lib/romana/cni-installation/romana-cni-wrapper > /host/opt/cni/bin/romana
-	chmod --reference=/var/lib/romana/cni-installation/romana-cni-wrapper /host/opt/cni/bin/romana
+	cp /var/lib/romana/cni-installation/cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
-	replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+	replacements=(
+		-e 's|<romana-root>|'"$romana_root"'|g'
+		-e 's|<kubernetes-config>|/var/run/romana/kubeconfig|g'
+		-e 's|<romana-hostname>|'"$NODENAME"'|g'
+		-e 's|<romana-segment>|romana.io/segment|g'
+	)
 	sed "${replacements[@]}" /var/lib/romana/cni-installation/10-romana.conf > /host/etc/cni/net.d/10-romana.conf
 fi
 if [[ -d /host/etc/romana ]]; then
@@ -601,5 +628,5 @@ if [[ "$ipv6_tw" != "disabled" ]]; then
 fi
 
 # Run things via supervisord
-printf "Launching Romana services via supervisord\n"
+printf "Launching Romana agent via supervisord\n"
 exec supervisord

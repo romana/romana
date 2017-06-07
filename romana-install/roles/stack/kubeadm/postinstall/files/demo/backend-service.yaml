@@ -7,7 +7,7 @@
     },
     "spec": {
         "selector": {
-            "romanaSegment": "backend"
+            "romana.io/segment": "backend"
         },
         "ports": [
             {

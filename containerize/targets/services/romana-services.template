@@ -42,10 +42,3 @@ exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/listener.log
 stdout_logfile_backups=0
-
-[program:kube-cni-proxy]
-command=/usr/local/bin/kube-cni-proxy -port 9609 -target http://romana-master-address:9601
-exitcodes=0
-redirect_stderr=true
-stdout_logfile=/var/log/romana/kube-cni-proxy.log
-stdout_logfile_backups=0
