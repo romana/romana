@@ -141,7 +141,7 @@ spec:
         - name: mysql-data
           mountPath: /var/lib/mysql
       - name: romana-services
-        image: quay.io/romana/services:v1.0.1
+        image: quay.io/romana/services:v1.1.0
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
@@ -199,7 +199,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v1.0.1
+        image: quay.io/romana/agent:v1.1.0
         imagePullPolicy: Always
         args:
         - --cluster-ip-cidr=10.96.0.0/12
