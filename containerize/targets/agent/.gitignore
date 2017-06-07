@@ -1,3 +1,5 @@
 agent
 romana
+kubectl
 fix-ec2-srcdestcheck
+cni

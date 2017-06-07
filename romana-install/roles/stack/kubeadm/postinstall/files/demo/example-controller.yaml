@@ -8,7 +8,7 @@ spec:
     metadata:
       labels:
         app: guestbook
-        romanaSegment: default
+        romana.io/segment: default
     spec:
       containers:
       - name: nginx-default
