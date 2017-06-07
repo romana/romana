@@ -30,7 +30,6 @@ usage() {
 	echo " --ipv6-tw-address: IPv6 to use with external IPv6 interface. Use with ipv6-tw=address."
 	echo " --cluster-ip-cidr: CIDR for cluster IPs. Excluded from NAT rule."
 	echo " --pod-to-host: Permit pods to connect to the host server"
-	echo " --node-name: Name used for nodes in the cluster. (default: hostname. valid values: hostname, fqdn)"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
 
@@ -46,7 +45,6 @@ ipv6_tw_prefix=
 ipv6_tw_address=
 cluster_ip_cidr=
 pod_to_host=
-node_name=hostname
 cloud=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
@@ -107,7 +105,7 @@ while [[ $1 == -* ]]; do
 		shift 2
 		;;
 	--node-name)
-		node_name="$2"
+		echo "This option is deprecated: --node-name"
 		shift 2
 		;;
 	--cloud)
@@ -137,15 +135,6 @@ internal_error() {
 }
 
 # Validate options provided
-case "$node_name" in
-hostname|fqdn)
-	# OK
-	;;
-*)
-	usage_error "Invalid value for --node-name: $node_name"
-	;;
-esac
-
 case "$cloud" in
 none|aws)
 	# OK
