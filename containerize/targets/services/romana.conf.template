@@ -82,3 +82,8 @@ services:
       policy_notification_path_postfix: "networkpolicies"
       segment_label_name: "romana.io/segment"
       tenant_label_name: "{{ romana_tenant_label_name }}"
+  - service: romana-aws
+    api:
+      host: romana-master-address
+      port: 9660
+    config:
