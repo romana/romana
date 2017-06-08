@@ -6,6 +6,10 @@
     - add_host: name="{{ item }}" groups="kube_nodes,kube_minions"
       with_items: "{{ groups.computes }}"
 
+- hosts: kube_master
+  tasks:
+    - wait_for: port=9600 timeout=120
+
 - hosts: kube_nodes
   tasks:
     - name: Copy test scripts to all kube nodes
