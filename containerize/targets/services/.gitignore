@@ -1,9 +1,6 @@
-ipam
-listener
-policy
+romanad
+romana_listener
+romana_policy
 romana
-root
-tenant
-topology
 romana-aws
 kubectl
