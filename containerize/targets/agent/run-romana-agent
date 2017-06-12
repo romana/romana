@@ -448,7 +448,7 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
-	cp /var/lib/romana/cni-installation/cni /host/opt/cni/bin/romana
+	cp /var/lib/romana/cni-installation/romana_cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
 	replacements=(
@@ -587,7 +587,7 @@ esac
 
 # Create agent database
 printf "Creating database for agent\n"
-/usr/local/bin/agent -rootURL "$romana_root" -createSchema
+/usr/local/bin/romana_agent -rootURL "$romana_root" -createSchema
 	
 # Generate romana-agent.conf for supervisord
 replacements=(

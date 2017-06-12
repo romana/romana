@@ -1,43 +1,22 @@
 [supervisord]
 nodaemon=true
 
-[program:root]
-command=/usr/local/bin/root -c /etc/romana/romana.conf.yml
+[program:romanad]
+command=/usr/local/bin/romanad -rootURL http://romana-master-address:9600
 exitcodes=0
 redirect_stderr=true
-stdout_logfile=/var/log/romana/root.log
-stdout_logfile_backups=0
-
-[program:topology]
-command=/usr/local/bin/topology -rootURL http://romana-master-address:9600
-exitcodes=0
-redirect_stderr=true
-stdout_logfile=/var/log/romana/topology.log
-stdout_logfile_backups=0
-
-[program:tenant]
-command=/usr/local/bin/tenant -rootURL http://romana-master-address:9600
-exitcodes=0
-redirect_stderr=true
-stdout_logfile=/var/log/romana/tenant.log
-stdout_logfile_backups=0
-
-[program:ipam]
-command=/usr/local/bin/ipam -rootURL http://romana-master-address:9600
-exitcodes=0
-redirect_stderr=true
-stdout_logfile=/var/log/romana/ipam.log
+stdout_logfile=/var/log/romana/romanad.log
 stdout_logfile_backups=0
 
 [program:policy]
-command=/usr/local/bin/policy -rootURL http://romana-master-address:9600
+command=/usr/local/bin/romana_policy -rootURL http://romana-master-address:9600
 exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/policy.log
 stdout_logfile_backups=0
 
 [program:listener]
-command=/usr/local/bin/listener -rootURL http://romana-master-address:9600
+command=/usr/local/bin/romana_listener -rootURL http://romana-master-address:9600
 exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/listener.log
