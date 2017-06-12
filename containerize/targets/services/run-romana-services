@@ -402,41 +402,12 @@ done
 
 # Create any missing databases
 if (( ${#services[@]} )); then
-	# Start the root service (temporarily)
-	printf "Launching root service..."
-	/usr/local/bin/root -c /etc/romana/romana.conf.yml &>/dev/null &
-	root_svc=$!
-
-	# Wait until it's ready / listening on :9600
-	intervals=( 0.5 0.5 0.5 1 4 )
-	ready=0
-	for i in "${intervals[@]}"; do
-		sleep "$i"
-		{ read -r _; read -r status; } < <(ss -nlt '( sport = :9600 )')
-		if [[ "$status" ]]; then
-			# Found a match
-			ready=1
-			break
-		else
-			printf " ."
-		fi
-	done
-	if ! (( ready )); then
-		printf " root service not running.\b"
-		exit 1
-	fi
-	printf " OK\n"
-
 	# Create databases for ones that were missing
 	for i in "${!services[@]}"; do
 		printf "Creating database for %s\n" "${services[i]}"
 		/usr/local/bin/"${services[i]}" -rootURL "http://$host_ip:9600" -createSchema
 	done
 	
-	# Stop the root service
-	printf "Stopping root service..."
-	kill "$root_svc"
-	wait "$root_svc"
 	printf "OK\n"
 fi
 
