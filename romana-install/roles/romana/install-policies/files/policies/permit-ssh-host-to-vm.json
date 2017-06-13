@@ -1,15 +1,19 @@
 {
-  "rules": [
+  "ingress": [
     {
-      "ports": [
-        22
+      "rules": [
+        {
+          "ports": [
+            22
+          ],
+          "protocol": "TCP"
+        }
       ],
-      "protocol": "TCP"
-    }
-  ],
-  "peers": [
-    {
-      "peer": "host"
+      "peers": [
+        {
+          "peer": "host"
+        }
+      ]
     }
   ],
   "applied_to": [

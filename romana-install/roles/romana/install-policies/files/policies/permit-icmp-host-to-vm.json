@@ -1,12 +1,16 @@
 {
-  "rules": [
+  "ingress": [
     {
-      "protocol": "ICMP"
-    }
-  ],
-  "peers": [
-    {
-      "peer": "host"
+      "rules": [
+        {
+          "protocol": "ICMP"
+        }
+      ],
+      "peers": [
+        {
+          "peer": "host"
+        }
+      ]
     }
   ],
   "applied_to": [
