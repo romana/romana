@@ -21,11 +21,16 @@ elif [[ -f $HOME/.bash_profile ]]; then
        source "$HOME/.bash_profile"
 fi
 
-# Suppress output
-exec > /dev/null
+function checkPolicyExit(){
+    if test "$?" != "0"; then
+        echo Policy command failed to apply.
+        exit 1;
+    fi
+}
 
 # Install operator policies
 shopt -s nullglob
 for i in {{ romana_etc_dir }}/policy.d/*; do
 	romana policy add "$i"
+	checkPolicyExit
 done

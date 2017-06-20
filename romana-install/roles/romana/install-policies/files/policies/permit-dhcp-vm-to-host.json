@@ -1,15 +1,19 @@
 {
-  "rules": [
+  "ingress": [
     {
-      "ports": [
-        67
+      "rules": [
+        {
+          "ports": [
+            67
+          ],
+          "protocol": "UDP"
+        }
       ],
-      "protocol": "UDP"
-    }
-  ],
-  "peers": [
-    {
-      "peer": "local"
+      "peers": [
+        {
+          "peer": "local"
+        }
+      ]
     }
   ],
   "applied_to": [
