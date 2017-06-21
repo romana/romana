@@ -570,10 +570,7 @@ bird)
 	else
 		internal_error "Unable to find $host_ip.conf, $host_nw.conf or default.conf in $bird_conf_dir"
 	fi
-	if ! mkdir /var/run/romana/bird; then
-		internal_error "Unable to create config directory for bird: /var/run/romana/bird"
-	fi
-	if ! mkdir /var/run/romana/bird/conf.d; then
+	if ! mkdir -p /var/run/romana/bird/conf.d; then
 		internal_error "Unable to create config directory for bird: /var/run/romana/bird/conf.d"
 	fi
 	cp "$bird_conf_file" /var/run/romana/bird/bird.conf
