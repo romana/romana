@@ -53,6 +53,7 @@ services:
       port: 9604
     config:
       policy_enabled: policies-enabled
+      interhost_routes_enabled: interhost-routes-enabled
       lease_file : "/etc/ethers"
       firewall_provider : "save-restore"
       wait_for_iface_try: 6

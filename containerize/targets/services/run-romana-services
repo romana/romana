@@ -40,6 +40,7 @@ namespaces=16
 segments=16
 policies=
 cloud=none
+interhost_routes=
 route_publisher=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
@@ -85,6 +86,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--cloud)
 		cloud="$2"
+		shift 2
+		;;
+	--interhost_routes)
+		interhost_routes="$2"
 		shift 2
 		;;
 	--x-route-publisher)
@@ -258,6 +263,15 @@ else
 	policies=true
 fi
 
+# Check interhost-routes option is valid. Defaults to true if not specified
+if [[ "$interhost_routes" ]]; then
+	if ! valid_bool "$interhost_routes"; then
+		usage_error "Expected 'true' or 'false' for --interhost-routes option. ('$interhost_routes')"
+	fi
+else
+	interhost_routes=true
+fi
+
 if ! valid_cidr "$cidr"; then
 	usage_error "CIDR '$cidr' is not valid."
 fi
@@ -316,6 +330,7 @@ replacements+=( -e 's|tenant-bits|'"$namespace_bits"'|g' )
 replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
 replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
 replacements+=( -e 's|policies-enabled|'"$policies"'|g' )
+replacements+=( -e 's|interhost-routes-enabled|'"$interhost_routes"'|g' )
 case "$route_publisher" in
 bird)
 	replacements+=( -e '/publisher-config/r/var/lib/romana/templates/route-publisher-bird.template' )
