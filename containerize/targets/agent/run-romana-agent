@@ -31,6 +31,7 @@ usage() {
 	echo " --cluster-ip-cidr: CIDR for cluster IPs. Excluded from NAT rule."
 	echo " --pod-to-host: Permit pods to connect to the host server"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
+	echo " --persistence: remove agent persistence information. (default: false)"
 }
 
 # Parse command-line options
@@ -46,6 +47,7 @@ ipv6_tw_address=
 cluster_ip_cidr=
 pod_to_host=
 cloud=none
+persistence=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -110,6 +112,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--cloud)
 		cloud="$2"
+		shift 2
+		;;
+	--persistence)
+		persistence="$2"
 		shift 2
 		;;
 	*)
@@ -219,6 +225,20 @@ valid_bool() {
 	esac
 	return 0
 }
+
+# Check if persistence option is valid. Defaults to true if not specified
+if [[ "$persistence" ]]; then
+	if ! valid_bool "$persistence"; then
+		usage_error "Expected 'true' or 'false' for --persistence option. ('$persistence')"
+	fi
+else
+	persistence=false
+fi
+
+# Check for service persistence, clean directories if false.
+if [[ "$persistence" == "false" ]]; then
+    iptables-save | grep -v ROMANA- | iptables-restore
+fi
 
 # Check NAT option is valid
 if [[ "$nat" ]]; then
