@@ -294,8 +294,8 @@ copy() {
 	fi
 	log copy start
 	# TODO: Bump these versions when updating Romana to deliver newer releases of kubernetes.
-	kubectl_version="v1.6.4"
-	kubectl_sha256="a91c6b028bb3f737898ff003f7f3a3f2d242ea52e89ade1f6ca3ab99170119e5"
+	kubectl_version="v1.6.6"
+	kubectl_sha256="c7e1830010f58ca42e4b201ea712683d1f52f4c43b2af28cbe216257da963645"
 	kubectl_filepath="$PWD/volumes/romana_bin_dir_$tag/kubectl"
 	if ! wget --continue --output-document="$kubectl_filepath" "https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"; then
 		fatal error downloading kubectl

@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       containers:
       - name: romana-etcd
-        image: gcr.io/google_containers/etcd-amd64:3.0.14-kubeadm
+        image: gcr.io/google_containers/etcd-amd64:3.0.17
         command:
         - etcd
         - "--listen-client-urls=http://127.0.0.1:12379"
