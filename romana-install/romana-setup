@@ -417,10 +417,9 @@ if [[ "$platform" == "aws" ]]; then
 					    Name=product-code,Values=aw0evgkw8e5c1q413zgy5pjce
 					    Name=state,Values=available
 					    Name=virtualization-type,Values=hvm
-					--query 'Images[*].ImageId'
-					--output text
+					--output json
 				)
-				ami_id=$(aws "${aws_args[@]}")
+				ami_id=$(aws "${aws_args[@]}" | jq -r '.Images | sort_by(.CreationDate) | reverse | .[0].ImageId')
 				if ! [[ "$ami_id" ]]; then
 					echo "AMI not found for $distro / $release / $region"
 					exit 1
