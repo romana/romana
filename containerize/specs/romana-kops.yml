@@ -60,6 +60,7 @@ rules:
   - "*"
   resources:
   - pods
+  - nodes
   verbs:
   - get
 ---
@@ -147,6 +148,10 @@ spec:
         - --cidr=10.192.0.0/10
         - --cloud=aws
         env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:

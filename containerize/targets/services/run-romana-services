@@ -20,8 +20,6 @@ usage() {
 	echo "Options:"
 	echo " -h or --help: print usage"
 	echo " --api-server: URL for Kubernetes API Server, eg: http://127.0.0.1:8080"
-	echo " --ip-address: IP Address for the Romana services. If not provided, address of eth0 will be used"
-	echo " --interface: Interface for IP Address lookup, instead of eth0"
 	echo " --cidr: The CIDR used for Romana IPs (mandatory)"
 	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 256)"
 	echo " --namespaces: The number of namespaces that will be created. Used for internal Romana configuration (default: 16)"
@@ -32,8 +30,6 @@ usage() {
 
 # Parse command-line options
 api_server=
-ip_address=
-interface=
 cidr=
 nodes=256
 namespaces=16
@@ -57,11 +53,11 @@ while [[ $1 == -* ]]; do
 		shift 2
 		;;
 	--ip-address)
-		ip_address="$2"
+		echo "This option is deprecated: --ip-address"
 		shift 2
 		;;
 	--interface)
-		interface="$2"
+		echo "This option is deprecated: --interface"
 		shift 2
 		;;
 	--cidr)
@@ -137,24 +133,6 @@ none|bird)
 	;;
 esac
 
-# If IP address wasn't provided, try to look it up
-if ! [[ "$ip_address" ]]; then
-	found=0
-	if ! [[ "$interface" ]]; then
-		interface=eth0
-	fi
-	while read -r first second _; do
-		if [[ "$first" = "inet" ]]; then
-			ip_address="${second%/*}"
-			found=1
-		       	break
-		fi
-	done < <(ip addr show "$interface")
-	if ! ((found)); then
-		usage_error "Unable to find IP address using interface '$interface'. Use --interface to specify a different interface or --ip-address to provide the address"
-	fi
-fi
-
 # Romana CIDR must be set
 if ! [[ "$cidr" ]]; then
 	usage_error "Romana CIDR must be provided."
@@ -169,6 +147,11 @@ if ! [[ "$api_server" ]]; then
 fi
 if ! [[ "$api_server" ]]; then
 	usage_error "Unable to find apiserver via command-line option or default service. Use --apiserver to specify an address for kube-apiserver."
+fi
+
+# NODENAME environment variable must be set
+if ! [[ "$NODENAME" ]]; then
+	usage_error "Ensure NODENAME is specified in your deployment for romana-services"
 fi
 
 # Check that we can connect to the apiserver
@@ -190,6 +173,12 @@ if ! kubectl_output=$(kubectl "${kubectl_options[@]}" version 2>&1); then
 	exit 1
 fi
 printf "ok.\n"
+
+# Look up IP address of this node via NODENAME variable
+host_ip=$(kubectl get node "$NODENAME" -o json | jq -r '.status.addresses[] | select(.type=="InternalIP") | .address')
+if ! [[ "$host_ip" ]]; then
+	internal_error "Error requesting InternalIP from apiserver for $NODENAME"
+fi
 
 valid_bool() {
 	if (($# != 1)); then
@@ -321,7 +310,7 @@ if (( endpoint_bits < 3 )); then
 fi
 
 replacements=()
-replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
+replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
 replacements+=( -e 's|mysql-root-password|'"$MYSQL_ROOT_PASSWORD"'|g' )
 replacements+=( -e 's|kubernetes-apiserver|'"$api_server"'|g' )
 replacements+=( -e 's|romana-cidr|'"$cidr"'|g' )
@@ -416,7 +405,7 @@ if (( ${#services[@]} )); then
 	# Create databases for ones that were missing
 	for i in "${!services[@]}"; do
 		printf "Creating database for %s\n" "${services[i]}"
-		/usr/local/bin/"${services[i]}" -rootURL "http://$ip_address:9600" -createSchema
+		/usr/local/bin/"${services[i]}" -rootURL "http://$host_ip:9600" -createSchema
 	done
 	
 	# Stop the root service
@@ -428,12 +417,12 @@ fi
 
 # Generate .romana.yml for romana cli tool
 replacements=()
-replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
+replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
 
 # Generate romana-services.conf for supervisord
 replacements=()
-replacements+=( -e 's|romana-master-address|'"$ip_address"'|g' )
+replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
 
 # Configure kubectl
