@@ -48,6 +48,7 @@ cluster_ip_cidr=
 pod_to_host=
 cloud=none
 persistence=
+route_publisher=none
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -118,6 +119,10 @@ while [[ $1 == -* ]]; do
 		persistence="$2"
 		shift 2
 		;;
+	--x-route-publisher)
+		route_publisher="$2"
+		shift 2
+		;;
 	*)
 		echo "Unknown option '$1'"
 		usage
@@ -147,6 +152,15 @@ none|aws)
 	;;
 *)
 	usage_error "Invalid value for --cloud: $cloud"
+	;;
+esac
+
+case "$route_publisher" in
+bird)
+	# OK
+	;;
+*)
+	usage_error "Invalid value for --x-route-publisher: $route_publisher"
 	;;
 esac
 
@@ -341,6 +355,20 @@ cidr_addr() {
 	printf "%s" "$a"
 }
 
+cidr_nw_addr() {
+	if (($# != 1)); then
+		internal_error "cidr_nw_addr(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_nw_addr(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	printf "%d.%d.%d.%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))"
+}
 # Use eth0 as interface name if not provided
 if ! [[ "$interface" ]]; then
 	interface=eth0
@@ -354,6 +382,10 @@ fi
 host_ip=$(cidr_addr "$host_address")
 if ! [[ "$host_ip" ]]; then
 	internal_error "Error extracting host IP from $host_address"
+fi
+host_nw=$(cidr_nw_addr "$host_address")
+if ! [[ "$host_nw" ]]; then
+	internal_error "Error extracting host network from $host_address"
 fi
 
 # Check Cluster IP CIDR is valid
@@ -534,7 +566,7 @@ false)
 	if (( $(jq -r length <<< "$result" ) )); then
 		romana policy remove permit-all-host-to-pod
 	fi
-		;;
+	;;
 *)
 	internal_error "pod_to_host variable was not true or false: '$pod_to_host'"
 	;;
@@ -551,6 +583,37 @@ replacements=(
 	-e 's|<agent-environment>|'"$agent_environment"'|g'
 )
 sed "${replacements[@]}" /var/lib/romana/templates/romana-agent.template > /etc/supervisor/conf.d/romana-agent.conf
+
+# Configure route publisher
+case "$route_publisher" in
+bird)
+	echo "Configuring route publisher (bird)"
+	bird_conf_dir=/var/lib/romana/route-publisher/bird
+	if ! [[ -d "$bird_conf_dir" ]]; then
+		internal_error "Path for bird configuration templates not found: $bird_conf_dir"
+	fi
+	bird_conf_file="$bird_conf_dir/bird.conf"
+	if ! [[ -f "$bird_conf_file" ]]; then
+		internal_error "Path for bird configuration file not found: $bird_conf_file"
+	fi
+	bird_agent_template=
+	if [[ -f "$bird_conf_dir/$host_ip.conf" ]]; then
+		bird_agent_template="$bird_conf_dir/$host_ip.conf"
+	elif [[ -f "$bird_conf_dir/$host_nw.conf" ]]; then
+		bird_agent_template="$bird_conf_dir/$host_nw.conf"
+	elif [[ -f "$bird_conf_dir/default.conf" ]]; then
+		bird_agent_template="$bird_conf_dir/default.conf"
+	else
+		internal_error "Unable to find $host_ip.conf, $host_nw.conf or default.conf in $bird_conf_dir"
+	fi
+	if ! mkdir -p /var/run/romana/bird/conf.d; then
+		internal_error "Unable to create config directory for bird: /var/run/romana/bird/conf.d"
+	fi
+	cp "$bird_conf_file" /var/run/romana/bird/bird.conf
+	cp "$bird_agent_template" /var/run/romana/bird/agent-bgp.conf.t
+	cp /var/lib/romana/templates/route-publisher-bird.template /etc/supervisor/conf.d/route-publisher-bird.conf
+	;;
+esac
 
 # Run any required cloud integration agents
 case "$cloud" in

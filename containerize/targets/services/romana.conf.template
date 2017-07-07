@@ -53,12 +53,15 @@ services:
       port: 9604
     config:
       policy_enabled: policies-enabled
+      interhost_routes_enabled: interhost-routes-enabled
       lease_file : "/etc/ethers"
       firewall_provider : "save-restore"
       wait_for_iface_try: 6
       store:
         type: sqlite3
         database: /var/lib/misc/romana-agent.db
+      route_publisher: route-publisher
+      route_publisher_config: publisher-config
   - service: policy
     api:
       host: romana-master-address
