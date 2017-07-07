@@ -156,7 +156,7 @@ none|aws)
 esac
 
 case "$route_publisher" in
-bird)
+bird|none)
 	# OK
 	;;
 *)
