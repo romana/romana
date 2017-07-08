@@ -358,6 +358,21 @@ cidr_addr() {
 	printf "%s" "$a"
 }
 
+cidr_nw_addr() {
+	if (($# != 1)); then
+		internal_error "cidr_nw_addr(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_nw_addr(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	printf "%d.%d.%d.%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))"
+}
+
 # Look up host IP
 host_ip=$(kubectl get node "$NODENAME" -o json | jq -r '.status.addresses[] | select(.type=="InternalIP") | .address')
 if ! [[ "$host_ip" ]]; then
