@@ -106,6 +106,9 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
       hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: romana-services
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -193,6 +196,9 @@ spec:
         app: romana-agent
     spec:
       hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: romana-agent
       tolerations:
       - key: node-role.kubernetes.io/master
