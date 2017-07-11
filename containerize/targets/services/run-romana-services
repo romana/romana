@@ -331,13 +331,17 @@ replacements+=( -e 's|route-publisher|'"$route_publisher"'|g' )
 replacements+=( -e 's|publisher-config||g' )
 sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
 
-echo "==="
-cat /etc/romana/romana.conf.yml
-echo "==="
-
 # Check if etcd is running. Execute a version query
 printf "Checking if etcd is running..."
-if ! etcd_response=$(curl -s http://127.0.0.1:12379/version ); then
+intervals=( 0 1 1 1 3 3 3 )
+etcd_ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if etcd_response=$(curl -s http://127.0.0.1:12379/version ); then
+		etcd_ready=1
+	fi
+done
+if ! (( etcd_ready )); then
 	printf "error connecting to etcd\n"
 	exit 1
 fi
@@ -350,7 +354,15 @@ printf "ok. etcd version is %s\n" "$etcd_version"
 
 # Check if mysqladmin can connect to the database
 printf "Checking if database is running..."
-if ! mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
+intervals=( 0 1 1 1 3 3 3 )
+mysql_ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
+		mysql_ready=1
+	fi
+done
+if ! (( mysql_ready )); then
 	printf "mysqladmin status failed\n"
 	exit 1
 fi
@@ -370,10 +382,23 @@ for i in "${!databases[@]}"; do
 	fi
 done
 
-# Add topology service
-# TODO: Improve this in the future when we know the paths that should exist
-#       if installation has already been performed
-services+=( topology )
+# Check if etcd-based services have been configured.
+# Items in this list are service name and paths that are created by the service's createSchema option
+etcd_services=( topology:/romana/hosts_ids,/romana/tenants_ids,/romana/segments_ids )
+for service in "${etcd_services[@]}"; do
+	service_name=${service%%:*}
+	IFS=',' read -ra service_paths <<< "${service#*:}"
+	failed=0
+	for p in "${service_paths[@]}"; do
+		if [[ "$(curl -s "http://127.0.0.1:12379/v2/keys$p" | jq -r '.errorCode // empty')" ]]; then
+			failed=1
+			break
+		fi
+	done
+	if (( failed )); then
+		services+=( "$service_name" )
+	fi
+done
 
 # Create any missing databases
 if (( ${#services[@]} )); then
