@@ -2,7 +2,7 @@
 nodaemon=true
 
 [program:agent]
-command=/usr/local/bin/agent -rootURL <romana-root>
+command=/usr/local/bin/romana_agent -etcd-endpoints http://romana-master-address:12379
 exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/agent.log
