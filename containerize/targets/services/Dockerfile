@@ -2,7 +2,7 @@
 FROM ubuntu:16.04
 MAINTAINER Caleb Gilmour <cgilmour@romana.io>
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y supervisor mysql-client iproute2 jq curl ca-certificates
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y supervisor iproute2 jq curl ca-certificates
 COPY romana romanad romana_listener romana-aws kubectl /usr/local/bin/
 RUN mkdir -p /var/lib/romana/templates
 COPY dot-romana.template romana.conf.template romana-services.template romana-aws.template route-publisher-bird.template /var/lib/romana/templates/

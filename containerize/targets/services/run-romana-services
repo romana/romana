@@ -311,7 +311,6 @@ fi
 
 replacements=()
 replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
-replacements+=( -e 's|mysql-root-password|'"$MYSQL_ROOT_PASSWORD"'|g' )
 replacements+=( -e 's|kubernetes-apiserver|'"$api_server"'|g' )
 replacements+=( -e 's|romana-cidr|'"$cidr"'|g' )
 replacements+=( -e 's|host-bits|'"$node_bits"'|g' )
@@ -351,22 +350,6 @@ if ! [[ "$etcd_version" ]]; then
 	exit 1
 fi
 printf "ok. etcd version is %s\n" "$etcd_version"
-
-# Check if mysqladmin can connect to the database
-printf "Checking if database is running..."
-intervals=( 0 1 1 1 3 3 3 )
-mysql_ready=0
-for i in "${intervals[@]}"; do
-	sleep "$i"
-	if mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
-		mysql_ready=1
-	fi
-done
-if ! (( mysql_ready )); then
-	printf "mysqladmin status failed\n"
-	exit 1
-fi
-printf "OK.\n"
 
 # Check if etcd-based services have been configured.
 # Items in this list are service name and paths that are created by the service's createSchema option
