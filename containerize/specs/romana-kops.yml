@@ -83,15 +83,6 @@ subjects:
   name: romana-agent
   namespace: kube-system
 ---
-apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: romana-secrets
-  namespace: kube-system
-data:
-  datastore-password: cm9tYW5h
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -130,17 +121,6 @@ spec:
             host: 127.0.0.1
           initialDelaySeconds: 15
           timeoutSeconds: 15
-      - name: romana-datastore
-        image: mysql:5
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: romana-secrets
-              key: datastore-password
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
       - name: romana-services
         image: quay.io/romana/services:v1.1.0
         imagePullPolicy: Always
@@ -152,11 +132,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: romana-secrets
-              key: datastore-password
         volumeMounts:
         - name: log-path
           mountPath: /var/log/romana
@@ -164,9 +139,6 @@ spec:
       - name: etcd-data
         hostPath:
           path: "/var/lib/romana/etcd-db"
-      - name: mysql-data
-        hostPath:
-          path: "/var/lib/romana/mysql-db"
       - name: log-path
         hostPath:
           path: /var/log/romana
