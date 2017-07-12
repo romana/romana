@@ -368,20 +368,6 @@ if ! (( mysql_ready )); then
 fi
 printf "OK.\n"
 
-# Check if databases already exist
-services=( romana_policy )
-databases=( policy )
-printf "Checking if databases already exist:\n"
-for i in "${!databases[@]}"; do
-	if mysql ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 "${databases[i]}" &>/dev/null; then
-		# If we connected successfully, delete from list
-		printf "%s found.\n" "${databases[i]}"
-		unset services[i] databases[i]
-	else
-		printf "%s not found.\n" "${databases[i]}"
-	fi
-done
-
 # Check if etcd-based services have been configured.
 # Items in this list are service name and paths that are created by the service's createSchema option
 etcd_services=( topology:/romana/hosts_ids,/romana/tenants_ids,/romana/segments_ids )

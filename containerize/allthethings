@@ -308,7 +308,7 @@ copy() {
 	chmod +x "$kubectl_filepath"
 
 	log copy ... copying required files for services target
-	for f in romana romanad romana_policy romana_listener kubectl romana-aws; do
+	for f in romana romanad romana_listener kubectl romana-aws; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
 			fatal error copying "$f"
 		fi
