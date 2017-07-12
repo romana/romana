@@ -311,24 +311,6 @@ if ! [[ "$etcd_version" ]]; then
 fi
 printf "ok. etcd version is %s\n" "$etcd_version"
 
-# Check if etcd-based services have been configured.
-# Items in this list are service name and paths that are created by the service's createSchema option
-etcd_services=( topology:/romana/hosts_ids,/romana/tenants_ids,/romana/segments_ids )
-for service in "${etcd_services[@]}"; do
-	service_name=${service%%:*}
-	IFS=',' read -ra service_paths <<< "${service#*:}"
-	failed=0
-	for p in "${service_paths[@]}"; do
-		if [[ "$(curl -s "http://127.0.0.1:12379/v2/keys$p" | jq -r '.errorCode // empty')" ]]; then
-			failed=1
-			break
-		fi
-	done
-	if (( failed )); then
-		services+=( "$service_name" )
-	fi
-done
-
 # Generate .romana.yml for romana cli tool
 replacements=()
 replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
