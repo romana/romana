@@ -63,8 +63,6 @@ Example: `--cidr=10.192.0.0/12`
 #### Optional settings
 
 - `--api-server`: URL for HTTP connections to the Kubernetes API Server. Default: http://127.0.0.1:8080
-- `--interface`: The interface to use for detecting the host's address. Default: eth0
-- `--ip-address`: The IP address for Romana services. Default: address from `--interface.
 - `--nodes`: The number of nodes in the cluster. Default: 256
 - `--namespaces`: The number of namespaces in the cluster. Default: 16
 - `--segments`: The number of segments permitted per namespace: Default: 16
@@ -99,9 +97,8 @@ Example:
 #### Optional settings
 
 - `--romana-root`: The full HTTP address of the root service. Default: none, address discovered from service environment variables
-- `--interface`: The interface to use for detecting the host's address. Default: eth0
 - `--nat`: Permit pods to reach other networks with NAT (Network Address Translation). Default: true
-- `--nat-interface`: The interface traffic will route through when NAT is required. Defaults to `--interface` if specified, or eth0 if unspecified
+- `--nat-interface`: The interface traffic will route through when NAT is required."
 - `--pod-to-host`: Permit communication between pods and the host they are scheduled on. Required for some services and healthchecks. Default: true
 - `--node-name`: The name used for nodes in the cluster. Default: hostname. Permitted values: hostname, fqdn
 - `--cloud`: Enable cloud integration. No default. Permitted values: none, aws
