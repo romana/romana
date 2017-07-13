@@ -322,7 +322,7 @@ if [[ "$platform" != "static" ]]; then
 			;;
 		centos)
 			case "$stack_type" in
-				devstack|openstack|nostack)
+				devstack|openstack|kubeadm|nostack)
 					release=7
 				;;
 			esac
