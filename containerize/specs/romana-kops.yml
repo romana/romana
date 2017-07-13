@@ -125,7 +125,7 @@ spec:
           initialDelaySeconds: 15
           timeoutSeconds: 15
       - name: romana-services
-        image: quay.io/romana/services:v1.5.0-rc.1
+        image: quay.io/romana/services:v1.5.0
         imagePullPolicy: Always
         args:
         - --cidr=10.192.0.0/10
@@ -183,7 +183,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v1.5.0-rc.1
+        image: quay.io/romana/agent:v1.5.0
         imagePullPolicy: Always
         args:
         - --cluster-ip-cidr=100.64.0.0/12
