@@ -1,0 +1,7 @@
+---
+- name: Install kubectl
+  become: true
+  become_user: root
+  yum: pkg="{{ item }}"
+  with_items:
+    - kubectl
