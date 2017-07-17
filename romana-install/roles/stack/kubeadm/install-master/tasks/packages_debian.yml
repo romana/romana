@@ -1,0 +1,7 @@
+---
+- name: Install kubectl
+  become: true
+  become_user: root
+  apt: pkg="{{ item }}"
+  with_items:
+    - kubectl
