@@ -21,9 +21,9 @@ usage() {
 	echo " -h or --help: print usage"
 	echo " --api-server: URL for Kubernetes API Server, eg: http://127.0.0.1:8080"
 	echo " --cidr: The CIDR used for Romana IPs (mandatory)"
-	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 256)"
+	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 32)"
 	echo " --namespaces: The number of namespaces that will be created. Used for internal Romana configuration (default: 16)"
-	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 16)"
+	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 8)"
 	echo " --policies: Enable network policy features (default: true)"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
@@ -31,9 +31,9 @@ usage() {
 # Parse command-line options
 api_server=
 cidr=
-nodes=256
+nodes=32
 namespaces=16
-segments=16
+segments=8
 policies=
 cloud=none
 interhost_routes=
