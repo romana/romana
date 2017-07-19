@@ -1,5 +1,6 @@
 [supervisord]
 nodaemon=true
+environment=
 
 [program:root]
 command=/usr/local/bin/root -c /etc/romana/romana.conf.yml
