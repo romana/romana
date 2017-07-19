@@ -114,6 +114,22 @@ spec:
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
+      initContainers:
+      - name: cleanup
+        image: alpine
+        command:
+        - sh
+        - "-c"
+        # Uncomment the following line to remove romana persistence data.
+        # It should be done when the romana bitmap has changed, or any other
+        # config is changed which affects policies/pods/networks, etc.
+        #- "rm -rf /var/lib/romana/*"
+        - "ls -ltr /var/lib/romana/"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: romana-data
+          mountPath: "/var/lib/romana"
       containers:
       - name: romana-etcd
         image: gcr.io/google_containers/etcd-amd64:3.0.17
@@ -163,6 +179,9 @@ spec:
         - name: log-path
           mountPath: /var/log/romana
       volumes:
+      - name: romana-data
+        hostPath:
+          path: "/var/lib/romana"
       - name: etcd-data
         hostPath:
           path: "/var/lib/romana/etcd-db"
