@@ -1,5 +1,6 @@
 [supervisord]
 nodaemon=true
+environment=
 
 [program:agent]
 command=/usr/local/bin/agent -rootURL <romana-root>

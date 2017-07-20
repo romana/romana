@@ -31,6 +31,7 @@ usage() {
 	echo " --pod-to-host: Permit pods to connect to the host server"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 	echo " --persistence: remove agent persistence information. (default: false)"
+	echo " --debug: Turn on debug logging for romana agent/cni. (default: false. valid values: true, false)"
 }
 
 # Parse command-line options
@@ -45,6 +46,7 @@ ipv6_tw_address=
 cluster_ip_cidr=
 pod_to_host=
 cloud=none
+debug=false
 persistence=
 route_publisher=none
 while [[ $1 == -* ]]; do
@@ -111,6 +113,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--cloud)
 		cloud="$2"
+		shift 2
+		;;
+	--debug)
+		debug="$2"
 		shift 2
 		;;
 	--persistence)
@@ -242,6 +248,15 @@ valid_bool() {
 	esac
 	return 0
 }
+
+# Check if debug is valid
+if [[ "$debug" ]]; then
+	if ! valid_bool "$debug"; then
+		usage_error "Expected 'true' or 'false' for --debug option. ('$debug')"
+	fi
+else
+	debug=false
+fi
 
 # Check if persistence option is valid. Defaults to true if not specified
 if [[ "$persistence" ]]; then
@@ -443,6 +458,15 @@ fi
 replacements=( -e 's|romana-root|'"$romana_root"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
 
+# cni/agent debug log support.
+if [[ -d /host/etc/rlog ]]; then
+    if [[ "$debug" == "true" ]]; then
+    	cp /var/lib/rlog/romana-rlog.conf /host/etc/rlog/romana.conf
+    else
+    	rm /host/etc/rlog/romana.conf 2> dev/null
+    fi
+fi
+
 # Install CNI
 if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
@@ -541,7 +565,7 @@ true)
 	agent_environment='ROMANA_FEATURE_SNAT="enable",'
 	agent_environment+='ROMANA_FEATURE_SNAT_NATIF="'"$nat_interface"'",'
 	agent_environment+='ROMANA_FEATURE_SNAT_NATIP="'"$nat_ip"'",'
-	agent_environment+='ROMANA_FEATURE_SNAT_EXCLUDE="'"$snat_exclusions"'"'
+	agent_environment+='ROMANA_FEATURE_SNAT_EXCLUDE="'"$snat_exclusions"'",'
 	;;
 false)
 	agent_environment=""
@@ -550,6 +574,12 @@ false)
 	internal_error "nat variable was not true or false: '$nat'"
 	;;
 esac
+
+if [[ "$debug" == "true" ]]; then
+	agent_environment+='RLOG_LOG_LEVEL="DEBUG",'
+	agent_environment+='RLOG_TRACE_LEVEL="9",'
+	agent_environment+='RLOG_CALLER_INFO="y",'
+fi
 
 case "$pod_to_host" in
 true)
