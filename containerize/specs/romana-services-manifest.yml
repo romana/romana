@@ -8,21 +8,10 @@ metadata:
 spec:
   hostNetwork: true
   containers:
-  - name: romana-datastore
-    image: mysql:5
-    env:
-    - name: MYSQL_ROOT_PASSWORD
-      value: romana 
-    volumeMounts:
-    - name: db-path
-      mountPath: /var/lib/mysql
   - name: romana-services
     image: quay.io/romana/services:v1.1.0
     args:
     # - --cidr=10.0.0.0/8
-    env:
-    - name: MYSQL_ROOT_PASSWORD
-      value: romana 
     volumeMounts:
     - name: log-path
       mountPath: /var/log/romana

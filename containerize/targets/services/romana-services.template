@@ -2,21 +2,14 @@
 nodaemon=true
 
 [program:romanad]
-command=/usr/local/bin/romanad -rootURL http://romana-master-address:9600
+command=/usr/local/bin/romanad -etcd-endpoints http://romana-master-address:12379
 exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/romanad.log
 stdout_logfile_backups=0
 
-[program:policy]
-command=/usr/local/bin/romana_policy -rootURL http://romana-master-address:9600
-exitcodes=0
-redirect_stderr=true
-stdout_logfile=/var/log/romana/policy.log
-stdout_logfile_backups=0
-
 [program:listener]
-command=/usr/local/bin/romana_listener -rootURL http://romana-master-address:9600
+command=/usr/local/bin/romana_listener -etcd-endpoints http://romana-master-address:12379
 exitcodes=0
 redirect_stderr=true
 stdout_logfile=/var/log/romana/listener.log

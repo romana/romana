@@ -21,9 +21,6 @@ usage() {
 	echo " -h or --help: print usage"
 	echo " --api-server: URL for Kubernetes API Server, eg: http://127.0.0.1:8080"
 	echo " --cidr: The CIDR used for Romana IPs (mandatory)"
-	echo " --nodes: Number of nodes in the cluster. Used for internal Romana configuration (default: 256)"
-	echo " --namespaces: The number of namespaces that will be created. Used for internal Romana configuration (default: 16)"
-	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 16)"
 	echo " --policies: Enable network policy features (default: true)"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
 }
@@ -31,9 +28,6 @@ usage() {
 # Parse command-line options
 api_server=
 cidr=
-nodes=256
-namespaces=16
-segments=16
 policies=
 cloud=none
 interhost_routes=
@@ -52,28 +46,8 @@ while [[ $1 == -* ]]; do
 		api_server="$2"
 		shift 2
 		;;
-	--ip-address)
-		echo "This option is deprecated: --ip-address"
-		shift 2
-		;;
-	--interface)
-		echo "This option is deprecated: --interface"
-		shift 2
-		;;
 	--cidr)
 		cidr="$2"
-		shift 2
-		;;
-	--namespaces)
-		namespaces="$2"
-		shift 2
-		;;
-	--nodes)
-		nodes="$2"
-		shift 2
-		;;
-	--segments)
-		segments="$2"
 		shift 2
 		;;
 	--policies)
@@ -265,18 +239,6 @@ if ! valid_cidr "$cidr"; then
 	usage_error "CIDR '$cidr' is not valid."
 fi
 
-cidr_bits() {
-	if (($# != 1)); then
-		internal_error "cidr_bits(): expected 1 parameter, got $#"
-	fi
-	if ! valid_cidr "$1"; then
-		internal_error "cidr_bits(): '$1' is not a valid CIDR."
-	fi
-	local p
-	IFS='./' read -r _ _ _ _ p _ <<< "$1"
-	printf "%d" "$p"
-}
-
 bits() {
 	if (($# != 1)); then
 		internal_error "bits(): expected 1 parameter, got $#"
@@ -292,32 +254,10 @@ bits() {
 	printf "%d\n" "$i"
 }
 
-# Generate the root config file using values from command-line options
-# and calculation of bits required
-cidr_bits=$(cidr_bits "$cidr")
-node_bits=$(bits "$nodes")
-namespace_bits=$(bits "$namespaces")
-segment_bits=$(bits "$segments")
-endpoint_bits=$((32 - cidr_bits - node_bits - namespace_bits - segment_bits))
-if (( endpoint_bits < 3 )); then
-	# TODO: make this value smaller when IP addresses are allocated from .0 instead of .3
-	echo "Insufficient space for allocating addresses. Please assess your configuration."
-	echo "CIDR $cidr uses $cidr_bits bits."
-	echo "$nodes nodes uses $node_bits bits."
-	echo "$namespaces namespaces uses $namespace_bits bits."
-	echo "$segments segments uses $segment_bits bits."
-	usage_error "$endpoint_bits bits remaining for endpoints. A minimum of 3 bits is required."
-fi
-
 replacements=()
 replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
-replacements+=( -e 's|mysql-root-password|'"$MYSQL_ROOT_PASSWORD"'|g' )
 replacements+=( -e 's|kubernetes-apiserver|'"$api_server"'|g' )
 replacements+=( -e 's|romana-cidr|'"$cidr"'|g' )
-replacements+=( -e 's|host-bits|'"$node_bits"'|g' )
-replacements+=( -e 's|tenant-bits|'"$namespace_bits"'|g' )
-replacements+=( -e 's|segment-bits|'"$segment_bits"'|g' )
-replacements+=( -e 's|endpoint-bits|'"$endpoint_bits"'|g' )
 replacements+=( -e 's|policies-enabled|'"$policies"'|g' )
 replacements+=( -e 's|interhost-routes-enabled|'"$interhost_routes"'|g' )
 case "$route_publisher" in
@@ -329,7 +269,6 @@ bird)
 esac
 replacements+=( -e 's|route-publisher|'"$route_publisher"'|g' )
 replacements+=( -e 's|publisher-config||g' )
-sed "${replacements[@]}" /var/lib/romana/templates/romana.conf.template > /etc/romana/romana.conf.yml
 
 # Check if etcd is running. Execute a version query
 printf "Checking if etcd is running..."
@@ -351,65 +290,6 @@ if ! [[ "$etcd_version" ]]; then
 	exit 1
 fi
 printf "ok. etcd version is %s\n" "$etcd_version"
-
-# Check if mysqladmin can connect to the database
-printf "Checking if database is running..."
-intervals=( 0 1 1 1 3 3 3 )
-mysql_ready=0
-for i in "${intervals[@]}"; do
-	sleep "$i"
-	if mysqladmin ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 status &>/dev/null; then
-		mysql_ready=1
-	fi
-done
-if ! (( mysql_ready )); then
-	printf "mysqladmin status failed\n"
-	exit 1
-fi
-printf "OK.\n"
-
-# Check if databases already exist
-services=( romana_policy )
-databases=( policy )
-printf "Checking if databases already exist:\n"
-for i in "${!databases[@]}"; do
-	if mysql ${MYSQL_ROOT_PASSWORD:+--password="$MYSQL_ROOT_PASSWORD"} --host=127.0.0.1 "${databases[i]}" &>/dev/null; then
-		# If we connected successfully, delete from list
-		printf "%s found.\n" "${databases[i]}"
-		unset services[i] databases[i]
-	else
-		printf "%s not found.\n" "${databases[i]}"
-	fi
-done
-
-# Check if etcd-based services have been configured.
-# Items in this list are service name and paths that are created by the service's createSchema option
-etcd_services=( topology:/romana/hosts_ids,/romana/tenants_ids,/romana/segments_ids )
-for service in "${etcd_services[@]}"; do
-	service_name=${service%%:*}
-	IFS=',' read -ra service_paths <<< "${service#*:}"
-	failed=0
-	for p in "${service_paths[@]}"; do
-		if [[ "$(curl -s "http://127.0.0.1:12379/v2/keys$p" | jq -r '.errorCode // empty')" ]]; then
-			failed=1
-			break
-		fi
-	done
-	if (( failed )); then
-		services+=( "$service_name" )
-	fi
-done
-
-# Create any missing databases
-if (( ${#services[@]} )); then
-	# Create databases for ones that were missing
-	for i in "${!services[@]}"; do
-		printf "Creating database for %s\n" "${services[i]}"
-		/usr/local/bin/"${services[i]}" -rootURL "http://$host_ip:9600" -createSchema
-	done
-	
-	printf "OK\n"
-fi
 
 # Generate .romana.yml for romana cli tool
 replacements=()

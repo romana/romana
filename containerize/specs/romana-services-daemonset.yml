@@ -37,22 +37,11 @@ spec:
             host: 127.0.0.1
           initialDelaySeconds: 15
           timeoutSeconds: 15
-      - name: romana-datastore
-        image: mysql:5
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: romana
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
       - name: romana-services
         image: quay.io/romana/services:v1.1.0
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: romana
         volumeMounts:
         - name: log-path
           mountPath: /var/log/romana
@@ -60,9 +49,6 @@ spec:
       - name: etcd-data
         hostPath:
           path: "/var/lib/romana/etcd-db"
-      - name: mysql-data
-        hostPath:
-          path: "/var/lib/romana/mysql-db"
       - name: log-path
         hostPath:
           path: /var/log/romana

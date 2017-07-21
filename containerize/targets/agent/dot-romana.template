@@ -1,4 +1,4 @@
-RootURL: "romana-root"
+RootURL: http://romana-master-address
 RootPort: 9600
 LogFile: "/var/tmp/romana.log"
 Format: "table" # options are table/json 

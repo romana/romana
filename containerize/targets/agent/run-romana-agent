@@ -440,7 +440,7 @@ else
 fi
 
 # Generate .romana.yml for romana cli tool
-replacements=( -e 's|romana-root|'"$romana_root"'|g' )
+replacements=( -e 's|romana-master-address|'"$ROMANA_ROOT_SERVICE_HOST"'|g' )
 sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.romana.yml
 
 # Install CNI
@@ -585,13 +585,9 @@ false)
 	;;
 esac
 
-# Create agent database
-printf "Creating database for agent\n"
-/usr/local/bin/romana_agent -rootURL "$romana_root" -createSchema
-	
 # Generate romana-agent.conf for supervisord
 replacements=(
-	-e 's|<romana-root>|'"$romana_root"'|g'
+	-e 's|romana-master-address|'"$ROMANA_ROOT_SERVICE_HOST"'|g'
 	-e 's|<interface>|'"$interface"'|g'
 	-e 's|<agent-environment>|'"$agent_environment"'|g'
 )
