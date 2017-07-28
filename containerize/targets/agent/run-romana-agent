@@ -324,10 +324,10 @@ fi
 if [[ -d /host/etc/romana ]]; then
 	# Generate cli.yml for romana cli tool
 	replacements=(
-		-e 's|romana-daemon-address|'"$ROMANA_SERVICE_HOST"'|g'
-		-e 's|romana-daemon-port|'"$ROMANA_SERVICE_PORT_DAEMON"'|g'
+		-e 's|<romana-daemon-address>|'"$ROMANA_SERVICE_HOST"'|g'
+		-e 's|<romana-daemon-port>|'"$ROMANA_SERVICE_PORT_DAEMON"'|g'
 	)
-	sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /etc/romana/cli.yml
+	sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /host/etc/romana/cli.yml
 fi
 
 
