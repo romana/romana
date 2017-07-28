@@ -1,5 +1,5 @@
-romana_agent
+simple
 romana
 kubectl
-fix-ec2-srcdestcheck
+etcdctl
 romana_cni
