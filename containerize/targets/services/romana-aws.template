@@ -1,9 +1,0 @@
-[supervisord]
-nodaemon=true
-
-[program:romana-aws]
-command=/usr/local/bin/romana-aws
-exitcodes=0
-redirect_stderr=true
-stdout_logfile=/var/log/romana/romana-aws.log
-stdout_logfile_backups=0
