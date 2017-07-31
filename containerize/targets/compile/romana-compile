@@ -65,7 +65,7 @@ if [[ "$core_branch" ]] && ! git -C /go/src/github.com/romana/core checkout "$co
 	echo "failed to checkout '$core_branch'"
 	exit 1
 fi
-if [[ "$(git -C /go/src/github.com/romana/core symbolic-ref --short -q HEAD)" ]] && ! git -C /go/src/github.com/romana/core pull; then
+if [[ "$(git -C /go/src/github.com/romana/core symbolic-ref --short -q HEAD)" ]] && git rev-parse @{u} &>/dev/null && ! git -C /go/src/github.com/romana/core pull; then
 	echo "failed to pull"
 	exit 1
 fi
