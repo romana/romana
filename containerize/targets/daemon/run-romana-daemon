@@ -81,8 +81,8 @@ romana_daemon="http://$ROMANA_SERVICE_HOST:$ROMANA_SERVICE_PORT_DAEMON"
 # Romana etcd is required. Use value from command-line, or look for environment variables from Kubernetes
 if [[ "$etcd_endpoints" ]]; then
 	: # ok
-elif [[ "$ROMANA_SERVICE_HOST" ]] && [[ "$ROMANA_SERVICE_PORT_ETCD" ]]; then
-	etcd_endpoints="$ROMANA_SERVICE_HOST:$ROMANA_SERVICE_PORT_ETCD"
+elif [[ "$ROMANA_ETCD_SERVICE_HOST" ]] && [[ "$ROMANA_ETCD_SERVICE_PORT_ETCD" ]]; then
+	etcd_endpoints="$ROMANA_ETCD_SERVICE_HOST:$ROMANA_ETCD_SERVICE_PORT_ETCD"
 else
 	usage_error "Romana etcd endpoints must be provided."
 fi
