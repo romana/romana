@@ -295,7 +295,7 @@ copy() {
 	log copy start
 	# Download / cache kubectl
 	kubectl_version="v1.7.2"
-	kubectl_sha256="e0806c9fd584771e74df2bbffb3d07f34b429606056ca47de396ef063dc8ef71"
+	kubectl_sha256="dd0235f78b7019ee50400e705c7c2920ecb072252b6699683e84520cb5410073"
 	kubectl_url="https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"
 	kubectl_filepath="$PWD/volumes/romana_bin_dir_$tag/kubectl"
 	if ! wget --continue --output-document="$kubectl_filepath" "$kubectl_url"; then
