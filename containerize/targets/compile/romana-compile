@@ -77,9 +77,11 @@ while IFS= read -r p; do pkgs+=("$p"); done < <(go list -f '{{ if eq .Name "main
 
 if (( ${#pkgs[@]} == 0 )); then
 	echo "failed to list main packages"
+	exit 1
 fi
 if ! go install "${pkgs[@]}"; then
 	echo "failed to compile core packages"
+	exit 1
 fi
 additional_packages=(
 	fix-ec2-srcdestcheck
@@ -88,4 +90,5 @@ additional_packages=(
 go get -d "${additional_packages[@]}"
 if ! go install "${additional_packages[@]}"; then
 	echo "failed to compile additional packages"
+	exit 1
 fi
