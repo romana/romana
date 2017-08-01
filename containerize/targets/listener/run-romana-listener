@@ -155,6 +155,9 @@ if ! (( networks_ready )); then
 	intervals=( 2 2 2 2 2 10 10 )
 	for i in "${intervals[@]}"; do
 		sleep "$i"
+		if ! daemon_response=$(curl -s "${romana_daemon}/networks"); then
+			continue
+		fi
 		if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
 			networks_ready=1
 			break
