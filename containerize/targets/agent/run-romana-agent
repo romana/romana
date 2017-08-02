@@ -294,6 +294,7 @@ if [[ -d /host/opt/cni/bin ]]; then
 	cp /var/lib/romana/cni-installation/romana_cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
+	# shellcheck disable=SC2016
 	etcd_endpoints_json=$(jq -c --arg etcd_endpoints "$etcd_endpoints" '$etcd_endpoints | split(",")' <<< "{}")
 	replacements=(
 		-e 's|<kubernetes-config>|/var/run/romana/kubeconfig|g'
@@ -373,7 +374,7 @@ if ! (( networks_ready )); then
 	printf "failed\n"
 	exit 1
 elif (( num_networks == 1 )); then
-	printf "ok. One network configured.\n"
+	printf "ok. one network configured.\n"
 else
 	printf "ok. %d networks configured.\n" "$num_networks"
 fi
@@ -395,10 +396,58 @@ fi
 
 case "$nat" in
 true)
-	: # add steps to enable nat when new agent supports it
+	# Create chain
+	if ! iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+		if ! iptables -t nat -N ROMANA-MASQ; then
+			internal_error "Error creating chain for NAT rule"
+		fi
+	fi
+	# Flush rules from chain
+	if ! iptables -t nat -F ROMANA-MASQ; then
+		internal_error "Error flushing chain for NAT rule"
+	fi
+	# Generate a list of CIDRs to configure
+	romana_cidrs=()
+	while read -r romana_cidr; do
+		romana_cidrs+=( "$romana_cidr" )
+	done < <(jq -r '.[] | .cidr' <<< "$daemon_response")
+	# Add items to chain
+	for romana_cidr in "${romana_cidrs[@]}"; do
+		if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
+			internal_error "Error adding exclusion for $romana_cidr"
+		fi
+	done
+	if ! iptables -t nat -A ROMANA-MASQ -o "$nat_interface" -j MASQUERADE; then
+		internal_error "Error adding NAT for $nat_interface"
+	fi
+	# Activate chain
+	for romana_cidr in "${romana_cidrs[@]}"; do
+		if ! iptables -t nat -C POSTROUTING -s "$romana_cidr" -j ROMANA-MASQ; then
+			if ! iptables -t nat -A POSTROUTING -m comment --comment "romana postrouting rules" -s "$romana_cidr" -j ROMANA-MASQ; then
+				internal_error "Error adding $romana_cidr POSTROUTING rule"
+			fi
+		fi
+	done
 	;;
 false)
-	: # add steps to disable nat when agent supports it
+	# If chain exists, deactivate, flush and remove it
+	if iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+		while IFS= read -r rule; do
+			((rulenum++))
+			if [[ "$rule" != "${rule/'-m comment --comment "romana postrouting rules"'/}" ]]; then
+				if ! iptables -t nat -D "$rulenum"; then
+					internal_error "Error removing POSTROUTING rule: $rule"
+				fi
+				((rulenum--))
+			fi
+		done < <(iptables -t nat -S POSTROUTING)
+		if ! iptables -t nat -F ROMANA-MASQ; then
+			internal_error "Error flushing chain for NAT rule"
+		fi
+		if ! iptables -t nat -X ROMANA-MASQ; then
+			internal_error "Error removing chain for NAT rule"
+		fi
+	fi
 	;;
 *)
 	internal_error "nat variable was not true or false: '$nat'"
