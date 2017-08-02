@@ -330,6 +330,53 @@ fi
 printf "ok.\n"
 printf "%s\n" "$etcd_response"
 
+# Check if romanad is running and has a network configured
+printf "Checking if romana daemon is running..."
+intervals=( 0 1 1 1 3 3 3 )
+daemon_ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if daemon_response=$(curl -s "${romana_daemon}/networks"); then
+		daemon_ready=1
+		break
+	fi
+done
+if ! (( daemon_ready )); then
+	printf "error connecting to romana daemon\n"
+	exit 1
+fi
+printf "ok.\n"
+
+printf "Checking if romana networks are configured..."
+networks_ready=0
+# Handle response if they're already configured
+if [[ "$daemon_response" ]]; then
+	if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
+		networks_ready=1
+	fi
+fi
+if ! (( networks_ready )); then
+	# retry a few times. it may still be launching
+	intervals=( 2 2 2 2 2 10 10 )
+	for i in "${intervals[@]}"; do
+		sleep "$i"
+		if ! daemon_response=$(curl -s "${romana_daemon}/networks"); then
+			continue
+		fi
+		if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
+			networks_ready=1
+			break
+		fi
+	done
+fi
+if ! (( networks_ready )); then
+	printf "failed\n"
+	exit 1
+elif (( num_networks == 1 )); then
+	printf "ok. One network configured.\n"
+else
+	printf "ok. %d networks configured.\n" "$num_networks"
+fi
 
 if [[ "$nat_interface" ]]; then
 	nat_address=$(interface_address "$nat_interface")
