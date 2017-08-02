@@ -96,7 +96,7 @@ spec:
     protocol: TCP
     targetPort: 12379
   selector:
-    app: romana-etcd
+    romana-app: etcd
   sessionAffinity: None
   type: ClusterIP
 ---
@@ -110,7 +110,7 @@ spec:
   template:
     metadata:
       labels:
-        app: romana-etcd
+        romana-app: etcd
     spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
@@ -158,7 +158,7 @@ spec:
     protocol: TCP
     targetPort: 9600
   selector:
-    app: romana-daemon
+    romana-app: daemon
   sessionAffinity: None
   type: ClusterIP
 ---
@@ -172,7 +172,7 @@ spec:
   template:
     metadata:
       labels:
-        app: romana-daemon
+        romana-app: daemon
     spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
@@ -195,7 +195,7 @@ spec:
   template:
     metadata:
       labels:
-        app: romana-listener
+        romana-app: listener
     spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
@@ -218,7 +218,7 @@ spec:
   template:
     metadata:
       labels:
-        app: romana-agent
+        romana-app: agent
     spec:
       hostNetwork: true
       securityContext:
