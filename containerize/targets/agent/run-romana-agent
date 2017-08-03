@@ -422,7 +422,7 @@ true)
 	fi
 	# Activate chain
 	for romana_cidr in "${romana_cidrs[@]}"; do
-		if ! iptables -t nat -C POSTROUTING -s "$romana_cidr" -j ROMANA-MASQ; then
+		if ! iptables -t nat -C POSTROUTING -m comment --comment "romana postrouting rules" -s "$romana_cidr" -j ROMANA-MASQ; then
 			if ! iptables -t nat -A POSTROUTING -m comment --comment "romana postrouting rules" -s "$romana_cidr" -j ROMANA-MASQ; then
 				internal_error "Error adding $romana_cidr POSTROUTING rule"
 			fi
