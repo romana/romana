@@ -74,6 +74,12 @@ under the License.
     "Controller": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
+        "BlockDeviceMappings" : [
+           {
+              "DeviceName" : "/dev/sda1",
+              "Ebs" : { "VolumeSize" : "50" }
+           }
+        ],
         "InstanceType": {
           "Ref": "ControllerInstanceType"
         },
@@ -124,6 +130,12 @@ under the License.
     "Compute{{ '%02d' | format(loop.index) }}": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
+        "BlockDeviceMappings" : [
+           {
+              "DeviceName" : "/dev/sda1",
+              "Ebs" : { "VolumeSize" : "50" }
+           }
+        ],
         "InstanceType": {
           "Ref": "ComputeInstanceType"
         },
