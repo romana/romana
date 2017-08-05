@@ -84,7 +84,7 @@ under the License.
           "Ref": "ControllerInstanceType"
         },
         "IamInstanceProfile": {
-          "Ref": "RestrictedProfile"
+          "Ref": "ControllerProfile"
         },
         "ImageId": {
           "Ref": "ControllerAMI"
@@ -140,7 +140,7 @@ under the License.
           "Ref": "ComputeInstanceType"
         },
         "IamInstanceProfile": {
-          "Ref": "RestrictedProfile"
+          "Ref": "ComputeProfile"
         },
         "ImageId": {
           "Ref": "ComputeAMI"
@@ -415,7 +415,7 @@ under the License.
         }
       }
     },
-    "LimitedRole": {
+    "ControllerRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -436,10 +436,88 @@ under the License.
         "Path": "/"
       }
     },
-    "RolePolicy": {
+    "ControllerRolePolicy": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
-        "PolicyName": "limited_access_to_s3_buckets",
+        "PolicyName": "controller_policy",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ec2:*Vpc*",
+                "ec2:*Route*",
+                "ec2:Describe*"
+              ],
+              "Resource": [
+                "*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                "arn:aws:s3:::romana-binaries"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:DeleteObject",
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::romana-binaries/*"
+              ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "ControllerRole"
+          }
+        ]
+      }
+    },
+    "ControllerProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "ControllerRole"
+          }
+        ]
+      }
+    },
+    "ComputeRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "ComputeRolePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "compute_policy",
         "PolicyDocument": {
           "Statement": [
             {
@@ -461,34 +539,23 @@ under the License.
               "Resource": [
                 "arn:aws:s3:::romana-binaries/*"
               ]
-            },
-            {
-              "Action": [
-                "route53:ChangeResourceRecordSets",
-                "route53:GetHostedZone",
-                "route53:ListResourceRecordSets"
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                "arn:aws:route53:::hostedzone/Z3CT83X5Z3DBU6"
-              ]
             }
           ]
         },
         "Roles": [
           {
-            "Ref": "LimitedRole"
+            "Ref": "ComputeRole"
           }
         ]
       }
     },
-    "RestrictedProfile": {
+    "ComputeProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
         "Path": "/",
         "Roles": [
           {
-            "Ref": "LimitedRole"
+            "Ref": "ComputeRole"
           }
         ]
       }
