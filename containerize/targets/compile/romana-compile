@@ -83,12 +83,3 @@ if ! go install "${pkgs[@]}"; then
 	echo "failed to compile core packages"
 	exit 1
 fi
-additional_packages=(
-	fix-ec2-srcdestcheck
-	romana-aws
-)
-go get -d "${additional_packages[@]}"
-if ! go install "${additional_packages[@]}"; then
-	echo "failed to compile additional packages"
-	exit 1
-fi
