@@ -1,0 +1,34 @@
+{
+	"networks": [
+		{
+			"name": "kubeadm-network",
+			"cidr": "10.112.0.0/12",
+			"block_mask": 28
+		}
+	],
+	"topologies": [
+		{
+			"networks": [
+				"kubeadm-network"
+			],
+			"map": [
+				{ "name": "host-group-01", "groups": [] },
+				{ "name": "host-group-02", "groups": [] },
+				{ "name": "host-group-03", "groups": [] },
+				{ "name": "host-group-04", "groups": [] },
+				{ "name": "host-group-05", "groups": [] },
+				{ "name": "host-group-06", "groups": [] },
+				{ "name": "host-group-07", "groups": [] },
+				{ "name": "host-group-08", "groups": [] },
+				{ "name": "host-group-09", "groups": [] },
+				{ "name": "host-group-10", "groups": [] },
+				{ "name": "host-group-11", "groups": [] },
+				{ "name": "host-group-12", "groups": [] },
+				{ "name": "host-group-13", "groups": [] },
+				{ "name": "host-group-14", "groups": [] },
+				{ "name": "host-group-15", "groups": [] },
+				{ "name": "host-group-16", "groups": [] }
+			]
+		}
+	]
+}

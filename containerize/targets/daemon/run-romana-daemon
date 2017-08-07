@@ -20,10 +20,12 @@ usage() {
 	echo "Options:"
 	echo " -h or --help: print usage"
 	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
+	echo " --initial-network: path to a json file describing the initial network topology"
 }
 
 # Parse command-line options
 etcd_endpoints=
+initial_network=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -36,6 +38,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--etcd-endpoints)
 		etcd_endpoints="$2"
+		shift 2
+		;;
+	--initial-network)
+		initial_network="$2"
 		shift 2
 		;;
 	*)
@@ -104,6 +110,79 @@ if ! (( etcd_ready )); then
 fi
 printf "ok.\n"
 printf "%s\n" "$etcd_response"
+
+# Configure initial network
+if [[ "$initial_network" ]]; then
+	: # TODO: check if the file exists or support URLs.
+else
+	case "$KUBERNETES_SERVICE_HOST" in
+	100.64.0.1) # kops default
+		initial_network=/var/lib/romana/initial-network/kops.json
+		;;
+	10.96.0.1) # kubeadm default
+		initial_network=/var/lib/romana/initial-network/kubeadm-network.json
+		;;
+	*)
+		usage_error "Unable to determine initial network to apply."
+		;;
+	esac
+fi
+
+# Pre-launch romanad to check if initial network is configured.
+printf "Pre-launching Romana Daemon..."
+/usr/local/bin/romanad -host 127.0.0.1 -etcd-endpoints="$etcd_endpoints" &>/dev/null &
+daemon_pid="$!"
+
+# Wait until it's ready / listening on :9600
+intervals=( 0 0.5 0.5 0.5 1 2 2 2 )
+ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	{ read -r _; read -r status; } < <(ss -nlt '( sport = :9600 )')
+	if [[ "$status" ]]; then
+		# Found a match
+		ready=1
+		break
+	else
+		printf "."
+	fi
+done
+if ! (( ready )); then
+	printf " romana daemon failed to launch.\b"
+	exit 1
+fi
+printf " OK\n"
+
+printf "Checking if romana networks are configured..."
+if ! daemon_response=$(curl -s "http://127.0.0.1:9600/networks"); then
+	printf "error requesting networks from daemon\n"
+	exit 1
+
+fi
+if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
+	if ! (( num_networks )); then
+		printf "no networks configured.\n"
+	elif (( num_networks == 1 )); then
+		printf "ok. One network configured.\n"
+	elif (( num_networks > 1 )); then
+		printf "ok. %d networks configured.\n" "$num_networks"
+	else
+		printf "unexpected number of networks: %s\n" "$num_networks"
+		exit 1
+	fi
+fi
+if ! (( num_networks )); then
+	# Post an initial topology
+	if ! post_response=$(curl -s -X POST --header "Content-Type: application/json" --data-binary "@$initial_network" http://127.0.0.1:9600/topology); then
+		echo "Error loading initial toplogy $initial_network: $post_response"
+		exit 1
+	fi
+	echo "Response from loading initial topology: $post_response"
+fi
+
+# Stop the pre-loaded daemon
+kill "$daemon_pid"
+wait "$daemon_pid" 2>/dev/null
 
 printf "Launching Romana Daemon"
 exec /usr/local/bin/romanad -host 0.0.0.0 -etcd-endpoints="$etcd_endpoints"
