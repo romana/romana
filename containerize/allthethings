@@ -271,7 +271,7 @@ build() {
 		;;
 	maybe)
 		for n in "${namespaces[@]}"; do
-			for i in daemon listener agent; do
+			for i in daemon listener agent aws; do
 				if ! image_name=$(image_name "$n" "$i"); then
 					fatal "build(): error from image_name()"
 				fi
@@ -345,6 +345,12 @@ copy() {
 	log copy ... copying required files for agent target
 	for f in simple romana_cni romana kubectl etcdctl; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
+			fatal error copying "$f"
+		fi
+	done
+	log copy ... copying required files for aws target
+	for f in romana_aws; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/aws/$f"; then
 			fatal error copying "$f"
 		fi
 	done
@@ -468,7 +474,7 @@ push() {
 				fatal error logging into "$registry"
 			fi
 		fi
-		for i in daemon listener agent; do
+		for i in daemon listener agent aws; do
 			log push ... pushing "$i"
 			if ! docker push "$(image_name "$n" "$i")"; then
 				fatal error pushing "$i" to "$registry"
@@ -486,4 +492,5 @@ copy
 build_container daemon
 build_container listener
 build_container agent
+build_container aws
 push
