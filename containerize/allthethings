@@ -85,7 +85,7 @@ shopt -s nullglob
 # Parse command-line options
 tag=unspecified
 compile=maybe
-github_key=/dev/null
+github_key=
 core_repo=https://github.com/romana/core
 core_branch=
 build=maybe
@@ -240,6 +240,9 @@ compile() {
 		fi
 	done
 	log compile ... running compile stage
+	docker_flags=(
+		--rm
+	)
 	volume_flags=(
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
 		-v "$PWD/volumes/romana_pkg_dir_$tag":/go/pkg
@@ -247,13 +250,26 @@ compile() {
 		-v "$PWD/targets/compile/src":/go/src
 	)
 	compile_flags=(
-		${github_key:+--github-key=/github_id_rsa}
 		--core-repo="$core_repo"
 	)
 	if [[ "$core_branch" ]]; then
-		compile_flags+=( --core-branch="$core_branch" )
+		compile_flags+=(
+			--core-branch="$core_branch"
+		)
 	fi
-	if ! docker run --rm "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
+	if [[ "$github_key" ]]; then
+		docker_flags+=(
+			--user "$UID"
+		)
+		volume_flags+=(
+	       		-v /etc/passwd:/etc/passwd
+			-v "$github_key":/github_id_rsa
+		)
+		compile_flags+=(
+			--github-key=/github_id_rsa
+		)
+	fi
+	if ! docker run "${docker_flags[@]}" "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
 		fatal error running compile container
 	elif [[ "$build" = maybe ]]; then
 		build=yes
@@ -310,7 +326,7 @@ copy() {
 		fi
 	done
 	if ! (( matched )); then
-		fatal error matching checksum for kubectl: "$shasum" differs from "$kubectl_sha256[@]"
+		fatal error matching checksum for kubectl: "$shasum" differs from "${kubectl_sha256[@]}"
 	fi
 	chmod +x "$kubectl_filepath"
 

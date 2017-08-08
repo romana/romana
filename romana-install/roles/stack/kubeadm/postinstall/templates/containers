@@ -34,14 +34,6 @@ build)
 		--namespace "{{ hostvars[groups.kubeadm_master[0]].ansible_hostname }}:5000/romana/"
 	)
 	/var/tmp/romana/containerize/allthethings "${args[@]}"
-	if [[ -d /var/tmp/romana/containerize/volumes/romana_src_dir_local ]]; then
-		# Files would be owned by root. Change owner to user running the script.
-		u=$(id -un)
-		g=$(id -gn)
-		if [[ "$u" ]] && [[ "$g" ]]; then
-			sudo chown -R "$u:$g" /var/tmp/romana/containerize/volumes/romana_src_dir_local
-		fi
-	fi
 	;;
 rebuild)
 	args=(
