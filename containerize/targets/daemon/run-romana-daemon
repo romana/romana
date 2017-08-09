@@ -184,7 +184,7 @@ fi
 if ! (( num_networks )); then
 	# Post an initial topology
 	if ! post_response=$(curl -s -X POST --header "Content-Type: application/json" --data-binary "@$initial_network" http://127.0.0.1:9600/topology); then
-		echo "Error loading initial toplogy $initial_network: $post_response"
+		echo "Error loading initial topology $initial_network: $post_response"
 		exit 1
 	fi
 	echo "Response from loading initial topology: $post_response"
