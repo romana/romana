@@ -117,7 +117,7 @@ if [[ "$initial_network" ]]; then
 else
 	case "$KUBERNETES_SERVICE_HOST" in
 	100.64.0.1) # kops default
-		if ! mds_response=$(http://169.254.169.254/latest/meta-data/placement/availability-zone); then
+		if ! mds_response=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone); then
 			usage_error "Unable to determine initial network to apply."
 		fi
 		if ! [[ "$mds_response" ]]; then
