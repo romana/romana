@@ -117,7 +117,17 @@ if [[ "$initial_network" ]]; then
 else
 	case "$KUBERNETES_SERVICE_HOST" in
 	100.64.0.1) # kops default
-		initial_network=/var/lib/romana/initial-network/kops.json
+		if ! mds_response=$(http://169.254.169.254/latest/meta-data/placement/availability-zone); then
+			usage_error "Unable to determine initial network to apply."
+		fi
+		if ! [[ "$mds_response" ]]; then
+			usage_error "Unable to determine initial network to apply."
+		fi
+		aws_region=${mds_response%?}
+		if ! [[ -f "/var/lib/romana/initial-network/kops-network-${aws_region}.json" ]]; then
+			internal_error "No predefined initial network for region $aws_region"
+		fi
+		initial_network="/var/lib/romana/initial-network/kops-network-${aws_region}.json"
 		;;
 	10.96.0.1) # kubeadm default
 		initial_network=/var/lib/romana/initial-network/kubeadm-network.json
