@@ -1,0 +1,44 @@
+{
+	"networks": [
+		{
+			"name": "kops-network",
+			"cidr": "100.72.0.0/13",
+			"block_mask": 29
+		}
+	],
+	"topologies": [
+		{
+			"networks": [
+				"kops-network"
+			],
+			"map": [
+				{
+					"name": "failure-domain: ap-northeast-1a",
+					"groups": [
+						{ "name": "ap-northeast-1a-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } },
+						{ "name": "ap-northeast-1a-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1a" } }
+					]
+				},
+				{
+					"name": "failure-domain: ap-northeast-1c",
+					"groups": [
+						{ "name": "ap-northeast-1c-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } },
+						{ "name": "ap-northeast-1c-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "ap-northeast-1", "failure-domain.beta.kubernetes.io/zone": "ap-northeast-1c" } }
+					]
+				}
+			]
+		}
+	]
+}

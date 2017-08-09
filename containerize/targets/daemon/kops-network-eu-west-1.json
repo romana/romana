@@ -1,0 +1,57 @@
+{
+	"networks": [
+		{
+			"name": "kops-network",
+			"cidr": "100.72.0.0/13",
+			"block_mask": 29
+		}
+	],
+	"topologies": [
+		{
+			"networks": [
+				"kops-network"
+			],
+			"map": [
+				{
+					"name": "failure-domain: eu-west-1a",
+					"groups": [
+						{ "name": "eu-west-1a-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } },
+						{ "name": "eu-west-1a-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1a" } }
+					]
+				},
+				{
+					"name": "failure-domain: eu-west-1b",
+					"groups": [
+						{ "name": "eu-west-1b-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } },
+						{ "name": "eu-west-1b-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1b" } }
+					]
+				},
+				{
+					"name": "failure-domain: eu-west-1c",
+					"groups": [
+						{ "name": "eu-west-1c-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } },
+						{ "name": "eu-west-1c-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "eu-west-1", "failure-domain.beta.kubernetes.io/zone": "eu-west-1c" } }
+					]
+				}
+			]
+		}
+	]
+}
