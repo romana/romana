@@ -349,5 +349,3 @@ spec:
         - --etcd_use_v2
         - --etcd_addr=romana-etcd.kube-system
         - --etcd_port=12379
-        - --health=tcp
-        - --tcp_check_port=22
