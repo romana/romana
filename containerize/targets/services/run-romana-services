@@ -26,6 +26,7 @@ usage() {
 	echo " --segments: The number of segments that will be permitted within a namespace. Used for internal Romana configuration (default: 8)"
 	echo " --policies: Enable network policy features (default: true)"
 	echo " --cloud: Integration with cloud provider. (default: none. valid values: none, aws)"
+	echo " --debug: Turn on debug logging for romana services. (default: false. valid values: true, false)"
 }
 
 # Parse command-line options
@@ -35,6 +36,7 @@ nodes=32
 namespaces=16
 segments=8
 policies=
+debug=false
 cloud=none
 interhost_routes=
 route_publisher=none
@@ -82,6 +84,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--cloud)
 		cloud="$2"
+		shift 2
+		;;
+	--debug)
+		debug="$2"
 		shift 2
 		;;
 	--interhost_routes)
@@ -250,6 +256,15 @@ if [[ "$policies" ]]; then
 	fi
 else
 	policies=true
+fi
+
+# Check if debug is valid
+if [[ "$debug" ]]; then
+	if ! valid_bool "$debug"; then
+		usage_error "Expected 'true' or 'false' for --debug option. ('$debug')"
+	fi
+else
+	debug=false
 fi
 
 # Check interhost-routes option is valid. Defaults to true if not specified
@@ -448,6 +463,11 @@ sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /root/.
 # Generate romana-services.conf for supervisord
 replacements=()
 replacements+=( -e 's|romana-master-address|'"$host_ip"'|g' )
+if [[ "$debug" == "true" ]]; then
+    replacements+=( -e 's|environment=|'"environment=RLOG_LOG_LEVEL=\"DEBUG\",RLOG_TRACE_LEVEL=\"9\",RLOG_CALLER_INFO=\"y\""'|g' )
+else
+    replacements+=( -e 's|environment=|'""'|g' )
+fi
 sed "${replacements[@]}" /var/lib/romana/templates/romana-services.template > /etc/supervisor/conf.d/romana-services.conf
 
 # Configure kubectl

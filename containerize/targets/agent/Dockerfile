@@ -6,6 +6,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y iptables
 COPY romana agent kubectl fix-ec2-srcdestcheck /usr/local/bin/
 RUN mkdir -p /var/lib/romana/cni-installation /var/lib/romana/templates /var/lib/romana/policies
 COPY cni 10-romana.conf /var/lib/romana/cni-installation/
+RUN mkdir -p /var/lib/rlog/
+COPY romana-rlog.conf /var/lib/rlog/
 COPY dot-romana.template romana-agent.template route-publisher-bird.template /var/lib/romana/templates/
 COPY permit-all-pod-to-host.json permit-all-host-to-pod.json /var/lib/romana/policies/
 COPY run-romana-agent /usr/local/bin/

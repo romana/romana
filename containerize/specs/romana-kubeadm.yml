@@ -165,6 +165,7 @@ spec:
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
+        #- --debug=true
         env:
         - name: NODENAME
           valueFrom:
@@ -233,6 +234,7 @@ spec:
         imagePullPolicy: Always
         args:
         - --cluster-ip-cidr=10.96.0.0/12
+        #- --debug=true
         env:
         - name: NODENAME
           valueFrom:
@@ -245,6 +247,8 @@ spec:
           mountPath: /host/usr/local/bin
         - name: host-etc-romana
           mountPath: /host/etc/romana
+        - name: host-etc-rlog
+          mountPath: /host/etc/rlog
         - name: host-cni-bin
           mountPath: /host/opt/cni/bin
         - name: host-cni-net-d
@@ -260,6 +264,9 @@ spec:
       - name: host-etc-romana
         hostPath:
           path: /etc/romana
+      - name: host-etc-rlog
+        hostPath:
+          path: /etc/rlog
       - name: host-cni-bin
         hostPath:
           path: /opt/cni/bin
