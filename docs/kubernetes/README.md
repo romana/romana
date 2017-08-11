@@ -63,28 +63,20 @@ Instead, it is usually necessary to customize the YAML files used for the instal
 
 More information about this will be added in a future update. In the meantime, we can help via email or Slack.
 
-# Essential Components
+# Updates coming soon
 
-## romana-etc
+These topics still need additional explanation, instructions and guides.
 
-## romana-daemon
-
-## romana-listener
-
-## romana-agent
-
-# Add-Ons
-
-## romana-aws
-
-## romana-vpcrouter
-
-# Special Notes
-
-## Custom range for Kubernetes Service IPs
-
-## Custom range for Pod IPs
-
-## Running in VirtualBox
-
-## Running in multiple subnets
+- Essential Components
+- romana-etc
+  - romana-daemon
+  - romana-listener
+  - romana-agent
+- Add-Ons
+  - romana-aws
+  - romana-vpcrouter
+- Special Notes
+  - Custom range for Kubernetes Service IPs
+  - Custom range for Pod IPs
+  - Running in VirtualBox
+  - Running in multiple subnets
