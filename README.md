@@ -27,7 +27,7 @@ _which we are still working on for the full release:_
   _instructions._
 
 _If you would like to jump straight to the Romana 2.0 specific installation_
-_instructions, please click **here**._
+_instructions, please click [here](https://github.com/romana/romana/tree/romana-2.0/docs/kubernetes)._
 
 ***
 
