@@ -1,0 +1,177 @@
+#!/bin/bash
+
+# Copyright (c) 2016 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+usage() {
+	echo "${0##*/}: entrypoint for romana listener container."
+	echo "Options:"
+	echo " -h or --help: print usage"
+	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
+}
+
+# Parse command-line options
+etcd_endpoints=
+while [[ $1 == -* ]]; do
+	# expand --foo=bar options
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--etcd-endpoints)
+		etcd_endpoints="$2"
+		shift 2
+		;;
+	*)
+		echo "Unknown option '$1'"
+		usage
+		exit 1
+		;;
+	esac
+done
+
+usage_error() {
+	if (($# < 1)); then
+		internal_error "Call to usage_error without a message"
+	fi
+	echo "Error:" "$@"
+	usage
+	exit 1
+}
+
+internal_error() {
+	echo "Internal Error:" "$@"
+	exit 2
+}
+
+# Kubernetes HTTPS Service must be defined via envinronment variables
+if ! [[ "$KUBERNETES_SERVICE_HOST" ]]; then
+	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_HOST not found"
+fi
+if ! [[ "$KUBERNETES_SERVICE_PORT_HTTPS" ]]; then
+	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_PORT_HTTPS not found"
+fi
+api_server="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS"
+
+# Check that we can connect to the apiserver
+if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" ]]; then
+	kubectl_cert="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+fi
+if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
+	kubectl_token="$(< /var/run/secrets/kubernetes.io/serviceaccount/token)"
+fi
+kubectl_options=(
+	--server="$api_server"
+	${kubectl_cert:+--certificate-authority="$kubectl_cert"}
+	${kubectl_token:+--token="$kubectl_token"}
+)
+
+printf "Checking if kubernetes apiserver can be reached"
+if ! kubectl_output=$(kubectl "${kubectl_options[@]}" version 2>&1); then
+	printf "error: %s\n" "$(grep -v "^Client Version:" <<< "$kubectl_output")"
+	exit 1
+fi
+printf "ok.\n"
+
+# Romana Daemon Service must be defined via envinronment variables
+if ! [[ "$ROMANA_SERVICE_HOST" ]]; then
+	usage_error "Unable to find Romana Service. Environment varible ROMANA_SERVICE_HOST not found"
+fi
+if ! [[ "$ROMANA_SERVICE_PORT_DAEMON" ]]; then
+	usage_error "Unable to find Romana Service. Environment varible ROMANA_SERVICE_PORT_DAEMON not found"
+fi
+romana_daemon="http://$ROMANA_SERVICE_HOST:$ROMANA_SERVICE_PORT_DAEMON"
+
+# Romana etcd is required. Use value from command-line, or look for environment variables from Kubernetes
+if [[ "$etcd_endpoints" ]]; then
+	: # ok
+elif [[ "$ROMANA_ETCD_SERVICE_HOST" ]] && [[ "$ROMANA_ETCD_SERVICE_PORT_ETCD" ]]; then
+	etcd_endpoints="$ROMANA_ETCD_SERVICE_HOST:$ROMANA_ETCD_SERVICE_PORT_ETCD"
+else
+	usage_error "Romana etcd endpoints must be provided."
+fi
+
+# Check if etcd is running. Run check for cluster-health
+printf "Checking if etcd is running..."
+intervals=( 0 1 1 1 3 3 3 )
+etcd_ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if etcd_response=$(etcdctl --endpoints="$etcd_endpoints" cluster-health 2>/dev/null); then
+		etcd_ready=1
+		break
+	fi
+done
+if ! (( etcd_ready )); then
+	printf "error connecting to etcd: %s\n" "$etcd_response"
+	exit 1
+fi
+printf "ok.\n"
+printf "%s\n" "$etcd_response"
+
+# Check if romanad is running and has a network configured
+printf "Checking if romana daemon is running..."
+intervals=( 0 1 1 1 3 3 3 )
+daemon_ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if daemon_response=$(curl -s "${romana_daemon}/networks"); then
+		daemon_ready=1
+		break
+	fi
+done
+if ! (( daemon_ready )); then
+	printf "error connecting to romana daemon\n"
+	exit 1
+fi
+printf "ok.\n"
+
+printf "Checking if romana networks are configured..."
+networks_ready=0
+# Handle response if they're already configured
+if [[ "$daemon_response" ]]; then
+	if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
+		networks_ready=1
+	fi
+fi
+if ! (( networks_ready )); then
+	# retry a few times. it may still be launching
+	intervals=( 2 2 2 2 2 10 10 )
+	for i in "${intervals[@]}"; do
+		sleep "$i"
+		if ! daemon_response=$(curl -s "${romana_daemon}/networks"); then
+			continue
+		fi
+		if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
+			networks_ready=1
+			break
+		fi
+	done
+fi
+if ! (( networks_ready )); then
+	printf "failed\n"
+	exit 1
+elif (( num_networks == 1 )); then
+	printf "ok. One network configured.\n"
+else
+	printf "ok. %d networks configured.\n" "$num_networks"
+fi
+
+printf "Launching Romana Listener"
+exec /usr/local/bin/romana_listener -etcd-endpoints="$etcd_endpoints"

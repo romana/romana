@@ -1,6 +1,6 @@
-RootURL: http://romana-master-address
-RootPort: 9600
-LogFile: "/var/tmp/romana.log"
-Format: "table" # options are table/json 
+RootURL:  http://<romana-daemon-address>
+RootPort: <romana-daemon-port>
+LogFile:  "/dev/null"
+Format:   "table"
 Platform: "kubernetes"
-Verbose: false
+Verbose:  false

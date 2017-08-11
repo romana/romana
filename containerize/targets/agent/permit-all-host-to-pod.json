@@ -1,9 +1,0 @@
-{
-	"direction": "ingress",
-	"name": "permit-all-host-to-pod",
-	"applied_to": [ { "dest": "local" } ],
-	"ingress": [ {
-		"peers": [ { "peer": "host" } ],
-		"rules": [ { "protocol": "ANY" } ]
-	} ]
-}

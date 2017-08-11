@@ -2,7 +2,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: romana-services
+  name: romana-listener
 rules:
 - apiGroups:
   - "*"
@@ -35,20 +35,20 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: romana-services
+  name: romana-listener
   namespace: kube-system
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: romana-services
+  name: romana-listener
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: romana-services
+  name: romana-listener
 subjects:
 - kind: ServiceAccount
-  name: romana-services
+  name: romana-listener
   namespace: kube-system
 ---
 kind: ClusterRole
@@ -83,22 +83,41 @@ subjects:
   name: romana-agent
   namespace: kube-system
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romana-etcd
+  namespace: kube-system
+spec:
+  clusterIP: 100.64.0.88
+  ports:
+  - name: etcd
+    port: 12379
+    protocol: TCP
+    targetPort: 12379
+  selector:
+    romana-app: etcd
+  sessionAffinity: None
+  type: ClusterIP
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: romana-services
+  name: romana-etcd
   namespace: kube-system
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: romana-services
+        romana-app: etcd
     spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
       hostNetwork: true
-      serviceAccountName: romana-services
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
@@ -107,9 +126,9 @@ spec:
         image: gcr.io/google_containers/etcd-amd64:3.0.17
         command:
         - etcd
-        - "--listen-client-urls=http://127.0.0.1:12379"
+        - "--listen-client-urls=http://0.0.0.0:12379"
         - "--listen-peer-urls=http://127.0.0.1:12380"
-        - "--advertise-client-urls=http://127.0.0.1:12379"
+        - "--advertise-client-urls=http://100.64.0.88:12379"
         - "--data-dir=/var/etcd/data"
         volumeMounts:
         - name: etcd-data
@@ -121,43 +140,74 @@ spec:
             host: 127.0.0.1
           initialDelaySeconds: 15
           timeoutSeconds: 15
-      - name: romana-services
-        image: quay.io/romana/services:v1.1.0
-        imagePullPolicy: Always
-        args:
-        - --cidr=10.192.0.0/10
-        - --cloud=aws
-        env:
-        - name: NODENAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        volumeMounts:
-        - name: log-path
-          mountPath: /var/log/romana
       volumes:
       - name: etcd-data
         hostPath:
           path: "/var/lib/romana/etcd-db"
-      - name: log-path
-        hostPath:
-          path: /var/log/romana
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: romana-root
+  name: romana
   namespace: kube-system
 spec:
+  clusterIP: 100.64.0.99
   ports:
-  - name: root
+  - name: daemon
     port: 9600
     protocol: TCP
     targetPort: 9600
   selector:
-    app: romana-services
+    romana-app: daemon
   sessionAffinity: None
   type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-daemon
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        romana-app: daemon
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-daemon
+        image: quay.io/romana/daemon:v2.0-preview.1
+        imagePullPolicy: Always
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-listener
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        romana-app: listener
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      serviceAccountName: romana-listener
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-listener
+        image: quay.io/romana/listener:v2.0-preview.1
+        imagePullPolicy: Always
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -168,20 +218,20 @@ spec:
   template:
     metadata:
       labels:
-        app: romana-agent
+        romana-app: agent
     spec:
       hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: romana-agent
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v1.1.0
+        image: quay.io/romana/agent:v2.0-preview.1
         imagePullPolicy: Always
-        args:
-        - --cluster-ip-cidr=100.64.0.0/12
-        - --cloud=aws
         env:
         - name: NODENAME
           valueFrom:
@@ -200,8 +250,6 @@ spec:
           mountPath: /host/etc/cni/net.d
         - name: run-path
           mountPath: /var/run/romana
-        - name: log-path
-          mountPath: /var/log/romana
       volumes:
       - name: host-usr-local-bin
         hostPath:
@@ -218,6 +266,86 @@ spec:
       - name: run-path
         hostPath:
           path: /var/run/romana
-      - name: log-path
-        hostPath:
-          path: /var/log/romana
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-aws
+rules:
+- apiGroups:
+  - "*"
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: romana-aws
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-aws
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: romana-aws
+subjects:
+- kind: ServiceAccount
+  name: romana-aws
+  namespace: kube-system
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-aws
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        romana-app: aws
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      serviceAccountName: romana-aws
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-aws
+        image: quay.io/romana/aws:v2.0-preview.1
+        imagePullPolicy: Always
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-vpcrouter
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        romana-app: vpcrouter
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-vpcrouter
+        image: quay.io/romana/vpcrouter-romana-plugin
+        imagePullPolicy: Always
+        args:
+        - --etcd_use_v2
+        - --etcd_addr=romana-etcd.kube-system
+        - --etcd_port=12379

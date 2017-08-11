@@ -1,28 +1,21 @@
 ---
-- name: Add apt key for packages.cloud.google.com
-  become: true
-  become_user: root
-  apt_key: url="https://packages.cloud.google.com/apt/doc/apt-key.gpg" state="present"
-
-- name: Add Kubernetes apt source
-  become: true
-  become_user: root
-  copy: src="kubernetes.list" dest="/etc/apt/sources.list.d/kubernetes.list"
-
 - include: prep_local_registry.yml
   become: true
   become_user: root
   when: romana_core_source == "github"
 
-- name: Install kubeadm packages
+- name: Install packages required for kubeadm
+  include: "{{ file }}"
+  with_first_found:
+    - files:
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
-  apt: update_cache="yes" pkg="{{ item }}" force="yes"
-  with_items:
-    - docker-engine
-    - kubelet
-    - kubeadm
-    - kubernetes-cni
 
 - name: Add user to docker group (for convenience, so user can run docker commands)
   become: true

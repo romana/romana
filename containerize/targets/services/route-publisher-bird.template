@@ -1,4 +1,0 @@
-        templateFileName: /var/run/romana/bird/agent-bgp.conf.t
-        birdConfigName: /var/run/romana/bird/conf.d/agent-bgp.conf
-        pidFile: /var/run/romana/bird/bird.pid
-        localAS: "65534"

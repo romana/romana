@@ -8,9 +8,14 @@
              kubeadm init --kubernetes-version {{ kubernetes_version }} --token "{{ kubeadm_token }}" --apiserver-advertise-address="{{ hostvars[groups.kubeadm_master[0]].lan_ip }}" && mkdir /var/tmp/kubeadm-init
          fi
 
-- name: Install kubectl
+- include: "{{ file }}"
+  with_first_found:
+    - files:
+      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "packages_{{ ansible_distribution|lower }}.yml"
+      - "packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  loop_control:
+    loop_var: file
   become: true
   become_user: root
-  apt: pkg="{{ item }}"
-  with_items:
-    - kubectl

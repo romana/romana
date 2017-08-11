@@ -107,6 +107,9 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
       hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: romana-services
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -142,7 +145,7 @@ spec:
         - name: mysql-data
           mountPath: /var/lib/mysql
       - name: romana-services
-        image: quay.io/romana/services:v1.1.0
+        image: quay.io/romana/services:v1.5.0
         imagePullPolicy: Always
         args:
         - --cidr=100.112.0.0/12
@@ -198,13 +201,16 @@ spec:
         app: romana-agent
     spec:
       hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: romana-agent
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v1.1.0
+        image: quay.io/romana/agent:v1.5.0
         imagePullPolicy: Always
         args:
         - --cluster-ip-cidr=10.96.0.0/12

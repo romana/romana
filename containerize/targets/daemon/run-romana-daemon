@@ -1,0 +1,198 @@
+#!/bin/bash
+
+# Copyright (c) 2016 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+usage() {
+	echo "${0##*/}: entrypoint for romana daemon container."
+	echo "Options:"
+	echo " -h or --help: print usage"
+	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
+	echo " --initial-network: path to a json file describing the initial network topology"
+}
+
+# Parse command-line options
+etcd_endpoints=
+initial_network=
+while [[ $1 == -* ]]; do
+	# expand --foo=bar options
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--etcd-endpoints)
+		etcd_endpoints="$2"
+		shift 2
+		;;
+	--initial-network)
+		initial_network="$2"
+		shift 2
+		;;
+	*)
+		echo "Unknown option '$1'"
+		usage
+		exit 1
+		;;
+	esac
+done
+
+usage_error() {
+	if (($# < 1)); then
+		internal_error "Call to usage_error without a message"
+	fi
+	echo "Error:" "$@"
+	usage
+	exit 1
+}
+
+internal_error() {
+	echo "Internal Error:" "$@"
+	exit 2
+}
+
+# Kubernetes HTTPS Service must be defined via envinronment variables
+if ! [[ "$KUBERNETES_SERVICE_HOST" ]]; then
+	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_HOST not found"
+fi
+if ! [[ "$KUBERNETES_SERVICE_PORT_HTTPS" ]]; then
+	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_PORT_HTTPS not found"
+fi
+api_server="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS"
+
+# Romana Daemon Service must be defined via envinronment variables
+if ! [[ "$ROMANA_SERVICE_HOST" ]]; then
+	usage_error "Unable to find Romana Service. Environment varible ROMANA_SERVICE_HOST not found"
+fi
+if ! [[ "$ROMANA_SERVICE_PORT_DAEMON" ]]; then
+	usage_error "Unable to find Romana Service. Environment varible ROMANA_SERVICE_PORT_DAEMON not found"
+fi
+romana_daemon="http://$ROMANA_SERVICE_HOST:$ROMANA_SERVICE_PORT_DAEMON"
+
+# Romana etcd is required. Use value from command-line, or look for environment variables from Kubernetes
+if [[ "$etcd_endpoints" ]]; then
+	: # ok
+elif [[ "$ROMANA_ETCD_SERVICE_HOST" ]] && [[ "$ROMANA_ETCD_SERVICE_PORT_ETCD" ]]; then
+	etcd_endpoints="$ROMANA_ETCD_SERVICE_HOST:$ROMANA_ETCD_SERVICE_PORT_ETCD"
+else
+	usage_error "Romana etcd endpoints must be provided."
+fi
+
+# Check if etcd is running. Execute a version query
+printf "Checking if etcd is running..."
+intervals=( 0 1 1 1 3 3 3 )
+etcd_ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	if etcd_response=$(etcdctl --endpoints="$etcd_endpoints" cluster-health 2>/dev/null); then
+		etcd_ready=1
+		break
+	fi
+done
+if ! (( etcd_ready )); then
+	printf "error connecting to etcd: %s\n" "$etcd_response"
+	exit 1
+fi
+printf "ok.\n"
+printf "%s\n" "$etcd_response"
+
+# Configure initial network
+if [[ "$initial_network" ]]; then
+	: # TODO: check if the file exists or support URLs.
+else
+	case "$KUBERNETES_SERVICE_HOST" in
+	100.64.0.1) # kops default
+		if ! mds_response=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone); then
+			usage_error "Unable to determine initial network to apply."
+		fi
+		if ! [[ "$mds_response" ]]; then
+			usage_error "Unable to determine initial network to apply."
+		fi
+		aws_region=${mds_response%?}
+		if ! [[ -f "/var/lib/romana/initial-network/kops-network-${aws_region}.json" ]]; then
+			internal_error "No predefined initial network for region $aws_region"
+		fi
+		initial_network="/var/lib/romana/initial-network/kops-network-${aws_region}.json"
+		;;
+	10.96.0.1) # kubeadm default
+		initial_network=/var/lib/romana/initial-network/kubeadm-network.json
+		;;
+	*)
+		usage_error "Unable to determine initial network to apply."
+		;;
+	esac
+fi
+
+# Pre-launch romanad to check if initial network is configured.
+printf "Pre-launching Romana Daemon..."
+/usr/local/bin/romanad -host 127.0.0.1 -etcd-endpoints="$etcd_endpoints" &>/dev/null &
+daemon_pid="$!"
+
+# Wait until it's ready / listening on :9600
+intervals=( 0 0.5 0.5 0.5 1 2 2 2 )
+ready=0
+for i in "${intervals[@]}"; do
+	sleep "$i"
+	{ read -r _; read -r status; } < <(ss -nlt '( sport = :9600 )')
+	if [[ "$status" ]]; then
+		# Found a match
+		ready=1
+		break
+	else
+		printf "."
+	fi
+done
+if ! (( ready )); then
+	printf " romana daemon failed to launch.\b"
+	exit 1
+fi
+printf " OK\n"
+
+printf "Checking if romana networks are configured..."
+if ! daemon_response=$(curl -s "http://127.0.0.1:9600/networks"); then
+	printf "error requesting networks from daemon\n"
+	exit 1
+
+fi
+if num_networks=$(jq 'length' <<< "$daemon_response") && (( num_networks )); then
+	if ! (( num_networks )); then
+		printf "no networks configured.\n"
+	elif (( num_networks == 1 )); then
+		printf "ok. One network configured.\n"
+	elif (( num_networks > 1 )); then
+		printf "ok. %d networks configured.\n" "$num_networks"
+	else
+		printf "unexpected number of networks: %s\n" "$num_networks"
+		exit 1
+	fi
+fi
+if ! (( num_networks )); then
+	# Post an initial topology
+	if ! post_response=$(curl -s -X POST --header "Content-Type: application/json" --data-binary "@$initial_network" http://127.0.0.1:9600/topology); then
+		echo "Error loading initial topology $initial_network: $post_response"
+		exit 1
+	fi
+	echo "Response from loading initial topology: $post_response"
+fi
+
+# Stop the pre-loaded daemon
+kill "$daemon_pid"
+wait "$daemon_pid" 2>/dev/null
+
+printf "Launching Romana Daemon"
+exec /usr/local/bin/romanad -host 0.0.0.0 -etcd-endpoints="$etcd_endpoints"

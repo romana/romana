@@ -85,7 +85,7 @@ shopt -s nullglob
 # Parse command-line options
 tag=unspecified
 compile=maybe
-github_key=/dev/null
+github_key=
 core_repo=https://github.com/romana/core
 core_branch=
 build=maybe
@@ -240,6 +240,9 @@ compile() {
 		fi
 	done
 	log compile ... running compile stage
+	docker_flags=(
+		--rm
+	)
 	volume_flags=(
 		-v "$PWD/volumes/romana_bin_dir_$tag":/go/bin
 		-v "$PWD/volumes/romana_pkg_dir_$tag":/go/pkg
@@ -247,13 +250,26 @@ compile() {
 		-v "$PWD/targets/compile/src":/go/src
 	)
 	compile_flags=(
-		${github_key:+--github-key=/github_id_rsa}
 		--core-repo="$core_repo"
 	)
 	if [[ "$core_branch" ]]; then
-		compile_flags+=( --core-branch="$core_branch" )
+		compile_flags+=(
+			--core-branch="$core_branch"
+		)
 	fi
-	if ! docker run --rm "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
+	if [[ "$github_key" ]]; then
+		docker_flags+=(
+			--user "$UID"
+		)
+		volume_flags+=(
+	       		-v /etc/passwd:/etc/passwd
+			-v "$github_key":/github_id_rsa
+		)
+		compile_flags+=(
+			--github-key=/github_id_rsa
+		)
+	fi
+	if ! docker run "${docker_flags[@]}" "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
 		fatal error running compile container
 	elif [[ "$build" = maybe ]]; then
 		build=yes
@@ -271,7 +287,7 @@ build() {
 		;;
 	maybe)
 		for n in "${namespaces[@]}"; do
-			for i in services agent; do
+			for i in daemon listener agent aws; do
 				if ! image_name=$(image_name "$n" "$i"); then
 					fatal "build(): error from image_name()"
 				fi
@@ -293,29 +309,64 @@ copy() {
 		return
 	fi
 	log copy start
-	# TODO: Bump these versions when updating Romana to deliver newer releases of kubernetes.
-	kubectl_version="v1.6.6"
-	kubectl_sha256="c7e1830010f58ca42e4b201ea712683d1f52f4c43b2af28cbe216257da963645"
+	# Download / cache kubectl
+	kubectl_version="v1.7.2"
+	kubectl_sha256=( dd0235f78b7019ee50400e705c7c2920ecb072252b6699683e84520cb5410073 e0806c9fd584771e74df2bbffb3d07f34b429606056ca47de396ef063dc8ef71 )
+	kubectl_url="https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"
 	kubectl_filepath="$PWD/volumes/romana_bin_dir_$tag/kubectl"
-	if ! wget --continue --output-document="$kubectl_filepath" "https://storage.googleapis.com/kubernetes-release/release/$kubectl_version/bin/linux/amd64/kubectl"; then
+	if ! wget --continue --output-document="$kubectl_filepath" "$kubectl_url"; then
 		fatal error downloading kubectl
 	fi
 	read -r shasum _ < <(shasum -a 256 "$kubectl_filepath")
-	if [[ "$shasum" != "$kubectl_sha256" ]]; then
-		fatal error matching checksum for kubectl: "$shasum" differs from "$kubectl_sha256"
+	matched=0
+	for sha in "${kubectl_sha256[@]}"; do
+		if [[ "$shasum" = "$sha" ]]; then
+			matched=1
+			break
+		fi
+	done
+	if ! (( matched )); then
+		fatal error matching checksum for kubectl: "$shasum" differs from "${kubectl_sha256[@]}"
 	fi
-	# permission hack
 	chmod +x "$kubectl_filepath"
 
-	log copy ... copying required files for services target
-	for f in romana romanad romana_listener kubectl romana-aws; do
-		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/services/$f"; then
+	# Download / cache etcd
+	etcd_version="v3.0.17"
+	etcd_sha256="274c46a7f8d26f7ae99d6880610f54933cbcf7f3beafa19236c52eb5df8c7a0b"
+	etcd_url="https://github.com/coreos/etcd/releases/download/${etcd_version}/etcd-${etcd_version}-linux-amd64.tar.gz"
+	etcd_filepath="$PWD/volumes/romana_bin_dir_$tag/etcd-${etcd_version}-linux-amd64.tar.gz"
+	if ! wget --continue --output-document="$etcd_filepath" "$etcd_url"; then
+		fatal error downloading etcd
+	fi
+	read -r shasum _ < <(shasum -a 256 "$etcd_filepath")
+	if [[ "$shasum" != "$etcd_sha256" ]]; then
+		fatal error matching checksum for etcd: "$shasum" differs from "$etcd_sha256"
+	fi
+	if ! tar --directory="$PWD/volumes/romana_bin_dir_$tag" --strip-components=1 -zxvf "$etcd_filepath" "etcd-${etcd_version}-linux-amd64/etcdctl"; then
+		fatal error extracting etcdctl from "$etcd_filepath"
+	fi
+
+	log copy ... copying required files for daemon target
+	for f in romanad etcdctl; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/daemon/$f"; then
+			fatal error copying "$f"
+		fi
+	done
+	log copy ... copying required files for listener target
+	for f in romana_listener kubectl etcdctl; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/listener/$f"; then
 			fatal error copying "$f"
 		fi
 	done
 	log copy ... copying required files for agent target
-	for f in romana_agent romana_cni romana kubectl fix-ec2-srcdestcheck; do
+	for f in simple romana_cni romana kubectl etcdctl; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
+			fatal error copying "$f"
+		fi
+	done
+	log copy ... copying required files for aws target
+	for f in romana_aws; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/aws/$f"; then
 			fatal error copying "$f"
 		fi
 	done
@@ -352,29 +403,22 @@ docker_build() {
 	docker build "${flags[@]}" "$p"
 }
 
-# Build services container
-build_services() {
+# Build container
+build_container() {
+	if (($# != 1)); then
+		fatal "build_container(): expected 1 parameter, got $#"
+	fi
+	local c
+	c="$1"
 	if ! build; then
-		log services skipping
+		log "container-$c" skipping
 		return
 	fi
-	log services start building container for romana service components
-	if ! docker_build services targets/services; then
-		fatal error building services container
+	log "container-$c" start building container for romana "$c" components
+	if ! docker_build "$c" targets/"$c"; then
+		fatal error building "$c" container
 	fi
-	log services end
-}
-
-build_agent() {
-	if ! build; then
-		log agent skipping
-		return
-	fi
-	log agent start building container for romana agent components
-	if ! docker_build agent targets/agent; then
-		fatal error building agent container
-	fi
-	log agent end
+	log "container-$c" end
 }
 
 registry() {
@@ -432,6 +476,7 @@ push() {
 
 		log push start pushing containers to "$registry"
 		logged_in=0
+		# shellcheck disable=SC2016
 		if [[ -f ~/.docker/config.json ]] && [[ "$(jq -r --arg registry "$registry" '.auths[$registry].auth // empty' < ~/.docker/config.json)" ]]; then
 			log push ... already logged in
 			logged_in=1
@@ -445,7 +490,7 @@ push() {
 				fatal error logging into "$registry"
 			fi
 		fi
-		for i in services agent; do
+		for i in daemon listener agent aws; do
 			log push ... pushing "$i"
 			if ! docker push "$(image_name "$n" "$i")"; then
 				fatal error pushing "$i" to "$registry"
@@ -460,6 +505,8 @@ push() {
 # Script body
 compile
 copy
-build_services
-build_agent
+build_container daemon
+build_container listener
+build_container agent
+build_container aws
 push
