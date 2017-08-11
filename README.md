@@ -2,6 +2,8 @@
 
 Romana is a new network and security automation solution for Cloud Native applications. Romana automates the creation of isolated Cloud Native Networks and secures applications with a distributed firewall that applies access control policies consistently across all endpoints and services, wherever they run.
 
+A preview release of Romana v2.0 is availble [here](https://github.com/romana/romana/tree/romana-2.0). It includes important new features, including topology aware IPAM for multi-network deployment and ways to build large and HA Kubernetes clusters with native VPC networking in EC2. More details [here](http://romana.io/blog/romana-v2-preview/)
+
 # Code
 
 This repository contains the installer and documentation.
