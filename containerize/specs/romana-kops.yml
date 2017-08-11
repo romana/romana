@@ -347,5 +347,5 @@ spec:
         imagePullPolicy: Always
         args:
         - --etcd_use_v2
-        - --etcd_addr=romana-etcd.kube-system
+        - --etcd_addr=100.64.0.88
         - --etcd_port=12379
