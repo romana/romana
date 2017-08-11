@@ -89,7 +89,7 @@ metadata:
   name: romana-etcd
   namespace: kube-system
 spec:
-  clusterIP: 100.64.0.88
+  clusterIP: 10.96.0.88
   ports:
   - name: etcd
     port: 12379
@@ -128,7 +128,7 @@ spec:
         - etcd
         - "--listen-client-urls=http://0.0.0.0:12379"
         - "--listen-peer-urls=http://127.0.0.1:12380"
-        - "--advertise-client-urls=http://100.64.0.88:12379"
+        - "--advertise-client-urls=http://10.96.0.88:12379"
         - "--data-dir=/var/etcd/data"
         volumeMounts:
         - name: etcd-data
@@ -151,7 +151,7 @@ metadata:
   name: romana
   namespace: kube-system
 spec:
-  clusterIP: 100.64.0.99
+  clusterIP: 10.96.0.99
   ports:
   - name: daemon
     port: 9600
@@ -266,86 +266,3 @@ spec:
       - name: run-path
         hostPath:
           path: /var/run/romana
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: romana-aws
-rules:
-- apiGroups:
-  - "*"
-  resources:
-  - nodes
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: romana-aws
-  namespace: kube-system
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: romana-aws
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: romana-aws
-subjects:
-- kind: ServiceAccount
-  name: romana-aws
-  namespace: kube-system
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: romana-aws
-  namespace: kube-system
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        romana-app: aws
-    spec:
-      nodeSelector:
-        node-role.kubernetes.io/master: ""
-      hostNetwork: true
-      serviceAccountName: romana-aws
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      containers:
-      - name: romana-aws
-        image: quay.io/romana/aws:v2.0-preview.1
-        imagePullPolicy: Always
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: romana-vpcrouter
-  namespace: kube-system
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        romana-app: vpcrouter
-    spec:
-      nodeSelector:
-        node-role.kubernetes.io/master: ""
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      containers:
-      - name: romana-vpcrouter
-        image: quay.io/romana/vpcrouter-romana-plugin
-        imagePullPolicy: Always
-        args:
-        - --etcd_use_v2
-        - --etcd_addr=100.64.0.88
-        - --etcd_port=12379
