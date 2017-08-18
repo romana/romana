@@ -18,11 +18,7 @@
 						{ "name": "us-east-1a-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
 						{ "name": "us-east-1a-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
 						{ "name": "us-east-1a-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
-						{ "name": "us-east-1a-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
-						{ "name": "us-east-1a-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
-						{ "name": "us-east-1a-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
-						{ "name": "us-east-1a-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } },
-						{ "name": "us-east-1a-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } }
+						{ "name": "us-east-1a-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1a" } }
 					]
 				},
 				{
@@ -31,11 +27,7 @@
 						{ "name": "us-east-1b-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
 						{ "name": "us-east-1b-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
 						{ "name": "us-east-1b-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
-						{ "name": "us-east-1b-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
-						{ "name": "us-east-1b-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
-						{ "name": "us-east-1b-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
-						{ "name": "us-east-1b-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } },
-						{ "name": "us-east-1b-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } }
+						{ "name": "us-east-1b-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1b" } }
 					]
 				},
 				{
@@ -44,11 +36,7 @@
 						{ "name": "us-east-1c-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
 						{ "name": "us-east-1c-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
 						{ "name": "us-east-1c-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
-						{ "name": "us-east-1c-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
-						{ "name": "us-east-1c-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
-						{ "name": "us-east-1c-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
-						{ "name": "us-east-1c-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } },
-						{ "name": "us-east-1c-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } }
+						{ "name": "us-east-1c-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1c" } }
 					]
 				},
 				{
@@ -57,11 +45,7 @@
 						{ "name": "us-east-1d-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
 						{ "name": "us-east-1d-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
 						{ "name": "us-east-1d-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
-						{ "name": "us-east-1d-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
-						{ "name": "us-east-1d-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
-						{ "name": "us-east-1d-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
-						{ "name": "us-east-1d-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } },
-						{ "name": "us-east-1d-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } }
+						{ "name": "us-east-1d-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1d" } }
 					]
 				},
 				{
@@ -70,11 +54,7 @@
 						{ "name": "us-east-1e-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
 						{ "name": "us-east-1e-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
 						{ "name": "us-east-1e-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
-						{ "name": "us-east-1e-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
-						{ "name": "us-east-1e-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
-						{ "name": "us-east-1e-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
-						{ "name": "us-east-1e-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } },
-						{ "name": "us-east-1e-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } }
+						{ "name": "us-east-1e-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1e" } }
 					]
 				},
 				{
@@ -83,11 +63,7 @@
 						{ "name": "us-east-1f-group-01", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
 						{ "name": "us-east-1f-group-02", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
 						{ "name": "us-east-1f-group-03", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
-						{ "name": "us-east-1f-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
-						{ "name": "us-east-1f-group-05", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
-						{ "name": "us-east-1f-group-06", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
-						{ "name": "us-east-1f-group-07", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } },
-						{ "name": "us-east-1f-group-08", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } }
+						{ "name": "us-east-1f-group-04", "groups": [], "assignment": { "failure-domain.beta.kubernetes.io/region": "us-east-1", "failure-domain.beta.kubernetes.io/zone": "us-east-1f" } }
 					]
 				}
 			]
