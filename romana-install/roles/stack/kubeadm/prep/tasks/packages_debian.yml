@@ -10,5 +10,5 @@
   with_items:
     - docker-engine
     - kubelet
-    - kubeadm=1.7.0-00
+    - kubeadm
     - kubernetes-cni
