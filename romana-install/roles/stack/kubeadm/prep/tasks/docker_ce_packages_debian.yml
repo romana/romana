@@ -1,0 +1,11 @@
+---
+- name: Add apt key for download.docker.com
+  apt_key: url="https://download.docker.com/linux/ubuntu/gpg" state="present"
+
+- name: Add docker apt source
+  copy: src="docker.list" dest="/etc/apt/sources.list.d/docker.list"
+
+- name: Install docker packages
+  apt: update_cache="yes" pkg="{{ item }}" force="yes"
+  with_items:
+    - docker-ce

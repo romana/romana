@@ -1,0 +1,5 @@
+---
+- name: Install docker packages
+  apt: update_cache="yes" pkg="{{ item }}" force="yes"
+  with_items:
+    - docker-engine

@@ -8,7 +8,6 @@
 - name: Install kubeadm packages
   apt: update_cache="yes" pkg="{{ item }}" force="yes"
   with_items:
-    - docker-engine
     - kubelet
     - kubeadm
     - kubernetes-cni

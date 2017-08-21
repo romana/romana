@@ -1,0 +1,24 @@
+---
+- name: Add docker yum source
+  yum_repository:
+    name: docker
+    description: Docker YUM Repo
+    baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+    gpgkey: |
+      https://download.docker.com/linux/centos/gpg
+    gpgcheck: yes
+    repo_gpgcheck: yes
+
+- name: Install docker packages
+  yum: update_cache="yes" pkg="{{ item }}"
+  with_items:
+    - docker-ce
+
+- name: Add docker group
+  group: name="docker"
+
+- name: Align docker and kubelet cgroup configuration
+  replace:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: --cgroup-driver=systemd
+    replace: --cgroup-driver=cgroupfs
