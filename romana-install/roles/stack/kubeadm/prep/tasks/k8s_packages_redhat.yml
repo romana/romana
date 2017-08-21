@@ -14,5 +14,5 @@
   yum: update_cache="yes" pkg="{{ item }}"
   with_items:
     - kubelet
-    - kubeadm
+    - kubeadm-1.7.0-0
     - kubernetes-cni
