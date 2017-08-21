@@ -26,6 +26,7 @@ usage() {
 }
 
 # Parse command-line options
+etcd_endpoints=
 nat=
 nat_interface=
 service_ip_cidr=
