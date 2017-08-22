@@ -19,12 +19,14 @@ usage() {
 	echo "${0##*/}: entrypoint for romana agent container."
 	echo "Options:"
 	echo " -h or --help: print usage"
+	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
 	echo " --nat: Add NAT rule for traffic coming from pods"
 	echo " --nat-interface: Interface that NATs traffic"
 	echo " --service-cluster-ip-range: Interface that NATs traffic"
 }
 
 # Parse command-line options
+etcd_endpoints=
 nat=
 nat_interface=
 service_ip_cidr=
@@ -37,6 +39,10 @@ while [[ $1 == -* ]]; do
 	-h|--help)
 		usage
 		exit 0
+		;;
+	--etcd-endpoints)
+		etcd_endpoints="$2"
+		shift 2
 		;;
 	--nat)
 		nat="$2"
