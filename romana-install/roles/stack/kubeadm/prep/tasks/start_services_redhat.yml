@@ -1,0 +1,6 @@
+---
+- name: Start docker and kubelet
+  service: name="{{ item }}" enabled="yes" state="started"
+  with_items:
+    - docker
+    - kubelet

@@ -1,0 +1,7 @@
+- name: Install docker packages
+  yum: update_cache="yes" pkg="{{ item }}"
+  with_items:
+    - docker-io
+
+- name: Add docker group
+  group: name="docker"

@@ -13,16 +13,6 @@
 - name: Install kubeadm packages
   yum: update_cache="yes" pkg="{{ item }}"
   with_items:
-    - docker-io
     - kubelet
     - kubeadm-1.7.0-0
     - kubernetes-cni
-
-- name: Add docker group
-  group: name="docker"
-
-- name: Start docker and kubelet
-  service: name="{{ item }}" enabled="yes" state="started"
-  with_items:
-    - docker
-    - kubelet

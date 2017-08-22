@@ -8,16 +8,56 @@
   include: "{{ file }}"
   with_first_found:
     - files:
-      - "packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
-      - "packages_{{ ansible_distribution|lower }}.yml"
-      - "packages_{{ ansible_os_family|lower }}.yml"
+      - "k8s_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "k8s_packages_{{ ansible_distribution|lower }}.yml"
+      - "k8s_packages_{{ ansible_os_family|lower }}.yml"
       skip: true
   loop_control:
     loop_var: file
   become: true
   become_user: root
 
+- name: Install docker
+  include: "{{ file }}"
+  with_first_found:
+    - files:
+      - "docker_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "docker_packages_{{ ansible_distribution|lower }}.yml"
+      - "docker_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  loop_control:
+    loop_var: file
+  become: true
+  become_user: root
+  when: not use_docker_ce
+
+- name: Install docker-ce
+  include: "{{ file }}"
+  with_first_found:
+    - files:
+      - "docker_ce_packages_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "docker_ce_packages_{{ ansible_distribution|lower }}.yml"
+      - "docker_ce_packages_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  loop_control:
+    loop_var: file
+  become: true
+  become_user: root
+  when: use_docker_ce
+
 - name: Add user to docker group (for convenience, so user can run docker commands)
   become: true
   become_user: root
   user: name="{{ ansible_ssh_user }}" append=yes groups="docker"
+  
+- include: "{{ file }}"
+  with_first_found:
+    - files: 
+      - "start_services_{{ ansible_distribution|lower }}_{{ ansible_distribution_release|lower }}.yml"
+      - "start_services_{{ ansible_distribution|lower }}.yml"
+      - "start_services_{{ ansible_os_family|lower }}.yml"
+      skip: true
+  loop_control:
+    loop_var: file
+  become: true
+  become_user: root
