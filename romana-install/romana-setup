@@ -375,7 +375,7 @@ if [[ "$platform" == "aws" ]]; then
 		fi
 	fi
 	# If we now have a region, but no AMI setting, try to look it up
-	if [[ "$region" ]] && ! [[ "$ami" ]]; then
+	if [[ "$region" ]] && ! [[ "$ami" ]] && [[ "$action" = "install" ]]; then
 		ansible_args+=( -e region="$region" )
 		case "$distro" in
 			ubuntu)
