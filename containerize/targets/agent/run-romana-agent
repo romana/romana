@@ -15,6 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Enable shell options
+shopt -s nullglob
+
 usage() {
 	echo "${0##*/}: entrypoint for romana agent container."
 	echo "Options:"
@@ -300,6 +303,25 @@ if [[ -d /host/opt/cni/bin ]]; then
 	cp /var/lib/romana/cni-installation/romana_cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
+	existing_files=( /host/etc/cni/net.d/*.conf )
+	existing_cni_configs=()
+	for f in "${existing_files[@]}"; do
+		fn="${f##*/}"
+		if [[ "$fn" = "10-romana.conf" ]]; then
+			# this is ours
+			:
+		else
+			existing_cni_configs+=( "$fn" )
+		fi
+	done
+	if (( ${#existing_cni_configs[@]} )); then
+		printf "Existing CNI configuration found on host:\n"
+		for config in "${existing_cni_configs[@]}"; do
+			printf "%s\n" "$config"
+		done
+		internal_error "cni config not installed as other configs exist"
+	fi
+
 	# shellcheck disable=SC2016
 	etcd_endpoints_json=$(jq -c --arg etcd_endpoints "$etcd_endpoints" '$etcd_endpoints | split(",")' <<< "{}")
 	replacements=(
