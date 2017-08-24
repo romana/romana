@@ -385,6 +385,71 @@ else
 	printf "ok. %d networks configured.\n" "$num_networks"
 fi
 
+cidr_min() {
+	if (($# != 1)); then
+		internal_error "cidr_min(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_min(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	printf "%d" "$v"
+}
+
+cidr_max() {
+	if (($# != 1)); then
+		internal_error "cidr_max(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_max(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	((v+=2**(32-p)-1))
+	printf "%d" "$v"
+}
+
+cidr_overlaps() {
+	if (($# != 2)); then
+		internal_error "cidr_overlaps(): expected 2 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_overlaps(): '$1' is not a valid CIDR."
+	fi
+	if ! valid_cidr "$2"; then
+		internal_error "cidr_overlaps(): '$2' is not a valid CIDR."
+	fi
+	local first second
+	first="$1" second="$2"
+	first_min=$(cidr_min "$first") first_max=$(cidr_max "$first")
+	second_min=$(cidr_min "$second") second_max=$(cidr_max "$second")
+
+	if (( first_max < second_min )) || (( second_max < first_min )); then
+		return 1
+	fi
+	return 0
+}
+
+# Check if the CIDR for the network is valid
+while IFS=$'\t' read -r network_id network_cidr; do
+	if ! [[ "$network_cidr" ]]; then
+		internal_error "network '$network_id' is missing cidr value"
+	fi
+	if ! valid_cidr "$network_cidr"; then
+		internal_error "invalid cidr value for network '$network_id': $network_cidr"
+	fi
+	if cidr_overlaps "$network_cidr" "$service_ip_cidr"; then
+		internal_error "cidr for network '$network_id' overlaps with kubernetes service ip range: $network_cidr overlaps $service_ip_cidr"
+	fi
+done < <(jq -r '.[] | "\(.id)\t\(.cidr)"' <<< "$daemon_response")
+
 if [[ "$nat_interface" ]]; then
 	nat_address=$(interface_address "$nat_interface")
 	if ! [[ "$nat_address" ]]; then
