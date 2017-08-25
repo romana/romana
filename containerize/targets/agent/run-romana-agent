@@ -143,6 +143,9 @@ valid_number() {
 	if (($# != 1)); then
 		internal_error "valid_number(): expected 1 parameter, got $#"
 	fi
+	if ! [[ "$1" ]]; then
+		return 1
+	fi
 	if ! printf "%d\n" "$1" &> /dev/null; then
 		return 1
 	fi

@@ -26,6 +26,8 @@ usage() {
 # Parse command-line options
 etcd_endpoints=
 initial_network=
+cloud=
+network_cidr_overrides=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -42,6 +44,14 @@ while [[ $1 == -* ]]; do
 		;;
 	--initial-network)
 		initial_network="$2"
+		shift 2
+		;;
+	--cloud)
+		cloud="$2"
+		shift 2
+		;;
+	--network-cidr-overrides)
+		network_cidr_overrides="$2"
 		shift 2
 		;;
 	*)
@@ -73,7 +83,6 @@ fi
 if ! [[ "$KUBERNETES_SERVICE_PORT_HTTPS" ]]; then
 	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_PORT_HTTPS not found"
 fi
-api_server="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS"
 
 # Romana Daemon Service must be defined via envinronment variables
 if ! [[ "$ROMANA_SERVICE_HOST" ]]; then
@@ -82,7 +91,6 @@ fi
 if ! [[ "$ROMANA_SERVICE_PORT_DAEMON" ]]; then
 	usage_error "Unable to find Romana Service. Environment varible ROMANA_SERVICE_PORT_DAEMON not found"
 fi
-romana_daemon="http://$ROMANA_SERVICE_HOST:$ROMANA_SERVICE_PORT_DAEMON"
 
 # Romana etcd is required. Use value from command-line, or look for environment variables from Kubernetes
 if [[ "$etcd_endpoints" ]]; then
@@ -114,7 +122,27 @@ printf "%s\n" "$etcd_response"
 # Configure initial network
 if [[ "$initial_network" ]]; then
 	: # TODO: check if the file exists or support URLs.
+elif [[ "$cloud" ]]; then
+	case "$cloud" in
+	aws)
+		if ! mds_response=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone); then
+			usage_error "Unable to determine initial network to apply."
+		fi
+		if ! [[ "$mds_response" ]]; then
+			usage_error "Unable to determine initial network to apply."
+		fi
+		aws_region=${mds_response%?}
+		if ! [[ -f "/var/lib/romana/initial-network/aws-${aws_region}.json" ]]; then
+			internal_error "No predefined initial network for region $aws_region"
+		fi
+		initial_network="/var/lib/romana/initial-network/aws-${aws_region}.json"
+		;;
+	*)
+		usage_error "Unknown value for --cloud: $cloud"
+		;;
+	esac
 else
+	# guess based on kubernetes service ip
 	case "$KUBERNETES_SERVICE_HOST" in
 	100.64.0.1) # kops default
 		if ! mds_response=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone); then
@@ -124,10 +152,10 @@ else
 			usage_error "Unable to determine initial network to apply."
 		fi
 		aws_region=${mds_response%?}
-		if ! [[ -f "/var/lib/romana/initial-network/kops-network-${aws_region}.json" ]]; then
+		if ! [[ -f "/var/lib/romana/initial-network/aws-${aws_region}.json" ]]; then
 			internal_error "No predefined initial network for region $aws_region"
 		fi
-		initial_network="/var/lib/romana/initial-network/kops-network-${aws_region}.json"
+		initial_network="/var/lib/romana/initial-network/aws-${aws_region}.json"
 		;;
 	10.96.0.1) # kubeadm default
 		initial_network=/var/lib/romana/initial-network/kubeadm-network.json
@@ -136,6 +164,94 @@ else
 		usage_error "Unable to determine initial network to apply."
 		;;
 	esac
+fi
+
+valid_number() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	if ! [[ "$1" ]]; then
+		return 1
+	fi
+	if ! printf "%d\n" "$1" &> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+valid_cidr() {
+	if (($# != 1)); then
+		internal_error "valid_cidr(): expected 1 parameter, got $#"
+	fi
+	# Split w.x.y.z/p into pieces.
+	local w x y z p r v
+	IFS='./' read -r w x y z p r <<< "$1"
+	if [[ "$r" ]]; then
+		# Additional data in the CIDR. Return error.
+		return 1
+	fi
+	# Check w, x, y, z are valid numbers from 0-255.
+	error=0
+	for v in "$w" "$x" "$y" "$z"; do
+		if ! valid_number "$v"; then
+			error=1
+			break
+		fi
+		if ! ((v >= 0 && v < 256)); then
+			error=1
+			break
+		fi
+	done
+
+	if ((error)); then
+		return 1
+	fi
+	# Check p is some value between 0 and 32.
+	if ! valid_number "$p"; then
+		return 1
+	fi
+	if ! ((p >= 0 && p <= 32)); then
+		return 1
+	fi
+	
+	# Passed checks. return OK
+	return 0
+}
+
+# Apply network cidr overrides
+if [[ "$network_cidr_overrides" ]]; then
+	jq_args=()
+	jq_filter=""
+	filter_separator=""
+	IFS="," read -ra overrides <<< "$network_cidr_overrides"
+	i=0
+	for override in "${overrides[@]}"; do
+		IFS="=" read -r name cidr rest <<< "$override"
+		if [[ "$rest" ]]; then
+			internal_error "problem parsing override '$override': '$rest' after override expression"
+		fi
+		if ! [[ "$name" ]]; then
+			internal_error "problem parsing override '$override': empty name"
+		fi
+		if ! [[ "$cidr" ]]; then
+			internal_error "problem parsing override '$override': empty cidr"
+		fi
+		if ! valid_cidr "$cidr"; then
+			internal_error "problem parsing override '$override': invalid CIDR"
+		fi
+		# validation passed. add to jq command
+		((i++))
+		jq_args+=( --arg "cidr$i" "$cidr" )
+		# shellcheck disable=SC2016
+		jq_filter+="${filter_separator}"'(.networks[] | select(.name=="'"$name"'") | .cidr) |= $cidr'"$i"
+		filter_separator=" | "
+	done
+	# run jq
+	jq_output=/var/lib/romana/initial-network/initial-network.json
+	if ! jq -r "${jq_args[@]}" "$jq_filter" < "$initial_network" > "$jq_output"; then
+		internal_error "failed to apply network overrides: jq_args=( ${jq_args[*]} ) jq_filter='$jq_filter'"
+	fi
+	initial_network="$jq_output"
 fi
 
 # Pre-launch romanad to check if initial network is configured.
