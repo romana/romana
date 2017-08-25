@@ -21,6 +21,8 @@ usage() {
 	echo " -h or --help: print usage"
 	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
 	echo " --initial-network: path to a json file describing the initial network topology"
+	echo " --cloud: specify the cloud provider, for predefined initial config. Currently supported: aws"
+	echo " --network-cidr-overrides: a comma-separated list of name=CIDR pairs, to replace predefined network CIDR values"
 }
 
 # Parse command-line options
