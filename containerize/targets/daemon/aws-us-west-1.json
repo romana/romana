@@ -1,15 +1,15 @@
 {
 	"networks": [
 		{
-			"name": "kops-network",
-			"cidr": "100.72.0.0/13",
+			"name": "romana-network",
+			"cidr": "100.96.0.0/11",
 			"block_mask": 29
 		}
 	],
 	"topologies": [
 		{
 			"networks": [
-				"kops-network"
+				"romana-network"
 			],
 			"map": [
 				{
