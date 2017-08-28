@@ -15,6 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Enable shell options
+shopt -s nullglob
+
 usage() {
 	echo "${0##*/}: entrypoint for romana agent container."
 	echo "Options:"
@@ -77,6 +80,15 @@ internal_error() {
 	echo "Internal Error:" "$@"
 	exit 2
 }
+
+# Preview Release Only: iptables FORWARD policy should be set to ACCEPT
+if ! forward_policy=$(iptables-save | awk '/^\*/ { table=substr($0, 2) } table == "filter" && $1 == ":FORWARD" { print $2; end; }'); then
+	internal_error "Failed to check policy of iptables FORWARD chain"
+elif [[ "$forward_policy" = "DROP" ]]; then
+	internal_error "Policy for iptables FORWARD chain is set to DROP. Romana expects this to be ACCEPT"
+elif [[ "$forward_policy" != "ACCEPT" ]]; then
+	internal_error "Unexpected value for policy of iptables FORWARD chain: $forward_policy"
+fi
 
 # Kubernetes HTTPS Service must be defined via envinronment variables
 if ! [[ "$KUBERNETES_SERVICE_HOST" ]]; then
@@ -303,6 +315,25 @@ if [[ -d /host/opt/cni/bin ]]; then
 	cp /var/lib/romana/cni-installation/romana_cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
+	existing_files=( /host/etc/cni/net.d/*.conf )
+	existing_cni_configs=()
+	for f in "${existing_files[@]}"; do
+		fn="${f##*/}"
+		if [[ "$fn" = "10-romana.conf" ]]; then
+			# this is ours
+			:
+		else
+			existing_cni_configs+=( "$fn" )
+		fi
+	done
+	if (( ${#existing_cni_configs[@]} )); then
+		printf "Existing CNI configuration found on host:\n"
+		for config in "${existing_cni_configs[@]}"; do
+			printf "%s\n" "$config"
+		done
+		internal_error "cni config not installed as other configs exist"
+	fi
+
 	# shellcheck disable=SC2016
 	etcd_endpoints_json=$(jq -c --arg etcd_endpoints "$etcd_endpoints" '$etcd_endpoints | split(",")' <<< "{}")
 	replacements=(
@@ -387,6 +418,71 @@ elif (( num_networks == 1 )); then
 else
 	printf "ok. %d networks configured.\n" "$num_networks"
 fi
+
+cidr_min() {
+	if (($# != 1)); then
+		internal_error "cidr_min(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_min(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	printf "%d" "$v"
+}
+
+cidr_max() {
+	if (($# != 1)); then
+		internal_error "cidr_max(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_max(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	((v+=2**(32-p)-1))
+	printf "%d" "$v"
+}
+
+cidr_overlaps() {
+	if (($# != 2)); then
+		internal_error "cidr_overlaps(): expected 2 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_overlaps(): '$1' is not a valid CIDR."
+	fi
+	if ! valid_cidr "$2"; then
+		internal_error "cidr_overlaps(): '$2' is not a valid CIDR."
+	fi
+	local first second
+	first="$1" second="$2"
+	first_min=$(cidr_min "$first") first_max=$(cidr_max "$first")
+	second_min=$(cidr_min "$second") second_max=$(cidr_max "$second")
+
+	if (( first_max < second_min )) || (( second_max < first_min )); then
+		return 1
+	fi
+	return 0
+}
+
+# Check if the CIDR for the network is valid
+while IFS=$'\t' read -r network_id network_cidr; do
+	if ! [[ "$network_cidr" ]]; then
+		internal_error "network '$network_id' is missing cidr value"
+	fi
+	if ! valid_cidr "$network_cidr"; then
+		internal_error "invalid cidr value for network '$network_id': $network_cidr"
+	fi
+	if cidr_overlaps "$network_cidr" "$service_ip_cidr"; then
+		internal_error "cidr for network '$network_id' overlaps with kubernetes service ip range: $network_cidr overlaps $service_ip_cidr"
+	fi
+done < <(jq -r '.[] | "\(.id)\t\(.cidr)"' <<< "$daemon_response")
 
 if [[ "$nat_interface" ]]; then
 	nat_address=$(interface_address "$nat_interface")
