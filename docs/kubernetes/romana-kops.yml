@@ -94,56 +94,11 @@ spec:
   - name: etcd
     port: 12379
     protocol: TCP
-    targetPort: 12379
+    targetPort: 4001
   selector:
-    romana-app: etcd
+    k8s-app: etcd-server
   sessionAffinity: None
   type: ClusterIP
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: romana-etcd
-  namespace: kube-system
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        romana-app: etcd
-    spec:
-      nodeSelector:
-        node-role.kubernetes.io/master: ""
-      hostNetwork: true
-      securityContext:
-        seLinuxOptions:
-          type: spc_t
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      containers:
-      - name: romana-etcd
-        image: gcr.io/google_containers/etcd-amd64:3.0.17
-        command:
-        - etcd
-        - "--listen-client-urls=http://0.0.0.0:12379"
-        - "--listen-peer-urls=http://127.0.0.1:12380"
-        - "--advertise-client-urls=http://100.64.0.88:12379"
-        - "--data-dir=/var/etcd/data"
-        volumeMounts:
-        - name: etcd-data
-          mountPath: "/var/etcd/data"
-        livenessProbe:
-          httpGet:
-            path: "/health"
-            port: 12379
-            host: 127.0.0.1
-          initialDelaySeconds: 15
-          timeoutSeconds: 15
-      volumes:
-      - name: etcd-data
-        hostPath:
-          path: "/var/lib/romana/etcd-db"
 ---
 apiVersion: v1
 kind: Service
@@ -182,8 +137,11 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-daemon
-        image: quay.io/romana/daemon:v2.0-preview.1
+        image: quay.io/romana/daemon:v2.0-preview.2
         imagePullPolicy: Always
+        args:
+        - --cloud=aws
+        - --network-cidr-overrides=romana-network=100.96.0.0/11
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -206,7 +164,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-listener
-        image: quay.io/romana/listener:v2.0-preview.1
+        image: quay.io/romana/listener:v2.0-preview.2
         imagePullPolicy: Always
 ---
 apiVersion: extensions/v1beta1
@@ -230,7 +188,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v2.0-preview.1
+        image: quay.io/romana/agent:v2.0-preview.2
         imagePullPolicy: Always
         env:
         - name: NODENAME
@@ -321,7 +279,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-aws
-        image: quay.io/romana/aws:v2.0-preview.1
+        image: quay.io/romana/aws:v2.0-preview.2
         imagePullPolicy: Always
 ---
 apiVersion: extensions/v1beta1
