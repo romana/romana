@@ -5,7 +5,9 @@
 Installing Romana on a Kubernetes cluster is fast and easy.
 
 For clusters created with `kops` or `kubeadm` with default settings, predefined YAML files are provided that you can install using `kubectl apply`.
-Some changes to the YAML files will be required under some circumstances. Please check the special notes.
+Some changes to the YAML files will be required under some circumstances - check the special notes.
+
+If you have made your own customized installation of Kubernetes or used a different tool to create the cluster, then you should refer to the detailed [components](components.md) page, and align the example configuration with the details specific to your cluster.
 
 ## Installation for kubeadm
 
@@ -61,10 +63,9 @@ Please see special notes below if
 
 ## Installation in other environments
 
-If you are using a different installer or have your own set of tools for bringing up a cluster, it is likely that the predefined configurations for kubeadm or kops will not work.
-Instead, it is usually necessary to customize the YAML files used for the installing Romana to match your environment.
+Please refer to the detailed [components](components.md) page, and align the example configuration with the details specific to your cluster.
 
-More information about this will be added in a future update. In the meantime, we can help via email or Slack.
+## Special Notes
 
 # Updates coming soon
 
