@@ -23,7 +23,7 @@ For other environments including customized installations and baremetal deployme
 
 * `topologies` (required)
 
-  A list of (Topology Mapping)(#topology-mapping-json) objects. These link the network definitions and the topology of hosts within the cluster.
+  A list of [Topology Mapping](#topology-mapping-json) objects. These link the network definitions and the topology of hosts within the cluster.
 
 ### Network Definition JSON
 
