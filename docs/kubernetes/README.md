@@ -71,14 +71,6 @@ Please refer to the detailed [components](components.md) page, and align the exa
 
 These topics still need additional explanation, instructions and guides.
 
-- Essential Components
-- romana-etc
-  - romana-daemon
-  - romana-listener
-  - romana-agent
-- Add-Ons
-  - romana-aws
-  - romana-vpcrouter
 - Special Notes
   - Custom range for Kubernetes Service IPs
   - Custom range for Pod IPs
