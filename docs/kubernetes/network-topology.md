@@ -111,3 +111,17 @@ For other environments including customized installations and baremetal deployme
 * `ip` (required)
 
   The IP address of the host. Each IP must be unique. This address must match the node address registered in Kubernetes.
+
+
+## Examples
+
+- [Network topology used for kubeadm installations](../../containerize/targets/daemon/kubeadm-network.json)
+
+  This example defines a single network named `romana-network`, and maps to a topology containing 8 `host-groups`.
+  The empty groups are used as placeholders, and Kubernetes nodes will be assigned to the host-groups with round-robin placement.
+
+- [Network topology used for kops in us-west-1 region](../../containerize/targets/daemon/aws-us-west-1.json)
+
+  This example defined a single network named `romana-network`, and contains a host-group for each Availability Zone (AZ) within the us-west-1 region.
+  Inside each AZ host-group, there are 8 sub-groups with `assignment` labels specific to that AZ.
+  Kubernetes nodes will be assigned to one of those sub-groups based on round-robin placement after matching the `assignment` labels.
