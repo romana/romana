@@ -109,8 +109,33 @@ The following details must be modified to match your cluster's settings.
 
   A user-defined network topology can be provided by
   - loading the network topology file into a configmap using kubectl
+
+    ```bash
+    kubectl -n kube-system create configmap romana-network-conf  --from-file=custom-network.json
+    ```
+
   - mounting the configmap into the romana-daemon pod
+
+  ```yaml
+          volumeMounts:
+          - name: romana-config-volume
+            mountPath: /etc/romana/network
+        volumes:
+        - name: romana-config-volume
+          configMap:
+            name: romana-network-conf
+  ```
+
   - specifying the path to that network topology file in the romana-daemon pod arguments
+
+  ```yaml
+          args:
+          - --initial-network=/etc/romana/network/custom-network.json
+  ```
+
+  The path is a combination of the `mountPath` (eg: `/etc/romana/network`) and the filename inside the configmap (eg: `custom-network.json`).
+
+  See the example [romana-daemon-custom-network](specs/romana-daemon-custom-network.yaml) YAML file.
 
 * Network CIDR Overrides
 

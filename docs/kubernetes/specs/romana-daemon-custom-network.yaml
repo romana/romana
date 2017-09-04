@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romana
+  namespace: kube-system
+spec:
+  clusterIP: 100.64.0.99
+  ports:
+  - name: daemon
+    port: 9600
+    protocol: TCP
+    targetPort: 9600
+  selector:
+    romana-app: daemon
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-daemon
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        romana-app: daemon
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-daemon
+        image: quay.io/romana/daemon:v2.0-preview.2
+        imagePullPolicy: Always
+        args:
+        - --initial-network=/etc/romana/network/custom-network.json
+        volumeMounts:
+        - name: romana-config-volume
+          mountPath: /etc/romana/network
+      volumes:
+      - name: romana-config-volume
+        configMap:
+          name: romana-network-conf
