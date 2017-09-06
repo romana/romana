@@ -37,7 +37,7 @@ For other environments including customized installations and baremetal deployme
 
 * `name` (required)
 
-  The name for this network. Each name must be unique.
+  The name for this network. Each name must be unique. This name is used to link network definitions and topology mappings.
 
 * `cidr` (required)
   
@@ -45,7 +45,7 @@ For other environments including customized installations and baremetal deployme
 
 * `block_mask` (required)
 
-  The mask applied to _address blocks_. This must be longer than the mask used for the CIDR, with a maximum value of 32.
+  The mask applied to [address blocks](../romana#romana-address-blocks). This must be longer than the mask used for the CIDR, with a maximum value of 32.
   It implicitly defines the number of addresses per block, eg: a value of /29 means the address block contains 8 addresses.
 
 ### Topology Mapping JSON

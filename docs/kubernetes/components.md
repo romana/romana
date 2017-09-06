@@ -1,6 +1,6 @@
 # Romana on Kubernetes - Components
 
-An installation of Romana on Kubernetes has a number of essential components, and some add-on components for specific cloud providers.
+An installation of Romana on Kubernetes has a number of essential components, and some add-on components for specific cloud providers. These are currently available for AWS, and components for other cloud providers will be developed in the future.
 
 - Essential Components
   * [romana-etcd](#romana-etcd)
@@ -24,14 +24,14 @@ This can be the same etcd storage used by Kubernetes itself, dedicated etcd stor
 
 If you are using the Kubernetes etcd storage for Romana, then it is exposed as a service. See the example [etcd-service](specs/etcd-service.yaml) YAML file.
 To match this with a custom environment, you need to ensure
-* The `clusterIP` is specified and a valid value for your cluster's `--service-cluster-ip-range`. You will find this value in the configuration for your `kube-apiserver`
-* The `targetPort` must match the port used for clients to connect to etcd. You will find this value in the environment variable `ETCD_LISTEN_CLIENT_URLS` or the command-line option `--listen-client-urls` for etcd.
+* The `clusterIP` is specified and a valid value for your cluster's `--service-cluster-ip-range`. The value for this range can be found in the configuration for your `kube-apiserver`.
+* The `targetPort` must match the port used by clients to connect to etcd. You will find this value in the environment variable `ETCD_LISTEN_CLIENT_URLS` or the command-line option `--listen-client-urls` for etcd.
 * The `selector` lists labels that must match your etcd pods. Please ensure your etcd pods have a distinct label and that the `selector` matches that label.
 
 #### Dedicated etcd storage
 
 You can deploy your own etcd instance or cluster within Kubernetes and make Romana use that instead of the Kubernetes etcd.
-It's highly recommended that you expose that dedicated etcd storage as a service. See the section above for details.
+It's highly recommended to expose that dedicated etcd storage as a service. See the section above for details.
 
 #### Standalone pod
 
@@ -42,7 +42,7 @@ The example contains two parts that need to be aligned:
 * the `romana-etcd` Service
 * the `romana-etcd` Deployment
 
-The following details must be modified to match your cluster's settings.
+The following details must be modified to match your cluster's settings:
 
 * Service IP
 
@@ -52,7 +52,7 @@ The following details must be modified to match your cluster's settings.
 
 * Port
 
-  The Port for `romana-etcd` needs to be specified in the `romana-etcd` service for `port`, in the `romana-etcd` deployment template for the `--listen-client-urls` option, and in the `livenessProbe` for the `port`.
+  The port for `romana-etcd` needs to be specified in the `romana-etcd` service for `port`, in the `romana-etcd` deployment template for the `--listen-client-urls` option, and in the `livenessProbe` for the `port`.
 
 * Target Port
 
@@ -76,7 +76,7 @@ The example contains two parts that need to be aligned:
 * the `romana-daemon` Service
 * the `romana-daemon` Deployment
 
-The following details must be modified to match your cluster's settings.
+The following details must be modified to match your cluster's settings:
 
 * Service IP
 
@@ -152,7 +152,7 @@ The following details must be modified to match your cluster's settings.
 
 ### romana-listener
 
-The `romana-listener` service is a background service that listens for events from Kubernetes API Server and updates configuration in Romana. See the example [romana-listener](specs/romana-listener.yaml) YAML file.
+The `romana-listener` service is a background service that listens for events from the Kubernetes API Server and updates configuration in Romana. See the example [romana-listener](specs/romana-listener.yaml) YAML file.
 
 The example contains four parts:
 - the `romana-listener` ClusterRole
@@ -160,7 +160,7 @@ The example contains four parts:
 - the `romana-listener` ClusterRoleBinding
 - the `romana-listener` Deployment
 
-The following details must be modified to match your cluster's settings.
+The following details must be modified to match your cluster's settings:
 
 * Placement
 
@@ -170,7 +170,7 @@ The following details must be modified to match your cluster's settings.
 
 ### romana-agent
 
-The `romana-agent` component is a local agent than runs on all Kubernetes nodes. It install the CNI tools and configuration necessary to integrate Kubernetes CNI mechanics with Romana, and manages node-specific configuration for routing and policy. See the example [romana-agent](specs/romana-agent.yaml) YAML file.
+The `romana-agent` component is a local agent than runs on all Kubernetes nodes. It installs the CNI tools and configuration necessary to integrate Kubernetes CNI mechanics with Romana, and manages node-specific configuration for routing and policy. See the example [romana-agent](specs/romana-agent.yaml) YAML file.
 
 The example contains four parts:
 - the `romana-agent` ClusterRole
@@ -178,7 +178,7 @@ The example contains four parts:
 - the `romana-agent` ClusterRoleBinding
 - the `romana-agent` DaemonSet
 
-The following details must be modified to match your cluster's settings.
+The following details must be modified to match your cluster's settings:
 
 * Service Cluster IP Range
 
@@ -200,9 +200,9 @@ The following details must be modified to match your cluster's settings.
 
 ### romana-aws
 
-The `romana-aws` service listens for node information from the Kubernetes API Server and updates the Source-Dest-Check attribute of the EC2 instance for that node. This attribute needs to be disabled for pods to communicate between nodes. See the example [romana-aws](specs/romana-aws.yaml) YAML file.
+The `romana-aws` service listens for node information from the Kubernetes API Server and disables the Source-Dest-Check attribute of the EC2 instances to allow pods to communicate between nodes. See the example [romana-aws](specs/romana-aws.yaml) YAML file.
 
-The following details must be modified to match your cluster's settings.
+The following details must be modified to match your cluster's settings:
 
 * Placement
   The pod should be forced to run on a master node. If your master has a unique `node-role` label, then that can be used in the `romana-aws` deployment template for the `nodeSelector`. Otherwise, the `nodeSelector` should be updated to match the key and value for the master node's `kubernetes.io/hostname`
@@ -216,9 +216,9 @@ The following details must be modified to match your cluster's settings.
 
 ### romana-vpcrouter
 
-The `romana-vpcrouter` service responsible for creating and maintaining routes between Availability Zones and Subnets for a Kubernetes cluster in AWS. It combines node state information from Kubernetes, AWS and internal monitoring, and route assignments from Romana, and uses this to add and modify routes in the VPC Routing Tables.
+The `romana-vpcrouter` service is responsible for creating and maintaining routes between Availability Zones and Subnets for a Kubernetes cluster in AWS. It combines node state information from Kubernetes, AWS and internal monitoring, and route assignments from Romana, and uses this to add and modify routes in the VPC Routing Tables.
 
-The following details must be modified to match your cluster's settings.
+The following details must be modified to match your cluster's settings:
 
 * `romana-etcd` Service IP and Port
 
@@ -232,5 +232,10 @@ The following details must be modified to match your cluster's settings.
 * IAM Permissions
 
   The IAM role for your master node(s) needs to include the permission to describe EC2 Resources, list and modify VPCs, and list and modify RouteTables.
+
+* Security Groups
+
+  The vpcrouter component performs active liveness checks on cluster nodes. By default, it uses ICMPecho ("ping") requests for this purpose. Therefore, please ensure that your
+security group ruless allow for cluster nodes to exchange those messages.
 
 
