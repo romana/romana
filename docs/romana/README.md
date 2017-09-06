@@ -153,7 +153,120 @@ easily understood and comprehensible cluster operations.
 ## Topology
 
 * [Prefix groups](#prefix-groups)
+* [Topology map](#topology-map)
 
 ### Prefix groups
 
-In order to 
+Prefix groups are one of the key ideas behind Romana's IPAM. With this concept,
+IP addresses for endpoints are chosen from the same CIDR if they are created in
+'close proximity'. For example, assume you run a cluster in a data center
+network, consisting of multiple racks full of servers. Romana IPAM may consider
+all the hosts within a rack to be part of the same prefix group. This means
+that all address blocks - and therefore all endpoint IP addresses - assigned to
+those hosts will share the same prefix. This then means that the ToRs (top of
+rack) switches in the data center only need to know a single route to be able
+to send traffic to all the endpoints within a rack: With this topology aware
+IPAM, Romana manages to dramatically collapse the routing table, reducing the
+memory requirements, CPU load and network load of the network infrastructure.
+
+Let's look at an example in more detail.
+
+Assume your data center consists of four racks. Each rack has a ToR on top.
+Those ToRs are all connected to a set of core routers.
+
+Assume further that the overall address range for Romana is 10.1.0.0/16.
+
+The fact that there are four racks is expressed in the
+[topology map](#topology-map) that is provided as configuration. Romana then
+takes this information and automatically carves up the overall CIDR configured
+for Romana into four sub-ranges: `10.1.0.0/18`, `10.1.64.0/18`, `10.1.128.0/18`
+and `10.1.192.0/18`. It then organizes the hosts in each rack into a prefix
+group and assigns one of those sub-ranges to each prefix group. For example,
+`10.1.0.0/18` may be assigned to rack 1, `10.1.64.0/18` to rack 2, and so on.
+
+Then, if the cluster scheduler wishes to bring up a workload on any host in
+rack 1, Romana IPAM will make sure that the address block used for this
+endpoint will be fully contained in the `10.1.0.0/18` CIDR. For example, the
+address block may have the CIDR `10.1.0.8/28`.
+
+Likewise, if an address block is needed on any host in rack 2, it will have a
+CIDR that's contained within the second prefix group's CIDR. For example,
+`10.1.64.8/28`.
+
+As a result, to direct outgoing packets to endpoints in other racks,
+the core routers only need to have four routes: One route for each
+prefix-group's CIDR to the ToR for that prefix-group / rack. These routes do
+not even require updating during the life time of the cluster.
+
+Please note that every environment is different. Romana provides for a great
+deal of flexibility to organize hosts into prefix groups and how to configure
+the announcement of routes. Prefix groups are not only important in data
+centers, but also in clusters that are running on cloud infrastructure. Where
+and how routes are announced and created may differ depending on the
+environment. Romana supports a number of options.
+
+### Topology map
+
+A topology map is one of the configuration parameters for Romana and is the
+basis on which Romana IPAM calculates CIDRs for
+[prefix groups](#prefix-groups).
+
+Examples for a number of real world topology maps are included with the Romana
+distribution. Here are a few somewhat simplified examples:
+
+#### Example 1: Flat network, single prefix group
+
+In this example, any host that is added to the cluster will be automatically
+assigned to the single prefix group we have defined here.
+
+    {
+        ...
+        "map" : [
+            {
+                "name"   : "all-hosts",
+                "groups" : []
+            }
+        ]
+        ...
+    }
+
+#### Example 2: Data center with four racks
+
+Here, we define a topology with four prefix group. Each rack in our data center
+gets its own prefix group. Note the 'assignment' specifier. This matches any
+tags of hosts. Therefore, as cluster nodes are added, the operator should
+ensure that tags with those values are specified to each host. Both OpenStack
+as well as Kubernetes offer the option to tag nodes as they are added to the
+cluster. In some cloud environments, nodes are automatically added with a
+region or zone identifier, which can then be used in the same manner.
+
+
+    {
+        ...
+        "map" : [
+            {
+                "name"       : "rack-1",
+                "assignment" : { "my-location-tag" : "rack-1" },
+                "groups"     : []
+            },
+            {
+                "name"       : "rack-2",
+                "assignment" : { "my-location-tag" : "rack-2" },
+                "groups"     : []
+            },
+            {
+                "name"       : "rack-3",
+                "assignment" : { "my-location-tag" : "rack-3" },
+                "groups"     : []
+            },
+            {
+                "name"       : "rack-4",
+                "assignment" : { "my-location-tag" : "rack-4" },
+                "groups"     : []
+            },
+        ]
+        ...
+    }
+
+More complex group hierarchies with multiple levels are also possible.
+
