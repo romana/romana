@@ -45,7 +45,7 @@ The following terminology is used throughout this document:
 
 ## Networking
 
-* [Fully routed networking](#fully-routed-networks-no-overlay)
+* [Fully routed networking](#fully-routed-networks-no-overlays)
 * [Address blocks](#romana-address-blocks)
 * [Route management](#route-management)
 
