@@ -142,7 +142,7 @@ address range and to use `/28` blocks. Now assume a first workload needs to be
 started. The cluster scheduler decided to place this workload on host A of the
 cluster.
 
-Romana's IPAM realizes that no block is in use yet on host A, allcates a block
+Romana's IPAM realizes that no block is in use yet on host A, allocates a block
 and 'assigns' it to host A. For example, it may choose to use block
 `10.1.9.16/28`. As this assignment is made, the Romana agent on the cluster
 hosts [may create routes](#route-management) to this block's address range,
@@ -163,7 +163,10 @@ If now a third endpoint needs to be brought up, and it is again scheduled to
 host A, then IPAM detects that there is an address block already on host A, but
 it is not fully used, yet. Therefore, it returns a free address from that
 block, for example `10.1.9.18`. Importantly, no new block allocation was
-necessary in that case, an no additional routes had to be configured.
+necessary in that case, an no additional routes had to be configured. This
+image illustrates the state at this point:
+
+![State in a the cluster after third endpoint was created](img/fig1.png)
 
 As a result, the need to update routes on hosts or in the network
 infrastructure is greatly reduced. The larger the address blocks, the less
