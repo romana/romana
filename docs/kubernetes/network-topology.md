@@ -63,7 +63,7 @@ For other environments including customized installations and baremetal deployme
 
 * `map` (required)
 
-  A list of [Host Group](#host-group-json) objects.
+  A list of [Host Group](#host-group-json) objects. This is a [topology map](../romana##topology-map) for the list of networks.
 
 ### Host Group JSON
 
@@ -88,7 +88,10 @@ For other environments including customized installations and baremetal deployme
 
   A list of Host Group objects. Only one of "hosts" and "groups" should be specified.
   This allows for nesting the definition of groups to match your topology at each level, eg: spine and leaf.
+  Nested groups are treated as [prefix groups](../romana#prefix-groups) for IP addressing and routing..
+
   An empty list may be specified. This indicates the lowest level of grouping, but without defining hosts.
+
 
 * `assignment` (conditional)
 
