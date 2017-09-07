@@ -63,7 +63,7 @@ For other environments including customized installations and baremetal deployme
 
 * `map` (required)
 
-  A list of [Host Group](#host-group-json) objects. This is a [topology map](../romana##topology-map) for the list of networks.
+  A list of [Host Group](#host-group-json) objects. This is a [topology map](../romana#topology-map) for the list of networks.
 
 ### Host Group JSON
 
