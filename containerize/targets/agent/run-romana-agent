@@ -136,6 +136,11 @@ if ! [[ "$NODENAME" ]]; then
 	usage_error "Ensure NODENAME is specified in your daemonset for romana-agent"
 fi
 
+# NODEIP environment variable must be set
+if ! [[ "$NODEIP" ]]; then
+	usage_error "Ensure NODEIP is specified in your daemonset for romana-agent"
+fi
+
 # Validation functions
 valid_bool() {
 	if (($# != 1)); then
@@ -233,9 +238,9 @@ else
 fi
 
 # Networking functions
-interface_address() {
+ip_for_interface() {
 	if (($# != 1)); then
-		internal_error "interface_address(): expected 1 parameter, got $#"
+		internal_error "ip_for_interface(): expected 1 parameter, got $#"
 		return $?
 	fi
 	if ! ip link show "$1" &>/dev/null; then
@@ -251,31 +256,35 @@ interface_address() {
 	if ! ((found)); then
 		return 1
 	fi
-	printf "%s" "$second"
+	printf "%s" "${second%/*}"
 }
 
-# Look up host IP
-host_ip=$(kubectl get node "$NODENAME" -o json | jq -r '.status.addresses[] | select(.type=="InternalIP") | .address')
-if ! [[ "$host_ip" ]]; then
-	internal_error "Error requesting InternalIP from apiserver for $NODENAME"
-fi
+interface_for_ip() {
+	if (($# != 1)); then
+		internal_error "interface_for_ip(): expected 1 parameter, got $#"
+		return $?
+	fi
+	local found=0 interface
+	while read -ra tokens; do
+		if [[ "${tokens[2]}" != "inet" ]]; then
+			# we really expected the word inet here..
+			continue
+		fi
+		if [[ "${tokens[3]%/*}" != "$NODEIP" ]]; then
+			# this is not the address we're looking for
+			continue
+		fi
+		found=1
+		interface="${tokens[1]}"
+	done < <(ip -4 -o address show scope global)
+	if ! (( found )); then
+		return 1
+	fi
+	printf "%s" "$interface"
+}
 
-# Resolve interface name for IP
-found=0
-while read -ra tokens; do
-	if [[ "${tokens[2]}" != "inet" ]]; then
-		# we really expected the word inet here..
-		continue
-	fi
-	if [[ "${tokens[3]%/*}" != "$host_ip" ]]; then
-		# this is not the address we're looking for
-		continue
-	fi
-	found=1
-	interface="${tokens[1]}"
-done < <(ip -4 -o address show scope global)
-if ! (( found )); then
-	internal_error "Unable to find interface with the address $host_ip"
+if ! interface=$(interface_for_ip "$NODEIP"); then
+	internal_error "Unable to find interface with the address $NODEIP"
 fi
 
 # Check if the route for the service-cluster-ip-range uses the host interface
@@ -485,18 +494,14 @@ while IFS=$'\t' read -r network_id network_cidr; do
 done < <(jq -r '.[] | "\(.id)\t\(.cidr)"' <<< "$daemon_response")
 
 if [[ "$nat_interface" ]]; then
-	nat_address=$(interface_address "$nat_interface")
-	if ! [[ "$nat_address" ]]; then
-		internal_error "No address found for NAT interface $nat_interface"
-	fi
-	nat_ip=$(cidr_addr "$nat_address")
+	nat_ip=$(ip_for_interface "$nat_interface")
 	if ! [[ "$nat_ip" ]]; then
-		internal_error "Error extracting NAT IP from $nat_address"
+		internal_error "No address found for NAT interface $nat_interface"
 	fi
 else
 	# Use interface as default for nat_interface
 	nat_interface="$interface"
-	nat_ip="$host_ip"
+	nat_ip="$NODEIP"
 fi
 
 case "$nat" in
