@@ -205,6 +205,11 @@ that hosts do not share an L2 segment and that the ToR acts as the default
 router for hosts in the rack. In that case, block routes are created on the ToR
 instead.
 
+The following image shows where routes are created in a simplified
+L3-to-the-host data center:
+
+![Routes in an L3-to-the-host data center](img/fig2.png)
+
 Different means to create routes on network equipment can be configured. For
 example, BGP broadcasts.
 
