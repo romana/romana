@@ -1,0 +1,92 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-agent
+rules:
+- apiGroups:
+  - "*"
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: romana-agent
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: romana-agent
+subjects:
+- kind: ServiceAccount
+  name: romana-agent
+  namespace: kube-system
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-agent
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        romana-app: agent
+    spec:
+      hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
+      serviceAccountName: romana-agent
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-agent
+        image: quay.io/romana/agent:v2.0-preview.2
+        imagePullPolicy: Always
+        # args:
+        # - --service-cluster-ip-range=100.64.0.0/13
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-usr-local-bin
+          mountPath: /host/usr/local/bin
+        - name: host-etc-romana
+          mountPath: /host/etc/romana
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin
+        - name: host-cni-net-d
+          mountPath: /host/etc/cni/net.d
+        - name: run-path
+          mountPath: /var/run/romana
+      volumes:
+      - name: host-usr-local-bin
+        hostPath:
+          path: /usr/local/bin
+      - name: host-etc-romana
+        hostPath:
+          path: /etc/romana
+      - name: host-cni-bin
+        hostPath:
+          path: /opt/cni/bin
+      - name: host-cni-net-d
+        hostPath:
+          path: /etc/cni/net.d
+      - name: run-path
+        hostPath:
+          path: /var/run/romana

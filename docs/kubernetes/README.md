@@ -5,7 +5,9 @@
 Installing Romana on a Kubernetes cluster is fast and easy.
 
 For clusters created with `kops` or `kubeadm` with default settings, predefined YAML files are provided that you can install using `kubectl apply`.
-Some changes to the YAML files will be required under some circumstances. Please check the special notes.
+Some changes to the YAML files will be required under some circumstances - check the special notes below.
+
+If you have made your own customized installation of Kubernetes or used a different tool to create the cluster, then you should refer to the detailed [components](components.md) page, and align the example configuration with the details specific to your cluster.
 
 ## Installation for kubeadm
 
@@ -25,7 +27,7 @@ Please see special notes below if
 
 **NOTE:** These instructions will change in the near future, when Romana is added as a built-in networking option in `kops`.
 
-When creating your kops cluster, use the `--networking cni` option.
+When creating your [kops cluster](https://github.com/kubernetes/kops/blob/master/docs/aws.md), use the `--networking cni` option.
 You will need to SSH directly to your master node to install Romana and have the rest of the cluster finish launching.
 
 ```bash
@@ -61,23 +63,12 @@ Please see special notes below if
 
 ## Installation in other environments
 
-If you are using a different installer or have your own set of tools for bringing up a cluster, it is likely that the predefined configurations for kubeadm or kops will not work.
-Instead, it is usually necessary to customize the YAML files used for the installing Romana to match your environment.
-
-More information about this will be added in a future update. In the meantime, we can help via email or Slack.
+Please refer to the detailed [components](components.md) page, and align the example configuration with the details specific to your cluster.
 
 # Updates coming soon
 
 These topics still need additional explanation, instructions and guides.
 
-- Essential Components
-- romana-etc
-  - romana-daemon
-  - romana-listener
-  - romana-agent
-- Add-Ons
-  - romana-aws
-  - romana-vpcrouter
 - Special Notes
   - Custom range for Kubernetes Service IPs
   - Custom range for Pod IPs

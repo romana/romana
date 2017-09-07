@@ -1,0 +1,27 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-vpcrouter
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        romana-app: vpcrouter
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-vpcrouter
+        image: quay.io/romana/vpcrouter-romana-plugin
+        imagePullPolicy: Always
+        args:
+        - --etcd_use_v2
+        - --etcd_addr=100.64.0.88
+        - --etcd_port=12379

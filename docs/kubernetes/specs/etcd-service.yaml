@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romana-etcd
+  namespace: kube-system
+spec:
+  clusterIP: 100.64.0.88
+  ports:
+  - name: etcd
+    port: 12379
+    protocol: TCP
+    targetPort: 4001
+  selector:
+    k8s-app: etcd-server
+  sessionAffinity: None
+  type: ClusterIP
