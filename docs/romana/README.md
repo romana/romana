@@ -200,15 +200,16 @@ In most cases, the [Romana agents](#term_agent) on the
 [cluster hosts](#term_hosts) create routes to address blocks on other cluster
 hosts, at least for those hosts that are on the same L2 segment. This is often
 the case if the ToR acts as a switch for the hosts in the rack and is called
-'L2 to the host'. Some networks are designed for 'L3 to the host', meaning
-that hosts do not share an L2 segment and that the ToR acts as the default
-router for hosts in the rack. In that case, block routes are created on the ToR
-instead.
+'L2-to-the-host'. This image illustrates the route configuration for that case:
 
-The following image shows where routes are created in a simplified
+![Routes in an L2-to-the-host data center](img/fig2.png)
+
+Some networks are designed for 'L3-to-the-host', meaning that hosts do not
+share an L2 segment. In that case, block routes only need to be created on the
+ToR. The following image shows where routes are created in an
 L3-to-the-host data center:
 
-![Routes in an L3-to-the-host data center](img/fig2.png)
+![Routes in an L3-to-the-host data center](img/fig3.png)
 
 Different means to create routes on network equipment can be configured. For
 example, BGP broadcasts.
