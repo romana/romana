@@ -23,6 +23,7 @@ usage() {
 	echo "Options:"
 	echo " -h or --help: print usage"
 	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
+	echo " --mtu: MTU to apply to pod veth interfaces"
 	echo " --nat: Add NAT rule for traffic coming from pods"
 	echo " --nat-interface: Interface that NATs traffic"
 	echo " --service-cluster-ip-range: Interface that NATs traffic"
@@ -30,6 +31,7 @@ usage() {
 
 # Parse command-line options
 etcd_endpoints=
+mtu=
 nat=
 nat_interface=
 service_ip_cidr=
@@ -45,6 +47,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--etcd-endpoints)
 		etcd_endpoints="$2"
+		shift 2
+		;;
+	--mtu)
+		mtu="$2"
 		shift 2
 		;;
 	--nat)
@@ -208,6 +214,16 @@ valid_cidr() {
 	return 0
 }
 
+# Check MTU option is valid
+if [[ "$mtu" ]]; then
+	if ! valid_number "$mtu"; then
+		usage_error "Expected valid number for --mtu option. ('$mtu')"
+	fi
+	if ! ((mtu > 0)); then
+		usage_error "Expected positive number for --mtu option. ('$mtu')"
+	fi
+fi
+
 # Check NAT option is valid
 if [[ "$nat" ]]; then
 	if ! valid_bool "$nat"; then
@@ -283,8 +299,39 @@ interface_for_ip() {
 	printf "%s" "$interface"
 }
 
+interface_mtu() {
+	if (($# != 1)); then
+		internal_error "interface_mtu(): expected 1 parameter, got $#"
+		return $?
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		return 1
+	fi
+	local found=0 i tokens mtu
+	read -ra tokens < <(ip -o link show "$1")
+	tokens=( "${tokens[@]%\\}" ) # remove trailing \ from any values
+	for ((i=3; i < ${#tokens[@]}-1; i++)); do
+		if [[ "${tokens[i]}" = "mtu" ]]; then
+			found=1
+			mtu="${tokens[i+1]}"
+			break
+		fi
+	done
+	if ! ((found)); then
+		return 1
+	fi
+	printf "%d" "$mtu"
+}
+
 if ! interface=$(interface_for_ip "$NODEIP"); then
 	internal_error "Unable to find interface with the address $NODEIP"
+fi
+
+# Use interface's MTU for pods if not set
+if ! [[ "$mtu" ]]; then
+	if ! mtu=$(interface_mtu "$interface"); then
+		internal_error "Unable to get MTU for interface $interface"
+	fi
 fi
 
 # Check if the route for the service-cluster-ip-range uses the host interface
@@ -346,6 +393,7 @@ if [[ -d /host/etc/cni/net.d ]]; then
 	# shellcheck disable=SC2016
 	etcd_endpoints_json=$(jq -c --arg etcd_endpoints "$etcd_endpoints" '$etcd_endpoints | split(",")' <<< "{}")
 	replacements=(
+		-e 's|<mtu>|'"$mtu"'|g'
 		-e 's|<kubernetes-config>|/var/run/romana/kubeconfig|g'
 		-e 's|<romana-hostname>|'"$NODENAME"'|g'
 		-e 's|<romana-segment>|romana.io/segment|g'
