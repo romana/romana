@@ -27,3 +27,6 @@
 
 - name: Install and make demo script executable
   copy: src="demo/demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/demo.sh" mode=0755
+
+- name: Install and make scale-demo script executable
+  copy: src="demo/scale-demo.sh" dest="/home/{{ ansible_ssh_user }}/demo/scale-demo.sh" mode=0755
