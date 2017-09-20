@@ -218,11 +218,6 @@ compile() {
 	esac
 
 	log compile start building container for compiling
-	if [[ "$github_key" ]]; then
-		cp -p "$github_key" targets/compile/github_id_rsa
-	else
-		> targets/compile/github_id_rsa
-	fi
 	if ! docker build -t romana/compile targets/compile; then
 		fatal error building compile container
 	fi
