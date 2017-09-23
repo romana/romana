@@ -455,4 +455,4 @@ false)
 esac
 
 printf "Launching Romana Agent"
-exec /usr/local/bin/romana_agent -hostname "$NODENAME" -endpoints "$etcd_endpoints" -provision-iface -provision-sysctls
+exec /usr/local/bin/romana_agent -hostname "$NODENAME" -endpoints "$etcd_endpoints" -provision-iface -provision-sysctls -accept-non-prod -policy
