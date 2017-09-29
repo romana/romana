@@ -22,12 +22,14 @@ usage() {
 	echo " --nat: Add NAT rule for traffic coming from pods"
 	echo " --nat-interface: Interface that NATs traffic"
 	echo " --service-cluster-ip-range: Interface that NATs traffic"
+	echo " --policies: Enable Network Policies"
 }
 
 # Parse command-line options
 nat=
 nat_interface=
 service_ip_cidr=
+policies=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -48,6 +50,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--service-cluster-ip-range)
 		service_ip_cidr="$2"
+		shift 2
+		;;
+	--policies)
+		policies="$2"
 		shift 2
 		;;
 	*)
@@ -211,6 +217,15 @@ else
 	esac
 fi
 
+# Check policies option is valid
+if [[ "$policies" ]]; then
+	if ! valid_bool "$policies"; then
+		usage_error "Expected 'true' or 'false' for --policies option. ('$policies')"
+	fi
+else
+	policies=true
+fi
+
 # Networking functions
 interface_address() {
 	if (($# != 1)); then
@@ -300,6 +315,7 @@ if [[ -d /host/etc/cni/net.d ]]; then
 		-e 's|<kubernetes-config>|/var/run/romana/kubeconfig|g'
 		-e 's|<romana-hostname>|'"$NODENAME"'|g'
 		-e 's|<romana-segment>|romana.io/segment|g'
+		-e 's|<policies-enabled>|'"$policies"'|g'
 		-e 's|<etcd-endpoints>|'"$etcd_endpoints_json"'|g'
 	)
 	sed "${replacements[@]}" /var/lib/romana/cni-installation/10-romana.conf > /host/etc/cni/net.d/10-romana.conf
@@ -453,6 +469,15 @@ false)
 	internal_error "nat variable was not true or false: '$nat'"
 	;;
 esac
+agent_args=(
+	-accept-non-prod
+	-hostname "$NODENAME"
+	-endpoints "$etcd_endpoints"
+	-provision-iface -provision-sysctls
+)
+if [[ "$policies" = "true" ]]; then
+	agent_args+=( -policy )
+fi
 
 printf "Launching Romana Agent"
-exec /usr/local/bin/romana_agent -hostname "$NODENAME" -endpoints "$etcd_endpoints" -provision-iface -provision-sysctls -accept-non-prod -policy
+exec /usr/local/bin/romana_agent "${agent_args[@]}"
