@@ -470,7 +470,6 @@ false)
 	;;
 esac
 agent_args=(
-	-accept-non-prod
 	-hostname "$NODENAME"
 	-endpoints "$etcd_endpoints"
 	-provision-iface -provision-sysctls
