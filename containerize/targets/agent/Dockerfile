@@ -2,7 +2,7 @@
 FROM ubuntu:16.04
 MAINTAINER Caleb Gilmour <cgilmour@romana.io>
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y iptables iproute2 jq curl
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y iptables iproute2 jq curl ipset
 COPY kubectl etcdctl /usr/local/bin/
 RUN mkdir -p /var/lib/romana/cni-installation /var/lib/romana/templates
 COPY romana_cni 10-romana.conf /var/lib/romana/cni-installation/
