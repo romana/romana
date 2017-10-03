@@ -1,6 +1,6 @@
-FROM golang:1.8
+FROM golang:1.9-stretch
 MAINTAINER Caleb Gilmour <cgilmour@romana.io>
-COPY romana-compile git-ssh /var/tmp/
-COPY github_id_rsa /
-ENTRYPOINT ["/var/tmp/romana-compile"]
+
+COPY romana-compile /bin
+ENTRYPOINT ["/bin/romana-compile"]
 CMD []

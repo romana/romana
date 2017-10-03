@@ -34,7 +34,7 @@ while [[ $1 == -* ]]; do
 		exit 0
 		;;
 	--github-key)
-		export GIT_SSH=/var/tmp/git-ssh
+		export GIT_SSH_COMMAND='ssh -oStrictHostKeyChecking=no -i "'"$2"'"'
 		shift 2
 		;;
 	--core-repo)

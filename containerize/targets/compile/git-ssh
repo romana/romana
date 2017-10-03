@@ -1,2 +1,0 @@
-#!/bin/bash
-exec ssh -oStrictHostKeyChecking=no -i /github_id_rsa "$@"
