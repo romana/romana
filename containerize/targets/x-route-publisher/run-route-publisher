@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2016 Pani Networks
+# Copyright (c) 2017 Pani Networks
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,15 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Enable shell options
+shopt -s nullglob
+
 usage() {
-	echo "${0##*/}: entrypoint for romana listener container."
+	echo "${0##*/}: entrypoint for romana route publisher container."
 	echo "Options:"
 	echo " -h or --help: print usage"
 	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
+	echo " --asn: autonomous system (AS) number"
 }
 
 # Parse command-line options
 etcd_endpoints=
+asn=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -36,6 +41,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--etcd-endpoints)
 		etcd_endpoints="$2"
+		shift 2
+		;;
+	--asn)
+		asn="$2"
 		shift 2
 		;;
 	*)
@@ -54,40 +63,11 @@ usage_error() {
 	usage
 	exit 1
 }
-
+	
 internal_error() {
 	echo "Internal Error:" "$@"
 	exit 2
 }
-
-# Kubernetes HTTPS Service must be defined via envinronment variables
-if ! [[ "$KUBERNETES_SERVICE_HOST" ]]; then
-	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_HOST not found"
-fi
-if ! [[ "$KUBERNETES_SERVICE_PORT_HTTPS" ]]; then
-	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_PORT_HTTPS not found"
-fi
-api_server="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT_HTTPS"
-
-# Check that we can connect to the apiserver
-if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" ]]; then
-	kubectl_cert="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-fi
-if [[ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]]; then
-	kubectl_token="$(< /var/run/secrets/kubernetes.io/serviceaccount/token)"
-fi
-kubectl_options=(
-	--server="$api_server"
-	${kubectl_cert:+--certificate-authority="$kubectl_cert"}
-	${kubectl_token:+--token="$kubectl_token"}
-)
-
-printf "Checking if kubernetes apiserver can be reached"
-if ! kubectl_output=$(kubectl "${kubectl_options[@]}" version 2>&1); then
-	printf "error: %s\n" "$(grep -v "^Client Version:" <<< "$kubectl_output")"
-	exit 1
-fi
-printf "ok.\n"
 
 # Romana Daemon Service must be defined via envinronment variables
 if ! [[ "$ROMANA_SERVICE_HOST" ]]; then
@@ -106,6 +86,95 @@ elif [[ "$ROMANA_ETCD_SERVICE_HOST" ]] && [[ "$ROMANA_ETCD_SERVICE_PORT_ETCD" ]]
 else
 	usage_error "Romana etcd endpoints must be provided."
 fi
+
+# NODENAME environment variable must be set
+if ! [[ "$NODENAME" ]]; then
+	usage_error "Ensure NODENAME is specified in your daemonset for romana-agent"
+fi
+
+# Validation functions
+valid_bool() {
+	if (($# != 1)); then
+		internal_error "valid_bool(): expected 1 parameter, got $#"
+	fi
+	case "$1" in
+	true|false)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
+valid_number() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	if ! [[ "$1" ]]; then
+		return 1
+	fi
+	if ! printf "%d\n" "$1" &> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+# Check ASN option is valid
+if [[ "$asn" ]]; then
+	if ! valid_number "$asn"; then
+		usage_error "Expected valid number for --asn option. ('$asn')"
+	fi
+	if ! ((asn > 0)); then
+		usage_error "Expected positive number for --asn option. ('$asn')"
+	fi
+fi
+
+# Networking functions
+ip_for_interface() {
+	if (($# != 1)); then
+		internal_error "ip_for_interface(): expected 1 parameter, got $#"
+		return $?
+	fi
+	if ! ip link show "$1" &>/dev/null; then
+		return 1
+	fi
+	local found=0 first second
+	while read -r first second _; do
+		if [[ "$first" = "inet" ]]; then
+			found=1
+			break
+		fi
+	done < <(ip addr show "$1")
+	if ! ((found)); then
+		return 1
+	fi
+	printf "%s" "${second%/*}"
+}
+
+interface_for_ip() {
+	if (($# != 1)); then
+		internal_error "interface_for_ip(): expected 1 parameter, got $#"
+		return $?
+	fi
+	local found=0 interface
+	while read -ra tokens; do
+		if [[ "${tokens[2]}" != "inet" ]]; then
+			# we really expected the word inet here..
+			continue
+		fi
+		if [[ "${tokens[3]%/*}" != "$NODEIP" ]]; then
+			# this is not the address we're looking for
+			continue
+		fi
+		found=1
+		interface="${tokens[1]}"
+	done < <(ip -4 -o address show scope global)
+	if ! (( found )); then
+		return 1
+	fi
+	printf "%s" "$interface"
+}
 
 # Check if etcd is running. Run check for cluster-health
 printf "Checking if etcd is running..."
@@ -168,10 +237,51 @@ if ! (( networks_ready )); then
 	printf "failed\n"
 	exit 1
 elif (( num_networks == 1 )); then
-	printf "ok. One network configured.\n"
+	printf "ok. one network configured.\n"
 else
 	printf "ok. %d networks configured.\n" "$num_networks"
 fi
 
-printf "Launching Romana Listener\n"
-exec /usr/local/bin/romana_listener -etcd-endpoints="$etcd_endpoints"
+# Wait for route publisher template file to be present
+printf "Checking for route publisher template..."
+rp_template=/var/run/romana/bird/conf.d/published-routes.conf.t
+rp_config=/var/run/romana/bird/conf.d/published-routes.conf
+rp_ready=0
+intervals=( 0 1 1 1 1 1 5 5 5 10 10 )
+for i in "${intervals[@]}"; do
+	if [[ -f "$rp_template" ]]; then
+		rp_ready=1
+		break
+	fi
+	printf "."
+done
+if ! (( rp_ready ));  then
+	printf "not found.\n"
+	exit 1
+fi
+printf "ok\n"
+
+
+# Wait for bird pidfile to be present
+printf "Checking for pidfile from bird..."
+bird_pidfile=/var/run/romana/bird/bird.pid
+bird_ready=0
+intervals=( 0 1 1 1 1 1 5 5 5 10 10 )
+for i in "${intervals[@]}"; do
+	if [[ -f "$bird_pidfile" ]]; then
+		bird_pid=$(< "$bird_pidfile" )
+		if kill -0 "$bird_pid"; then
+			bird_ready=1
+			break
+		fi
+	fi
+	printf "."
+done
+if ! (( bird_ready )); then
+	printf "not found.\n"
+	exit 1
+fi
+printf "ok\n"
+
+printf "Launching Romana Route Publisher\n"
+exec /usr/local/bin/romana_route_publisher -hostname "$NODENAME" -endpoints "$etcd_endpoints" -template "$rp_template" -config "$rp_config" -pid "$bird_pidfile" -as "$asn"

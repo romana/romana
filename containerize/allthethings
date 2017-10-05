@@ -365,6 +365,12 @@ copy() {
 			fatal error copying "$f"
 		fi
 	done
+	log copy ... copying required files for x-route-publisher target
+	for f in romana_route_publisher etcdctl; do
+		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/x-route-publisher/$f"; then
+			fatal error copying "$f"
+		fi
+	done
 	log copy end
 }
 
@@ -485,7 +491,7 @@ push() {
 				fatal error logging into "$registry"
 			fi
 		fi
-		for i in daemon listener agent aws; do
+		for i in daemon listener agent aws x-route-publisher x-bird; do
 			log push ... pushing "$i"
 			if ! docker push "$(image_name "$n" "$i")"; then
 				fatal error pushing "$i" to "$registry"
@@ -504,4 +510,6 @@ build_container daemon
 build_container listener
 build_container agent
 build_container aws
+build_container x-route-publisher
+build_container x-bird
 push

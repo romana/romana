@@ -256,5 +256,5 @@ if [[ "$network_cidr_overrides" ]]; then
 	initial_network="$jq_output"
 fi
 
-printf "Launching Romana Daemon"
+printf "Launching Romana Daemon\n"
 exec /usr/local/bin/romanad -host 0.0.0.0 -etcd-endpoints="$etcd_endpoints" -initial-topology-file="$initial_network"
