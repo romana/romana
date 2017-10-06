@@ -2,6 +2,7 @@
 romana_version: "v1.5.0"
 romana_core_branch: "{{ romana_version }}"
 romana_networking_branch: "{{ romana_version }}-stable/liberty"
+romana_romana_branch: "romana-2.0"
 
 # Install from Github or S3 bucket
 romana_core_source: "s3"
