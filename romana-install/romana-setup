@@ -456,7 +456,7 @@ if [[ "$networking_branch" ]]; then
 	ansible_args+=( -e romana_networking_branch="$networking_branch" )
 fi
 if [[ "$romana_branch" ]]; then
-	ansible_args+=( -e romana_romana_branch="$networking_branch" )
+	ansible_args+=( -e romana_romana_branch="$romana_branch" )
 fi
 # Change github key
 if [[ "$github_key" ]]; then
