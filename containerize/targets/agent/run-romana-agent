@@ -301,7 +301,7 @@ interface_for_ip() {
 			# we really expected the word inet here..
 			continue
 		fi
-		if [[ "${tokens[3]%/*}" != "$NODEIP" ]]; then
+		if [[ "${tokens[3]%/*}" != "$1" ]]; then
 			# this is not the address we're looking for
 			continue
 		fi
@@ -636,5 +636,5 @@ if [[ "$policies" = "true" ]]; then
 	agent_args+=( -policy )
 fi
 
-printf "Launching Romana Agent"
+printf "Launching Romana Agent\n"
 exec /usr/local/bin/romana_agent "${agent_args[@]}"

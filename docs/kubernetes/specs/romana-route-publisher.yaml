@@ -1,0 +1,57 @@
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-route-publisher
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        romana-app: route-publisher
+    spec:
+      hostNetwork: true
+      hostPID: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: publisher
+        image: ip-192-168-99-10:5000/romana/x-route-publisher:local
+        imagePullPolicy: Always
+        args:
+        - --asn=65534
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        volumeMounts:
+        - name: run-path
+          mountPath: /var/run/romana
+      - name: bird
+        image: ip-192-168-99-10:5000/romana/x-bird:local
+        imagePullPolicy: Always
+        args:
+        - --config-dir=/var/tmp/romana/publisher-config
+        - --bird-config=bird.conf
+        - --publisher-template=publisher.conf
+        env:
+        - name: NODEIP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        volumeMounts:
+        - name: route-publisher-config
+          mountPath: /var/tmp/romana/publisher-config
+        - name: run-path
+          mountPath: /var/run/romana
+      volumes:
+      - name: route-publisher-config
+        configMap:
+          name: route-publisher-config
+      - name: run-path
+        emptyDir: {}

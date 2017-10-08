@@ -1,0 +1,241 @@
+#!/bin/bash
+
+# Copyright (c) 2017 Pani Networks
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# Enable shell options
+shopt -s nullglob
+
+usage() {
+	echo "${0##*/}: entrypoint for romana bird container."
+	echo "Options:"
+	echo " -h or --help: print usage"
+	echo " --config-dir: The path where configmaps for this container are mounted"
+	echo " --bird-config: The name of the bird config file"
+	echo " --publisher-template: The name of the publisher template file"
+}
+
+# Parse command-line options
+config_dir=
+bird_config=
+publisher_template=
+while [[ $1 == -* ]]; do
+	# expand --foo=bar options
+	if [[ $1 == -*=* ]]; then
+		set -- "${1%%=*}" "${1#*=}" "${@:2}"
+	fi
+	case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--config-dir)
+		config_dir="$2"
+		shift 2
+		;;
+	--bird-config)
+		bird_config="$2"
+		shift 2
+		;;
+	--publisher-template)
+		publisher_template="$2"
+		shift 2
+		;;
+	*)
+		echo "Unknown option '$1'"
+		usage
+		exit 1
+		;;
+	esac
+done
+
+usage_error() {
+	if (($# < 1)); then
+		internal_error "Call to usage_error without a message"
+	fi
+	echo "Error:" "$@"
+	usage
+	exit 1
+}
+
+internal_error() {
+	echo "Internal Error:" "$@"
+	exit 2
+}
+
+# NODEIP environment variable must be set
+if ! [[ "$NODEIP" ]]; then
+	usage_error "Ensure NODEIP is specified in your daemonset for romana-agent"
+fi
+
+# Networking functions
+full_ip() {
+	if (($# != 1)); then
+		internal_error "full_ip: expected 1 parameter, got $#"
+		return $?
+	fi
+	local found=0 ip
+	while read -ra tokens; do
+		if [[ "${tokens[2]}" != "inet" ]]; then
+			# we really expected the word inet here..
+			continue
+		fi
+		if [[ "${tokens[3]%/*}" != "$1" ]]; then
+			# this is not the address we're looking for
+			continue
+		fi
+		found=1
+		ip="${tokens[3]}"
+	done < <(ip -4 -o address show scope global)
+	if ! (( found )); then
+		return 1
+	fi
+	printf "%s" "$ip"
+}
+
+valid_number() {
+	if (($# != 1)); then
+		internal_error "valid_number(): expected 1 parameter, got $#"
+	fi
+	if ! [[ "$1" ]]; then
+		return 1
+	fi
+	if ! printf "%d\n" "$1" &> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+valid_cidr() {
+	if (($# != 1)); then
+		internal_error "valid_cidr(): expected 1 parameter, got $#"
+	fi
+	# Split w.x.y.z/p into pieces.
+	local w x y z p r v
+	IFS='./' read -r w x y z p r <<< "$1"
+	if [[ "$r" ]]; then
+		# Additional data in the CIDR. Return error.
+		return 1
+	fi
+	# Check w, x, y, z are valid numbers from 0-255.
+	error=0
+	for v in "$w" "$x" "$y" "$z"; do
+		if ! valid_number "$v"; then
+			error=1
+			break
+		fi
+		if ! ((v >= 0 && v < 256)); then
+			error=1
+			break
+		fi
+	done
+
+	if ((error)); then
+		return 1
+	fi
+	# Check p is some value between 0 and 32.
+	if ! valid_number "$p"; then
+		return 1
+	fi
+	if ! ((p >= 0 && p <= 32)); then
+		return 1
+	fi
+	return 0
+}
+
+cidr_nw_addr() {
+	if (($# != 1)); then
+		internal_error "cidr_nw_addr(): expected 1 parameter, got $#"
+	fi
+	if ! valid_cidr "$1"; then
+		internal_error "cidr_nw_addr(): '$1' is not a valid CIDR."
+	fi
+	local v w x y z p
+	IFS='./' read -r w x y z p <<< "$1"
+	((v=(w<<24) + (x<<16) + (y<<8) + z))
+	((v=v>>32-p))
+	((v=v<<32-p))
+	printf "%d.%d.%d.%d" "$(((v>>24)%256))" "$(((v>>16)%256))" "$(((v>>8)%256))" "$((v%256))"
+}
+
+if ! full_nodeip=$(full_ip "$NODEIP"); then
+	internal_error "failed to expand $NODEIP to a full address"
+fi
+if ! network_address=$(cidr_nw_addr "$full_nodeip"); then
+	internal_error "failed to determine network address for $full_nodeip (expanded from $NODEIP)"
+fi
+
+best_match() {
+	if (($# != 3)); then
+		internal_error "best_match: expected 3 parameters, got $#"
+	fi
+	local path="$1" ip="$2" network="$3"
+	if [[ -f "$path.$ip" ]]; then
+		printf "%s" "$path.$ip"
+	elif [[ -f "$path.$network" ]]; then
+		printf "%s" "$path.$network"
+		return 0
+	else
+		printf "%s" "$path"
+	fi
+}
+
+# Check config path
+if ! [[ "$config_dir" ]]; then
+	usage_error "Path to configuration files expected using --config-dir option."
+elif ! [[ -d "$config_dir" ]]; then
+	usage_error "Expected valid directory for --config-dir option. ($config_dir)"
+fi
+
+# Check bird config
+if ! [[ "$bird_config" ]]; then
+	usage_error "Name of bird configuration file expected using --bird-config option."
+fi
+bird_config=$(best_match "$config_dir/$bird_config" "$NODEIP" "$network_address")
+if ! [[ -f "$bird_config" ]]; then
+	usage_error "Expected valid filename for --bird-config option. No file found at $bird_config"
+fi
+
+# Check publisher template
+if ! [[ "$publisher_template" ]]; then
+	usage_error "Name of publisher template file expected using --publisher-template option."
+fi
+publisher_template=$(best_match "$config_dir/$publisher_template" "$NODEIP" "$network_address")
+if ! [[ -f "$publisher_template" ]]; then
+	usage_error "Expected valid filename for --publisher-template option. No file found at $publisher_template"
+fi
+
+# Check that /var/run/romana exists
+if ! [[ -d /var/run/romana ]]; then
+	usage_error "Missing directory /var/run/romana. This should be mounted to the container."
+fi
+
+# Stage the config in /var/run/romana
+if ! [[ -d /var/run/romana/bird ]] && ! mkdir /var/run/romana/bird; then
+	internal_error "Error occured creating directory for bird config"
+fi
+if ! [[ -d /var/run/romana/bird/conf.d ]] && ! mkdir /var/run/romana/bird/conf.d; then
+	internal_error "Error occured creating directory for publisher template config"
+fi
+if ! cp "$bird_config" /var/run/romana/bird/bird.conf; then
+	internal_error "Error occured staging bird config"
+fi
+if ! cp "$publisher_template" /var/run/romana/bird/conf.d/published-routes.conf.t; then
+	internal_error "Error occured staging publisher template config"
+fi
+
+printf "Launching BIRD\n"
+exec /usr/sbin/bird -d -c /var/run/romana/bird/bird.conf -s /var/run/romana/bird/bird.ctl -P /var/run/romana/bird/bird.pid
+
