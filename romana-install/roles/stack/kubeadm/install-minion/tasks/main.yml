@@ -4,5 +4,5 @@
   become_user: root
   shell: |
          if ! [ -d /var/tmp/kubeadm-join ]; then
-             kubeadm join --token "{{ kubeadm_token }}" "{{ hostvars[groups.kubeadm_master[0]].lan_ip }}:6443" && mkdir /var/tmp/kubeadm-join
+             kubeadm reset && kubeadm join --token "{{ kubeadm_token }}" "{{ hostvars[groups.kubeadm_master[0]].lan_ip }}:6443" && mkdir /var/tmp/kubeadm-join
          fi
