@@ -235,6 +235,9 @@ fi
 if ! cp "$publisher_template" /var/run/romana/bird/conf.d/published-routes.conf.t; then
 	internal_error "Error occured staging publisher template config"
 fi
+if [[ -f /var/run/romana/bird/conf.d/published-routes.conf ]]; then
+	rm /var/run/romana/bird/conf.d/published-routes.conf
+fi
 
 printf "Launching BIRD\n"
 exec /usr/sbin/bird -d -c /var/run/romana/bird/bird.conf -s /var/run/romana/bird/bird.ctl -P /var/run/romana/bird/bird.pid

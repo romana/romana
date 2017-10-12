@@ -249,6 +249,7 @@ rp_config=/var/run/romana/bird/conf.d/published-routes.conf
 rp_ready=0
 intervals=( 0 1 1 1 1 1 5 5 5 10 10 )
 for i in "${intervals[@]}"; do
+	sleep "$i"
 	if [[ -f "$rp_template" ]]; then
 		rp_ready=1
 		break
@@ -261,13 +262,13 @@ if ! (( rp_ready ));  then
 fi
 printf "ok\n"
 
-
 # Wait for bird pidfile to be present
 printf "Checking for pidfile from bird..."
 bird_pidfile=/var/run/romana/bird/bird.pid
 bird_ready=0
 intervals=( 0 1 1 1 1 1 5 5 5 10 10 )
 for i in "${intervals[@]}"; do
+	sleep "$i"
 	if [[ -f "$bird_pidfile" ]]; then
 		bird_pid=$(< "$bird_pidfile" )
 		if kill -0 "$bird_pid"; then
