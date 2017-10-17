@@ -20,10 +20,12 @@ usage() {
 	echo " --github-key:          private key to access github repositories"
 	echo " --core-repo:           git@ or https:// address of core repo"
 	echo " --core-branch:         git branch/tag/sha of core to build"
+	echo " --race:                build core with race detector enabled"
 }
 
 core_repo=
 core_branch=
+race=
 while [[ $1 == -* ]]; do
 	if [[ $1 == -*=* ]]; then
 		set -- "${1%%=*}" "${1#*=}" "${@:2}"
@@ -44,6 +46,10 @@ while [[ $1 == -* ]]; do
 	--core-branch)
 		core_branch="$2"
 		shift 2
+		;;
+	--race)
+		race=enabled
+		shift 1
 		;;
 	*)
 		usage "Unrecognized option '$1'"
@@ -79,7 +85,7 @@ if (( ${#pkgs[@]} == 0 )); then
 	echo "failed to list main packages"
 	exit 1
 fi
-if ! go install "${pkgs[@]}"; then
+if ! go install ${race:+"-race"} "${pkgs[@]}"; then
 	echo "failed to compile core packages"
 	exit 1
 fi
