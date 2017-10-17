@@ -492,6 +492,24 @@ else
 	printf "ok. %d networks configured.\n" "$num_networks"
 fi
 
+if [[ "$policies" = "true" ]]; then
+	printf "Checking if policies are initialized..."
+	intervals=( 0 1 1 2 2 2 5 5 )
+	policies_ready=0
+	for i in "${intervals[@]}"; do
+		sleep "$i"
+		if etcdctl --endpoints="$etcd_endpoints" ls /romana/policies &>/dev/null; then
+			policies_ready=1
+			break
+		fi
+	done
+	if ! (( policies_ready )); then
+		printf "failed\n"
+		exit 1
+	fi
+	printf "ok\n"
+fi
+
 cidr_min() {
 	if (($# != 1)); then
 		internal_error "cidr_min(): expected 1 parameter, got $#"
