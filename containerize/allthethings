@@ -262,6 +262,7 @@ compile() {
 		)
 		compile_flags+=(
 			--github-key=/github_id_rsa
+			--race
 		)
 	fi
 	if ! docker run "${docker_flags[@]}" "${volume_flags[@]}" romana/compile "${compile_flags[@]}"; then
