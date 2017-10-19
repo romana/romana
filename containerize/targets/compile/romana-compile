@@ -79,13 +79,21 @@ if ! git -C /go/src/github.com/romana/core submodule update --init --recursive; 
 	echo "failed to submodule update"
 	exit 1
 fi
+
+buildbranch=`git -C /go/src/github.com/romana/core describe --all --abbrev=7 --always`
+buildcommit=`git -C /go/src/github.com/romana/core log --pretty=format:"%h" | head -n 1`
+buildinfo=$buildbranch-$buildcommit
+buildtime=`date -u '+%Y-%m-%d_%I:%M:%S%p'`
+ldflagbuildinfo="-X github.com/romana/core/common.buildInfo"
+ldflagbuildtime="-X github.com/romana/core/common.buildTimeStamp"
+
 while IFS= read -r p; do pkgs+=("$p"); done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}' github.com/romana/core/... | grep -v /vendor/)
 
 if (( ${#pkgs[@]} == 0 )); then
 	echo "failed to list main packages"
 	exit 1
 fi
-if ! go install ${race:+"-race"} "${pkgs[@]}"; then
+if ! go install ${race:+"-race"} -ldflags "$ldflagbuildinfo=$buildinfo $ldflagbuildtime=$buildtime" "${pkgs[@]}"; then
 	echo "failed to compile core packages"
 	exit 1
 fi
