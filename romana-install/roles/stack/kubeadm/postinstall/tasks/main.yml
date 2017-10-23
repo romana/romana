@@ -16,4 +16,11 @@
 - name: Install romana-kubeadm.yml
   command: kubectl apply -f romana-kubeadm.yml
 
+- name: Install kubernetes bash auto completion.
+  blockinfile:
+    dest: "~/.bashrc"
+    block: |
+      # kubernetes bash auto completion
+      source <(kubectl completion bash)
+
 - include: "demo.yml"
