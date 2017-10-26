@@ -7,7 +7,7 @@ RUN mkdir -p /var/lib/romana/cni-installation /var/lib/romana/templates
 COPY romana_cni 10-romana.conf /var/lib/romana/cni-installation/
 COPY dot-romana.template /var/lib/romana/templates/
 COPY romana /usr/local/bin/
-COPY simple /usr/local/bin/romana_agent
+COPY romana_agent /usr/local/bin/
 COPY run-romana-agent /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/run-romana-agent"]

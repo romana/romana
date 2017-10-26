@@ -355,7 +355,7 @@ copy() {
 		fi
 	done
 	log copy ... copying required files for agent target
-	for f in simple romana_cni romana kubectl etcdctl; do
+	for f in romana_agent romana_cni romana kubectl etcdctl; do
 		if ! cp -p "$PWD/volumes/romana_bin_dir_$tag/$f" "targets/agent/$f"; then
 			fatal error copying "$f"
 		fi
