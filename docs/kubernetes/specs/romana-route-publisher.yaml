@@ -29,6 +29,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
         volumeMounts:
         - name: run-path
           mountPath: /var/run/romana
@@ -44,6 +46,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
+        securityContext:
+          privileged: true
         volumeMounts:
         - name: route-publisher-config
           mountPath: /var/tmp/romana/publisher-config
