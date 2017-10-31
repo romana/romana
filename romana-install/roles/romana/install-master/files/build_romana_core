@@ -9,8 +9,11 @@ done < <(go list -f '{{ if eq .Name "main" }}{{ .ImportPath }}{{ end }}'  github
 # GIT_DIR shouldn't be before go get, since it interferes with
 # git submodule update.
 export GIT_DIR=$GOPATH/src/github.com/romana/core/.git
+buildbranch=`git describe --all --abbrev=7 --always`
+buildcommit=`git log --pretty=format:"%h" | head -n 1`
+buildinfo=$buildbranch-$buildcommit
 go install -ldflags \
-	"-X github.com/romana/core/common.buildInfo=`git describe --always` \
+	"-X github.com/romana/core/common.buildInfo=$buildinfo \
 	-X github.com/romana/core/common.buildTimeStamp=`date -u '+%Y-%m-%d_%I:%M:%S%p'`" \
 	"${pkgs[@]}"
 
