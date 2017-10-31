@@ -93,15 +93,6 @@ internal_error() {
 	exit 2
 }
 
-# Preview Release Only: iptables FORWARD policy should be set to ACCEPT
-if ! forward_policy=$(iptables-save | awk '/^\*/ { table=substr($0, 2) } table == "filter" && $1 == ":FORWARD" { print $2; end; }'); then
-	internal_error "Failed to check policy of iptables FORWARD chain"
-elif [[ "$forward_policy" = "DROP" ]]; then
-	internal_error "Policy for iptables FORWARD chain is set to DROP. Romana expects this to be ACCEPT"
-elif [[ "$forward_policy" != "ACCEPT" ]]; then
-	internal_error "Unexpected value for policy of iptables FORWARD chain: $forward_policy"
-fi
-
 # Kubernetes HTTPS Service must be defined via envinronment variables
 if ! [[ "$KUBERNETES_SERVICE_HOST" ]]; then
 	usage_error "Unable to find Kubernetes API Server. Environment varible KUBERNETES_SERVICE_HOST not found"
