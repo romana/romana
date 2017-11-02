@@ -72,5 +72,5 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-listener
-        image: quay.io/romana/listener:v2.0-preview.3
+        image: quay.io/romana/listener:v2.0-preview.3b
         imagePullPolicy: Always
