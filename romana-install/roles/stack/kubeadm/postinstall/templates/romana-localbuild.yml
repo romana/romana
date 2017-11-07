@@ -215,6 +215,8 @@ metadata:
   name: romana-agent
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:

@@ -5,6 +5,8 @@ metadata:
   name: romana-route-publisher
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
