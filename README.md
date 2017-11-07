@@ -17,17 +17,8 @@ _which brings many improvements:_
 * _Improvements to Romana's internal architecture._
 * _Ability to be deployed on top of kops clusters._
 
-_Since this is a preview release, there are also still a few limitations,_
-_which we are still working on for the full release:_
-
-* _Network policies are still in the process of being ported to 2.0, so they_
-  _are not included in this preview release._
-* _Currently not yet fully integrated with kops, even though an installation_
-  _in a kops cluster is possible, as described in our installation_
-  _instructions._
-
 _If you would like to jump straight to the Romana 2.0 specific installation_
-_instructions, please click [here](https://github.com/romana/romana/tree/romana-2.0/docs/kubernetes)._
+_instructions, please click [here](docs/kubernetes)._
 
 ***
 
@@ -54,4 +45,4 @@ And get in touch with us via email, Slack or GitHub if you need some help in the
 
 * By email: [info@romana.io](mailto:info@romana.io)
 * On the [Romana Slack](https://romana.slack.com/). You'll need to email to request an invite to this slack network
-* On GitHub, just open an [issue](https://github.com/romana/romana/issues/new).
+* On GitHub, just open an [issue](https://github.com/romana/romana/issues/new)
