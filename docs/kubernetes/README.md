@@ -14,7 +14,7 @@ If you have made your own customized installation of Kubernetes or used a differ
 Follow the guide for [Using kubeadm to Create a Cluster](https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/#instructions), and complete steps 1 and 2.
 Then, to install Romana, run
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/romana/romana/romana-2.0/docs/kubernetes/romana-kubeadm.yml
+kubectl apply -f https://raw.githubusercontent.com/romana/romana/master/docs/kubernetes/romana-kubeadm.yml
 ```
 
 Please see special notes below if
@@ -45,7 +45,7 @@ ip-172-20-xx-xxx.us-west-2.compute.internal   NotReady,master   2m        v1.7.0
 
 Then, to install Romana, run
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/romana/romana/romana-2.0/docs/kubernetes/romana-kops.yml
+kubectl apply -f https://raw.githubusercontent.com/romana/romana/master/docs/kubernetes/romana-kops.yml
 ```
 
 It will take a few minutes for the master node to become ready, launch deployments, and for other minion nodes to register and activate.
