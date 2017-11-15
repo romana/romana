@@ -22,7 +22,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: publisher
-        image: quay.io/romana/x-route-publisher:v2.0-preview.3b
+        image: quay.io/romana/x-route-publisher:v2.0-rc.1
         imagePullPolicy: Always
         args:
         - --asn=65534
@@ -37,7 +37,7 @@ spec:
         - name: run-path
           mountPath: /var/run/romana
       - name: bird
-        image: quay.io/romana/x-bird:v2.0-preview.3b
+        image: quay.io/romana/x-bird:v2.0-rc.1
         imagePullPolicy: Always
         args:
         - --config-dir=/var/tmp/romana/publisher-config
