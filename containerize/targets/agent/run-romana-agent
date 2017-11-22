@@ -554,6 +554,7 @@ cidr_overlaps() {
 }
 
 # Check if the CIDR for the network is valid
+romana_cidrs=()
 while IFS=$'\t' read -r network_id network_cidr; do
 	if ! [[ "$network_cidr" ]]; then
 		internal_error "network '$network_id' is missing cidr value"
@@ -564,7 +565,43 @@ while IFS=$'\t' read -r network_id network_cidr; do
 	if cidr_overlaps "$network_cidr" "$service_ip_cidr"; then
 		internal_error "cidr for network '$network_id' overlaps with kubernetes service ip range: $network_cidr overlaps $service_ip_cidr"
 	fi
+	romana_cidrs+=( "$network_cidr" )
 done < <(jq -r '.[] | "\(.id)\t\(.cidr)"' <<< "$daemon_response")
+
+# Add a chain for forwarding rules.
+# This permits packets on the forward chain that aren't from Romana pod ranges.
+
+# Create forward chain
+if ! iptables -t filter -L ROMANA-FORWARD 2>/dev/null; then
+	if ! iptables -t filter -N ROMANA-FORWARD; then
+		internal_error "Error creating ROMANA-FORWARD chain for FORWARD rules"
+	fi
+fi
+# Flush rules from chain
+if ! iptables -t filter -F ROMANA-FORWARD; then
+	internal_error "Error flushing ROMANA-FORWARD chain for FORWARD rules"
+fi
+# Add exclusions for romana cidrs
+for romana_cidr in "${romana_cidrs[@]}"; do
+	if ! iptables -t filter -A ROMANA-FORWARD -s "$romana_cidr" -j RETURN; then
+		internal_error "Error adding exclusion rule to ROMANA-FORWARD for $romana_cidr"
+	fi
+done
+# Add final accept rule
+if ! iptables -t filter -A ROMANA-FORWARD -j ACCEPT; then
+	internal_error "Error adding ACCEPT rule to ROMANA-FORWARD"
+fi
+# Activate romana forwarding rules
+if ! iptables -t filter -C FORWARD -m comment --comment "romana forwarding rules" -o "$interface" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT; then
+	if ! iptables -t filter -A FORWARD -m comment --comment "romana forwarding rules" -o "$interface" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT; then
+		internal_error "Error adding established/related rule to FORWARD chain"
+	fi
+fi
+if ! iptables -t filter -C FORWARD -m comment --comment "romana forwarding rules" -i "$interface" -o "$interface" -j ROMANA-FORWARD; then
+	if ! iptables -t filter -A FORWARD -m comment --comment "romana forwarding rules" -i "$interface" -o "$interface" -j ROMANA-FORWARD; then
+		internal_error "Error adding ROMANA-FORWARD rules to FORWARD chain"
+	fi
+fi
 
 if [[ "$nat_interface" ]]; then
 	nat_ip=$(ip_for_interface "$nat_interface")
@@ -580,28 +617,23 @@ fi
 case "$nat" in
 true)
 	# Create chain
-	if ! iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+	if ! iptables -t nat -L ROMANA-MASQ &>/dev/null; then
 		if ! iptables -t nat -N ROMANA-MASQ; then
-			internal_error "Error creating chain for NAT rule"
+			internal_error "Error creating ROMANA-MASQ chain for NAT rules"
 		fi
 	fi
 	# Flush rules from chain
 	if ! iptables -t nat -F ROMANA-MASQ; then
-		internal_error "Error flushing chain for NAT rule"
+		internal_error "Error flushing ROMANA-MASQ chain for NAT rules"
 	fi
-	# Generate a list of CIDRs to configure
-	romana_cidrs=()
-	while read -r romana_cidr; do
-		romana_cidrs+=( "$romana_cidr" )
-	done < <(jq -r '.[] | .cidr' <<< "$daemon_response")
 	# Add items to chain
 	for romana_cidr in "${romana_cidrs[@]}"; do
 		if ! iptables -t nat -A ROMANA-MASQ -d "$romana_cidr" -j RETURN; then
-			internal_error "Error adding exclusion for $romana_cidr"
+			internal_error "Error adding exclusion to ROMANA-MASQ for $romana_cidr"
 		fi
 	done
 	if ! iptables -t nat -A ROMANA-MASQ -o "$nat_interface" -j MASQUERADE; then
-		internal_error "Error adding NAT for $nat_interface"
+		internal_error "Error adding NAT to ROMANA-MASQ for $nat_interface"
 	fi
 	# Activate chain
 	for romana_cidr in "${romana_cidrs[@]}"; do
@@ -614,7 +646,7 @@ true)
 	;;
 false)
 	# If chain exists, deactivate, flush and remove it
-	if iptables -t nat -L ROMANA-MASQ 2>/dev/null; then
+	if iptables -t nat -L ROMANA-MASQ &>/dev/null; then
 		while IFS= read -r rule; do
 			((rulenum++))
 			if [[ "$rule" != "${rule/'-m comment --comment "romana postrouting rules"'/}" ]]; then
