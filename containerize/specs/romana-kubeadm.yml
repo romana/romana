@@ -184,6 +184,8 @@ spec:
       - name: romana-daemon
         image: quay.io/romana/daemon:v2.0.0
         imagePullPolicy: Always
+        #args:
+        #- --debug=true
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -208,6 +210,8 @@ spec:
       - name: romana-listener
         image: quay.io/romana/listener:v2.0.0
         imagePullPolicy: Always
+        #args:
+        #- --debug=true
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -234,6 +238,8 @@ spec:
       - name: romana-agent
         image: quay.io/romana/agent:v2.0.0
         imagePullPolicy: Always
+        #args:
+        #- --debug=true
         env:
         - name: NODENAME
           valueFrom:
@@ -256,6 +262,8 @@ spec:
           mountPath: /host/etc/cni/net.d
         - name: run-path
           mountPath: /var/run/romana
+        - name: host-etc-rlog
+          mountPath: /host/etc/rlog
       volumes:
       - name: host-usr-local-bin
         hostPath:
@@ -272,3 +280,6 @@ spec:
       - name: run-path
         hostPath:
           path: /var/run/romana
+      - name: host-etc-rlog
+        hostPath:
+          path: /etc/rlog
