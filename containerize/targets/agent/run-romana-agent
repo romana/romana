@@ -28,12 +28,14 @@ usage() {
 	echo " --nat-interface: Interface that NATs traffic"
 	echo " --service-cluster-ip-range: Interface that NATs traffic"
 	echo " --policies: Enable Network Policies"
+	echo " --debug: Turn on debug logging for romana agent/cni. (default: false. valid values: true, false)"
 }
 
 # Parse command-line options
 etcd_endpoints=
 mtu=
 nat=
+debug=false
 nat_interface=
 service_ip_cidr=
 policies=
@@ -69,6 +71,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--policies)
 		policies="$2"
+		shift 2
+		;;
+	--debug)
+		debug="$2"
 		shift 2
 		;;
 	*)
@@ -210,6 +216,15 @@ valid_cidr() {
 	# Passed checks. return OK
 	return 0
 }
+
+# Check if debug is valid
+if [[ "$debug" ]]; then
+	if ! valid_bool "$debug"; then
+		usage_error "Expected 'true' or 'false' for --debug option. ('$debug')"
+	fi
+else
+	debug=false
+fi
 
 # Check MTU option is valid
 if [[ "$mtu" ]]; then
@@ -415,6 +430,15 @@ if [[ -d /host/etc/romana ]]; then
 		-e 's|<romana-daemon-port>|'"$ROMANA_SERVICE_PORT_DAEMON"'|g'
 	)
 	sed "${replacements[@]}" /var/lib/romana/templates/dot-romana.template > /host/etc/romana/cli.yml
+fi
+
+# cni debug log support.
+if [[ -d /host/etc/rlog ]]; then
+    if [[ "$debug" == "true" ]]; then
+    	cp /var/lib/rlog/romana-rlog.conf /host/etc/rlog/romana.conf
+    else
+    	rm /host/etc/rlog/romana.conf 2> dev/null
+    fi
 fi
 
 # Check if etcd is running. Run check for cluster-health
@@ -646,4 +670,9 @@ if [[ "$policies" = "true" ]]; then
 fi
 
 printf "Launching Romana Agent\n"
+if [[ "$debug" == "true" ]]; then
+    export RLOG_LOG_LEVEL="DEBUG"
+    export RLOG_TRACE_LEVEL="9"
+    export RLOG_CALLER_INFO="y"
+fi
 exec /usr/local/bin/romana_agent "${agent_args[@]}"
