@@ -20,10 +20,12 @@ usage() {
 	echo "Options:"
 	echo " -h or --help: print usage"
 	echo " --etcd-endpoints: a comma-separated list of etcd endpoint URLs for the etcd cluster"
+	echo " --debug: Turn on debug logging for romana listener. (default: false. valid values: true, false)"
 }
 
 # Parse command-line options
 etcd_endpoints=
+debug=false
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
 	if [[ $1 == -*=* ]]; then
@@ -36,6 +38,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--etcd-endpoints)
 		etcd_endpoints="$2"
+		shift 2
+		;;
+	--debug)
+		debug="$2"
 		shift 2
 		;;
 	*)
@@ -59,6 +65,30 @@ internal_error() {
 	echo "Internal Error:" "$@"
 	exit 2
 }
+
+# Validation functions
+valid_bool() {
+	if (($# != 1)); then
+		internal_error "valid_bool(): expected 1 parameter, got $#"
+	fi
+	case "$1" in
+	true|false)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
+# Check if debug is valid
+if [[ "$debug" ]]; then
+	if ! valid_bool "$debug"; then
+		usage_error "Expected 'true' or 'false' for --debug option. ('$debug')"
+	fi
+else
+	debug=false
+fi
 
 # Kubernetes HTTPS Service must be defined via envinronment variables
 if ! [[ "$KUBERNETES_SERVICE_HOST" ]]; then
@@ -174,4 +204,9 @@ else
 fi
 
 printf "Launching Romana Listener\n"
+if [[ "$debug" == "true" ]]; then
+    export RLOG_LOG_LEVEL="DEBUG"
+    export RLOG_TRACE_LEVEL="9"
+    export RLOG_CALLER_INFO="y"
+fi
 exec /usr/local/bin/romana_listener -etcd-endpoints="$etcd_endpoints"

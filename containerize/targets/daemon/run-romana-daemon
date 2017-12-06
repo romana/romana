@@ -23,12 +23,14 @@ usage() {
 	echo " --initial-network: path to a json file describing the initial network topology"
 	echo " --cloud: specify the cloud provider, for predefined initial config. Currently supported: aws"
 	echo " --network-cidr-overrides: a comma-separated list of name=CIDR pairs, to replace predefined network CIDR values"
+	echo " --debug: Turn on debug logging for romana daemon. (default: false. valid values: true, false)"
 }
 
 # Parse command-line options
 etcd_endpoints=
 initial_network=
 cloud=
+debug=false
 network_cidr_overrides=
 while [[ $1 == -* ]]; do
 	# expand --foo=bar options
@@ -50,6 +52,10 @@ while [[ $1 == -* ]]; do
 		;;
 	--cloud)
 		cloud="$2"
+		shift 2
+		;;
+	--debug)
+		debug="$2"
 		shift 2
 		;;
 	--network-cidr-overrides)
@@ -168,6 +174,21 @@ else
 	esac
 fi
 
+# Validation functions
+valid_bool() {
+	if (($# != 1)); then
+		internal_error "valid_bool(): expected 1 parameter, got $#"
+	fi
+	case "$1" in
+	true|false)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
 valid_number() {
 	if (($# != 1)); then
 		internal_error "valid_number(): expected 1 parameter, got $#"
@@ -220,6 +241,15 @@ valid_cidr() {
 	return 0
 }
 
+# Check if debug is valid
+if [[ "$debug" ]]; then
+	if ! valid_bool "$debug"; then
+		usage_error "Expected 'true' or 'false' for --debug option. ('$debug')"
+	fi
+else
+	debug=false
+fi
+
 # Apply network cidr overrides
 if [[ "$network_cidr_overrides" ]]; then
 	jq_args=()
@@ -257,4 +287,9 @@ if [[ "$network_cidr_overrides" ]]; then
 fi
 
 printf "Launching Romana Daemon\n"
+if [[ "$debug" == "true" ]]; then
+    export RLOG_LOG_LEVEL="DEBUG"
+    export RLOG_TRACE_LEVEL="9"
+    export RLOG_CALLER_INFO="y"
+fi
 exec /usr/local/bin/romanad -host 0.0.0.0 -etcd-endpoints="$etcd_endpoints" -initial-topology-file="$initial_network"
