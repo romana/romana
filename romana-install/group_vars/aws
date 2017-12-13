@@ -5,12 +5,12 @@ instance_type:
     devstack: "t2.large"
     openstack: "t2.large"
     kubeadm: "t2.medium"
-    nostack: "t2.small"
+    nostack: "t2.medium"
   compute:
     devstack: "t2.small"
     openstack: "t2.small"
     kubeadm: "t2.medium"
-    nostack: "t2.small"
+    nostack: "t2.medium"
 
 # These AMIs are for reference and only apply to region us-west-1.
 # Normally the romana-setup script will do a lookup and use the discovered
