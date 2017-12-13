@@ -1,2 +1,2 @@
 kubeadm_token: random.16charactertoken
-use_docker_ce: false
+use_docker_ce: true
