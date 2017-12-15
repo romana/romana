@@ -596,24 +596,24 @@ done < <(jq -r '.[] | "\(.id)\t\(.cidr)"' <<< "$daemon_response")
 # This permits packets on the forward chain that aren't from Romana pod ranges.
 
 # Create forward chain
-if ! iptables -t filter -L ROMANA-FORWARD 2>/dev/null; then
-	if ! iptables -t filter -N ROMANA-FORWARD; then
-		internal_error "Error creating ROMANA-FORWARD chain for FORWARD rules"
+if ! iptables -t filter -L ROMANA_FORWARD 2>/dev/null; then
+	if ! iptables -t filter -N ROMANA_FORWARD; then
+		internal_error "Error creating ROMANA_FORWARD chain for FORWARD rules"
 	fi
 fi
 # Flush rules from chain
-if ! iptables -t filter -F ROMANA-FORWARD; then
-	internal_error "Error flushing ROMANA-FORWARD chain for FORWARD rules"
+if ! iptables -t filter -F ROMANA_FORWARD; then
+	internal_error "Error flushing ROMANA_FORWARD chain for FORWARD rules"
 fi
 # Add exclusions for romana cidrs
 for romana_cidr in "${romana_cidrs[@]}"; do
-	if ! iptables -t filter -A ROMANA-FORWARD -s "$romana_cidr" -j RETURN; then
-		internal_error "Error adding exclusion rule to ROMANA-FORWARD for $romana_cidr"
+	if ! iptables -t filter -A ROMANA_FORWARD -s "$romana_cidr" -j RETURN; then
+		internal_error "Error adding exclusion rule to ROMANA_FORWARD for $romana_cidr"
 	fi
 done
 # Add final accept rule
-if ! iptables -t filter -A ROMANA-FORWARD -j ACCEPT; then
-	internal_error "Error adding ACCEPT rule to ROMANA-FORWARD"
+if ! iptables -t filter -A ROMANA_FORWARD -j ACCEPT; then
+	internal_error "Error adding ACCEPT rule to ROMANA_FORWARD"
 fi
 # Activate romana forwarding rules
 if ! iptables -t filter -C FORWARD -m comment --comment "romana forwarding rules" -o "$interface" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT; then
@@ -621,9 +621,9 @@ if ! iptables -t filter -C FORWARD -m comment --comment "romana forwarding rules
 		internal_error "Error adding established/related rule to FORWARD chain"
 	fi
 fi
-if ! iptables -t filter -C FORWARD -m comment --comment "romana forwarding rules" -i "$interface" -o "$interface" -j ROMANA-FORWARD; then
-	if ! iptables -t filter -A FORWARD -m comment --comment "romana forwarding rules" -i "$interface" -o "$interface" -j ROMANA-FORWARD; then
-		internal_error "Error adding ROMANA-FORWARD rules to FORWARD chain"
+if ! iptables -t filter -C FORWARD -m comment --comment "romana forwarding rules" -i "$interface" -o "$interface" -j ROMANA_FORWARD; then
+	if ! iptables -t filter -A FORWARD -m comment --comment "romana forwarding rules" -i "$interface" -o "$interface" -j ROMANA_FORWARD; then
+		internal_error "Error adding ROMANA_FORWARD rules to FORWARD chain"
 	fi
 fi
 
@@ -704,7 +704,7 @@ fi
 printf "Launching Romana Agent\n"
 if [[ "$debug" == "true" ]]; then
     export RLOG_LOG_LEVEL="DEBUG"
-    export RLOG_TRACE_LEVEL="9"
-    export RLOG_CALLER_INFO="y"
+    # export RLOG_TRACE_LEVEL="9"
+    # export RLOG_CALLER_INFO="y"
 fi
 exec /usr/local/bin/romana_agent "${agent_args[@]}"
