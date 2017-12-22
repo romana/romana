@@ -54,7 +54,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-agent
-        image: quay.io/romana/agent:v2.0.0
+        image: quay.io/romana/agent:v2.0.1
         imagePullPolicy: Always
         # args:
         # - --service-cluster-ip-range=100.64.0.0/13
