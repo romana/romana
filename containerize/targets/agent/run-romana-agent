@@ -389,6 +389,11 @@ if [[ -d /host/usr/local/bin ]]; then
 	cp /usr/local/bin/romana /host/usr/local/bin/romana
 fi
 if [[ -d /host/opt/cni/bin ]]; then
+	# Delete if it exists, then copy into place.
+	# This prevents errors if it's actively being run by kubelet
+	if [[ -f /host/opt/cni/bin/romana ]]; then
+		rm /host/opt/cni/bin/romana
+	fi
 	cp /var/lib/romana/cni-installation/romana_cni /host/opt/cni/bin/romana
 fi
 if [[ -d /host/etc/cni/net.d ]]; then
