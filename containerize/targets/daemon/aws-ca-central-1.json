@@ -2,8 +2,7 @@
 	"networks": [
 		{
 			"name": "romana-network",
-			"cidr": "100.96.0.0/11",
-			"block_mask": 29
+			"cidr": "100.96.0.0/11"
 		}
 	],
 	"topologies": [
