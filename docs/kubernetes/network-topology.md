@@ -30,8 +30,7 @@ For other environments including customized installations and baremetal deployme
 ```json5
 {
     "name": String,
-    "cidr": IPv4 CIDR,
-    "block_mask": Number
+    "cidr": IPv4 CIDR
 }
 ```
 
@@ -43,7 +42,7 @@ For other environments including customized installations and baremetal deployme
   
   The IPv4 CIDR for pods created within this network. Each CIDR must be unique, not overlapping with other values, and also not overlapping your cluster's `service-cluster-ip-range`.
 
-* `block_mask` (required)
+* `block_mask` (optional, default /29)
 
   The mask applied to [address blocks](../romana#romana-address-blocks). This must be longer than the mask used for the CIDR, with a maximum value of 32.
   It implicitly defines the number of addresses per block, eg: a value of /29 means the address block contains 8 addresses.

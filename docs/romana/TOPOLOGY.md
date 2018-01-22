@@ -65,8 +65,7 @@ Note that in the configuration we usually don't list the actual hosts. As nodes/
         "networks": [                           # 'networks' or CIDRs from which Romana chooses endpoint addresses
             {
                 "name"      : "my-network",     # each network needs a unique name...
-                "cidr"      : "10.111.0.0/16",  # ... and a CIDR.
-                "block_mask": 29                # size of address blocks for this network, safe to leave at "/29"                                
+                "cidr"      : "10.111.0.0/16"   # ... and a CIDR.
             }
         ],
         "topologies": [                         # list of topologies Romana knows about, just need one here
@@ -95,8 +94,7 @@ When a host is added to a cluster, Romana assigns hosts to (prefix) groups in a 
         "networks": [
             {
                 "name"      : "my-network",
-                "cidr"      : "10.111.0.0/16",
-                "block_mask": 29                
+                "cidr"      : "10.111.0.0/16"
             }
         ],
         "topologies": [
@@ -120,13 +118,11 @@ Sometimes you may have multiple, smaller address ranges available for your pod o
         "networks": [
             {
                 "name"      : "net-1",
-                "cidr"      : "10.111.0.0/16",
-                "block_mask": 29                
+                "cidr"      : "10.111.0.0/16"
             },
             {
                 "name"      : "net-2",              # unique names for each network
-                "cidr"      : "192.168.3.0/24",     # can be non-contiguous CIDR ranges
-                "block_mask": 31                    # each network can have different block size
+                "cidr"      : "192.168.3.0/24"      # can be non-contiguous CIDR ranges
             }
         ],
         "topologies": [
@@ -147,18 +143,15 @@ It is possible to define multiple topologies, which are handled by Romana at the
         "networks": [
             {
                 "name"      : "net-1",
-                "cidr"      : "10.111.0.0/16",
-                "block_mask": 29                
+                "cidr"      : "10.111.0.0/16"
             },
             {
                 "name"      : "net-2",
-                "cidr"      : "10.222.0.0/16",
-                "block_mask": 28
+                "cidr"      : "10.222.0.0/16"
             },
             {
                 "name"      : "net-3",
-                "cidr"      : "172.16.0.0/16",
-                "block_mask": 30
+                "cidr"      : "172.16.0.0/16"
             }
         ],
         "topologies": [
@@ -193,13 +186,11 @@ Note that Romana does NOT influence the placement of new pods/VMs. This is done 
             {
                 "name"      : "production",
                 "cidr"      : "10.111.0.0/16",
-                "block_mask": 29,
                 "tenants"   : [ "web", "app", "db" ]
             },
             {
                 "name"      : "test",
                 "cidr"      : "10.222.0.0/16",
-                "block_mask": 32,
                 "tenants"   : [ "qa", "integration" ]
             }
         ],
@@ -227,8 +218,7 @@ Note that such a multi-rack deployment would usually also involve the installati
         "networks": [
             {
                 "name"      : "my-network",
-                "cidr"      : "10.111.0.0/16",
-                "block_mask": 29                
+                "cidr"      : "10.111.0.0/16"
             }
         ],
         "topologies": [
@@ -266,8 +256,7 @@ The following example shows a cluster deployed across two "zones" (DCs or spines
         "networks": [
             {
                 "name"      : "my-network",
-                "cidr"      : "10.111.0.0/16",
-                "block_mask": 29                
+                "cidr"      : "10.111.0.0/16"
             }
         ],
         "topologies": [
