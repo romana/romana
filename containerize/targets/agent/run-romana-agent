@@ -700,6 +700,7 @@ esac
 agent_args=(
 	-hostname "$NODENAME"
 	-endpoints "$etcd_endpoints"
+	-link-name "$interface"
 	-provision-iface -provision-sysctls
 )
 if [[ "$policies" = "true" ]]; then
