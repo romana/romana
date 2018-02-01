@@ -1,6 +1,6 @@
 RootURL:  http://<romana-daemon-address>
 RootPort: <romana-daemon-port>
-LogFile:  "/dev/null"
+LogFile:  "/var/tmp/romana-cli.log"
 Format:   "table"
 Platform: "kubernetes"
 Verbose:  false
