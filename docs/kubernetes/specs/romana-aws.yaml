@@ -53,5 +53,5 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-aws
-        image: quay.io/romana/aws:v2.0.1
+        image: quay.io/romana/aws:v2.0.2
         imagePullPolicy: Always

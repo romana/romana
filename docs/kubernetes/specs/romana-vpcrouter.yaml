@@ -19,7 +19,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-vpcrouter
-        image: quay.io/romana/vpcrouter-romana-plugin
+        image: quay.io/romana/vpcrouter-romana-plugin:1.1.17
         imagePullPolicy: Always
         args:
         - --etcd_use_v2

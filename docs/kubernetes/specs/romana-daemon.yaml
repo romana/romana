@@ -36,7 +36,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: romana-daemon
-        image: quay.io/romana/daemon:v2.0.1
+        image: quay.io/romana/daemon:v2.0.2
         imagePullPolicy: Always
         # args:
         # - --cloud=aws
