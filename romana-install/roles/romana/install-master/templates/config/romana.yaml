@@ -2,8 +2,7 @@
 # Default romana configuration file.
 # please move it to ~/.romana.yaml
 #
-RootURL: "http://{{ romana_master_ip }}"
-RootPort: 9600
+RootURL: "http://{{ romana_master_ip }}:9600"
 LogFile: "/var/tmp/romana.log"
 UsernameKey: ""
 PasswordKey: ""
