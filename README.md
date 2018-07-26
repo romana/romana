@@ -40,7 +40,7 @@ need some help in the meantime.
   networks, the route publisher announces the necessary routes either via BGP
   or OSPF.
 
-Visit [docs.romana.io](http://docs.romana.io/) for the complete documentation.
+Visit [http://romana.readthedocs.io/](http://romana.readthedocs.io/) for the complete documentation.
 
 # Code
 
